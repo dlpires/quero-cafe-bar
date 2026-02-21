@@ -7,6 +7,7 @@ import { ComandaModule } from './modules/comanda/comanda.module';
 import { MesaModule } from './modules/mesa/mesa.module';
 import { ProdutoModule } from './modules/produto/produto.module';
 import { ComandaItemModule } from './modules/comanda-item/comanda-item.module';
+import { UsuarioModule } from './modules/usuario/usuario.module';
 import ormConfig from './config/orm.config';
 
 @Module({
@@ -26,6 +27,7 @@ import ormConfig from './config/orm.config';
     MesaModule,
     ProdutoModule,
     ComandaItemModule,
+    UsuarioModule,
   ],
   controllers: [AppController],
   providers: [AppService],
