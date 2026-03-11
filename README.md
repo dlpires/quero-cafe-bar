@@ -18,8 +18,9 @@ O projeto visa simular um cenário real de desenvolvimento de software, abrangen
 - **Linguagem:** TypeScript
 - **Gerenciador de Pacotes:** Yarn
 
-### Frontend (Em breve)
+### Frontend (Atual)
 - **Framework:** [Ionic Framework](https://ionicframework.com/)
+- **Base:** [JavaScript - Vanilla JS](https://ionicframework.com/docs/javascript/quickstart)
 - **Plataforma:** Mobile (Android/iOS) e Web
 
 ## 📊 Status do Projeto
@@ -32,10 +33,19 @@ No momento, o projeto encontra-se na fase inicial de desenvolvimento do **Backen
 - [x] Integração com Banco de Dados (TypeORM).
 - [ ] Autenticação e Autorização.
 
+No momento, o projeto encontra-se na fase inicial de desenvolvimento do **Frontend**:
+- [x] Configuração inicial do ambiente Ionic.
+- [x] Estrutura básica do projeto (Tabs/SideMenu).
+- [ ] Listagem e visualização de Produtos.
+- [ ] Fluxo de criação de Pedidos.
+- [ ] Integração com a API (Serviços).
+- [ ] Telas de Login e Perfil de Usuário.
+
+
 ## 📂 Estrutura de Pastas
 
 - `/backend`: API REST desenvolvida em NestJS.
-- `/frontend`: (A ser iniciado) Aplicação mobile desenvolvida em Ionic.
+- `/frontend`: Aplicação mobile desenvolvida em Ionic.
 
 ## 💻 Como executar o Backend
 
@@ -54,5 +64,20 @@ No momento, o projeto encontra-se na fase inicial de desenvolvimento do **Backen
    yarn run start:dev
    ```
 
+## 📱 Como executar o Frontend
+
+1. Acesse a pasta do frontend:
+   ```bash
+   cd frontend
+   ```
+
+2. Instale as dependências:
+   ```bash
+   npm install
+   ```
+
+3. Inicie o servidor de desenvolvimento do Ionic:
+   ```bash
+   npm run dev
 ---
 *Projeto desenvolvido para fins educacionais - ETEC e FATEC.*

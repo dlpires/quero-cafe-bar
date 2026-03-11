@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quero Café Bar</title>
+  </head>
+  <body>
+    <ion-app>
+        <ion-router id="main-router" use-hash="false">
+            <ion-route-redirect from="/" to="/login"></ion-route-redirect>
+            
+            <ion-route url="/login" component="login-page"></ion-route>
+            
+            <ion-route url="/home" component="home-page"></ion-route>
+
+            <ion-route url="/produtos" component="list-produto-page"></ion-route>
+            
+            <ion-route url="/logout" redirect-to="/login"></ion-route>
+        </ion-router>
+
+        <ion-nav id="main-nav"></ion-nav>
+    </ion-app>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
