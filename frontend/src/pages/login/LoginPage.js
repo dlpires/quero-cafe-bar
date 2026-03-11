@@ -1,5 +1,5 @@
 import './LoginPage.css'
-import { createHeader } from '../shared/Header.js';
+import { createHeader } from '../../shared/Header.js';
 
 const pageName = 'Login';
 

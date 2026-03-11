@@ -7,12 +7,14 @@
   </head>
   <body>
     <ion-app>
-        <ion-router id="main-router" use-hash="true">
-            <ion-route url="/" redirect-to="/login"></ion-route>
+        <ion-router id="main-router" use-hash="false">
+            <ion-route-redirect from="/" to="/login"></ion-route-redirect>
             
             <ion-route url="/login" component="login-page"></ion-route>
             
             <ion-route url="/home" component="home-page"></ion-route>
+
+            <ion-route url="/produtos" component="list-produto-page"></ion-route>
             
             <ion-route url="/logout" redirect-to="/login"></ion-route>
         </ion-router>

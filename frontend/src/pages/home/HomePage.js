@@ -1,5 +1,6 @@
 import './HomePage.css'
-import { createHeader } from '../shared/Header.js';
+import { createHeader } from '../../shared/Header.js';
+import { logout } from '../../shared/util.js';
 
 const pageName = 'Home';
 
@@ -22,18 +23,7 @@ class HomePage extends HTMLElement {
       </ion-content>
     `;
 
-    this.querySelector('#logout-btn').addEventListener('click', () => {
-      // 1. Limpa cache/token
-        localStorage.clear();
-        
-        // 2. Redireciona via browser (Isso mata qualquer erro de 'n is not a function')
-        // No modo Hash, usamos #/login. No modo normal, apenas /login
-        const useHash = document.querySelector('ion-router').useHash;
-        window.location.href = useHash ? '#/login' : '/login';
-        
-        // 3. Força o recarregamento para limpar o estado do JS
-        window.location.reload();
-    });
+    this.querySelector('#logout-btn').addEventListener('click', logout);
   }
 }
 
