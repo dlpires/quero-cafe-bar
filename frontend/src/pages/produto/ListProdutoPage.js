@@ -16,6 +16,7 @@ class ListProdutoPage extends HTMLElement {
     `;
 
     this.querySelector('#logout-btn').addEventListener('click', logout);
+    this.renderFabButton();
     await this.fetchProdutos();
   }
 
@@ -41,6 +42,27 @@ class ListProdutoPage extends HTMLElement {
       await loading.dismiss();
     }
   }
+
+  renderFabButton() {
+    const content = this.querySelector('ion-content');
+    const fab = document.createElement('ion-fab');
+    fab.vertical = 'bottom';
+    fab.horizontal = 'end';
+    fab.slot = 'fixed';
+
+    fab.innerHTML = `
+      <ion-fab-button>
+        <ion-icon name="add"></ion-icon>
+      </ion-fab-button>
+    `;
+
+    fab.addEventListener('click', () => {
+      window.location.href = '/produto/register';
+    });
+
+    content.appendChild(fab);
+  }
+
 
   renderProdutos(produtos) {
     const container = this.querySelector('.list-produto-container');
@@ -68,10 +90,10 @@ class ListProdutoPage extends HTMLElement {
         </ion-label>
 
         <ion-buttons slot="end">
-          <ion-button fill="clear">
+          <ion-button fill="clear" class="btn-edit" data-id="${produto.id}">
             <ion-icon slot="icon-only" name="create-outline"></ion-icon>
           </ion-button>
-          <ion-button fill="clear" color="danger">
+          <ion-button fill="clear" color="danger" class="btn-delete" data-id="${produto.id}">
             <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
           </ion-button>
         </ion-buttons>
@@ -81,6 +103,42 @@ class ListProdutoPage extends HTMLElement {
     container.innerHTML = `
       <ion-list>${productItems}</ion-list>
     `;
+
+    // Adiciona eventos para os botões de edição
+    container.querySelectorAll('.btn-edit').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        const router = document.querySelector('ion-router');
+        router.push(`/produto/edit?id=${id}`);
+      });
+    });
+
+    // Adiciona eventos para os botões de exclusão
+    container.querySelectorAll('.btn-delete').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        
+        const alert = document.createElement('ion-alert');
+        alert.header = 'Confirmar';
+        alert.message = 'Deseja realmente excluir este produto?';
+        alert.buttons = [
+          { text: 'Cancelar', role: 'cancel' },
+          {
+            text: 'Excluir',
+            handler: async () => {
+              try {
+                await api.deleteProduto(id);
+                await this.fetchProdutos(); // Recarrega a lista
+              } catch (error) {
+                console.error('Erro ao excluir:', error);
+              }
+            }
+          }
+        ];
+        document.body.appendChild(alert);
+        await alert.present();
+      });
+    });
   }
 }
 

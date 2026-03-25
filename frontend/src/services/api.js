@@ -72,9 +72,33 @@ class Api {
         });
     }
 
-    // --- Métodos de Produtos (Exemplo) ---
+    // --- Métodos de Produtos ---
     async getProdutos() {
         return this.request('/produto');
+    }
+
+    async addProduto(produtoData) {
+        return this.request('/produto', {
+            method: 'POST',
+            body: JSON.stringify(produtoData),
+        });
+    }
+
+    async getProdutoById(id) {
+        return this.request(`/produto/${id}`);
+    }
+
+    async updateProduto(id, produtoData) {
+        return this.request(`/produto/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(produtoData),
+        });
+    }
+
+    async deleteProduto(id) {
+        return this.request(`/produto/${id}`, {
+            method: 'DELETE',
+        });
     }
 }
 
