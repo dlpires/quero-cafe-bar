@@ -41,6 +41,11 @@ const createAndInjectMenu = () => {
                     <ion-icon name="fast-food-outline" slot="start"></ion-icon>
                     <ion-label>Produtos</ion-label>
                 </ion-item>
+                <ion-item button class="menu-item" data-url="/usuarios">
+                    <ion-icon name="people-outline" slot="start"></ion-icon>
+                    <ion-label>Usuários</ion-label>
+                </ion-item>
+
             </ion-list>
         </ion-content>
     `;

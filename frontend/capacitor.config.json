@@ -1,0 +1,10 @@
+{
+  "appId": "com.example.querocafebar",
+  "appName": "Quero Café Bar",
+  "webDir": "dist",
+  "androidScheme": "https",
+    "allowNavigation": [
+      "*.ngrok-free.dev",
+      "localhost"
+    ]
+}
