@@ -30,6 +30,10 @@ import './pages/produto/RegProdutoPage.js';
 import './pages/produto/ListProdutoPage.js';
 import './pages/produto/UpdateProdutoPage.js';
 
+import './pages/usuario/RegUsuarioPage.js';
+import './pages/usuario/ListUsuarioPage.js';
+import './pages/usuario/UpdateUsuarioPage.js';
+
 // Redirect to Login Page
 // if (window.location.hash === '' || window.location.hash === '#/') {
 //   window.location.hash = '#/login';

@@ -1,5 +1,6 @@
 import './LoginPage.css'
 import { createHeader } from '../../shared/Header.js';
+import { api } from '../../services/api.js';
 
 const pageName = 'Login';
 
@@ -49,20 +50,21 @@ class LoginPage extends HTMLElement {
       // Cria e exibe o Loading de 5 segundos
       const loading = document.createElement('ion-loading');
       loading.message = 'Autenticando...';
-      loading.duration = 5000;
       
       document.body.appendChild(loading);
       await loading.present();
-      await loading.onDidDismiss(); // Aguarda o tempo acabar
 
-      // Validação Mockada
-      if (user === 'admin' && password === 'admin') {
+      try {
+        const response = await api.login(user, password);
+        api.setToken(response.token);
+
         await presentToast('Login realizado com sucesso!', 'success');        
-        // Navegação usando o ion-router. 'replace' impede o usuário de voltar para a tela de login.
         document.querySelector('ion-router').push('/home', 'forward', 'replace');
-      } else {
-        await presentToast('Usuário ou senha inválidos.');
+      } catch (error) {
+        await presentToast(error.message || 'Usuário ou senha inválidos.');
         passwordInput.value = '';
+      } finally {
+        await loading.dismiss();
       }
     });
 

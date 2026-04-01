@@ -1,4 +1,4 @@
-import { environment } from '../environments/environment.js';
+import { environment } from '@environment';
 /**
  * Classe para centralizar e gerenciar as chamadas à API do backend.
  */
@@ -30,6 +30,7 @@ class Api {
     async request(endpoint, options = {}) {
         const headers = {
             'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true',
             ...options.headers,
         };
 
@@ -66,7 +67,7 @@ class Api {
      */
     async login(username, password) {
         // O endpoint de login pode variar (ex: '/auth/login')
-        return this.request('/login', {
+        return this.request('/usuario/login', {
             method: 'POST',
             body: JSON.stringify({ username, password }),
         });
@@ -97,6 +98,36 @@ class Api {
 
     async deleteProduto(id) {
         return this.request(`/produto/${id}`, {
+            method: 'DELETE',
+        });
+    }
+
+    // --- Métodos de Usuarios ---
+
+    async getUsuarios() {
+        return this.request('/usuario');
+    }
+
+    async addUsuario(usuarioData) {
+        return this.request('/usuario', {
+            method: 'POST',
+            body: JSON.stringify(usuarioData),
+        });
+    }
+
+    async getUsuarioById(id) {
+        return this.request(`/usuario/${id}`);
+    }
+
+    async updateUsuario(id, usuarioData) {
+        return this.request(`/usuario/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(usuarioData),
+        });
+    }
+
+    async deleteUsuario(id) {
+        return this.request(`/usuario/${id}`, {
             method: 'DELETE',
         });
     }

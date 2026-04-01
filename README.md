@@ -36,10 +36,10 @@ No momento, o projeto encontra-se na fase inicial de desenvolvimento do **Backen
 No momento, o projeto encontra-se na fase inicial de desenvolvimento do **Frontend**:
 - [x] Configuração inicial do ambiente Ionic.
 - [x] Estrutura básica do projeto (Tabs/SideMenu).
-- [ ] Listagem e visualização de Produtos.
+- [x] Listagem e visualização de Produtos.
 - [ ] Fluxo de criação de Pedidos.
-- [ ] Integração com a API (Serviços).
-- [ ] Telas de Login e Perfil de Usuário.
+- [x] Integração com a API (Serviços).
+- [x] Telas de Login e Perfil de Usuário.
 
 
 ## 📂 Estrutura de Pastas
@@ -76,8 +76,29 @@ No momento, o projeto encontra-se na fase inicial de desenvolvimento do **Fronte
    npm install
    ```
 
-3. Inicie o servidor de desenvolvimento do Ionic:
+3. Inicie o servidor de desenvolvimento:
    ```bash
    npm run dev
+   ```
+
+### Gerando Build para Android
+
+1. Adicione a plataforma Android (Capacitor):
+   ```bash
+   npx cap add android
+   ```
+
+2. Realize o build e sincronize os arquivos:
+   ```bash
+   npm run build # ou build:prod
+   npx cap copy
+   npx cap open android # ou
+   npx cap run android
+   ```
+
+3. Caso queira apenas gerar o APK diretamente via CLI:
+   ```bash
+   npx cap build android
+   ```
 ---
 *Projeto desenvolvido para fins educacionais - ETEC e FATEC.*
