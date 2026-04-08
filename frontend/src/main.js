@@ -34,6 +34,10 @@ import './pages/usuario/RegUsuarioPage.js';
 import './pages/usuario/ListUsuarioPage.js';
 import './pages/usuario/UpdateUsuarioPage.js';
 
+import './pages/mesa/RegMesaPage.js';
+import './pages/mesa/ListMesaPage.js';
+import './pages/mesa/UpdateMesaPage.js';
+
 // Redirect to Login Page
 // if (window.location.hash === '' || window.location.hash === '#/') {
 //   window.location.hash = '#/login';

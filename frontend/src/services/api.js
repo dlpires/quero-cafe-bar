@@ -131,6 +131,35 @@ class Api {
             method: 'DELETE',
         });
     }
+
+    // --- Métodos de Mesas ---
+    async getMesas() {
+        return this.request('/mesa');
+    }
+
+    async addMesa(mesaData) {
+        return this.request('/mesa', {
+            method: 'POST',
+            body: JSON.stringify(mesaData),
+        });
+    }
+
+    async getMesaById(id) {
+        return this.request(`/mesa/${id}`);
+    }
+
+    async updateMesa(id, mesaData) {
+        return this.request(`/mesa/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(mesaData),
+        });
+    }
+
+    async deleteMesa(id) {
+        return this.request(`/mesa/${id}`, {
+            method: 'DELETE',
+        });
+    }
 }
 
 // Exporta uma instância única (Singleton) da classe Api para ser usada em toda a aplicação.

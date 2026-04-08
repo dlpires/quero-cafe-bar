@@ -1,40 +1,39 @@
-import './ListUsuarioPage.css'
+import './ListMesaPage.css'
 import { createHeader } from '../../shared/Header.js';
 import { logout } from '../../shared/util.js';
 import { api } from '../../services/api.js';
 
-const pageName = 'Usuários';
+const pageName = 'Mesas';
 
-class ListUsuarioPage extends HTMLElement {
+class ListMesaPage extends HTMLElement {
   async connectedCallback() {
     this.classList.add('ion-page');
     this.innerHTML = `
       ${createHeader(pageName)}
       <ion-content>
-        <div class="list-usuario-container"></div>
+        <div class="list-mesa-container"></div>
       </ion-content>
     `;
 
     this.querySelector('#logout-btn').addEventListener('click', logout);
     this.renderFabButton();
-    await this.fetchUsuarios();
+    await this.fetchMesas();
   }
 
-  async fetchUsuarios() {
-    const container = this.querySelector('.list-usuario-container');
+  async fetchMesas() {
     const loading = document.createElement('ion-loading');
-    loading.message = 'Buscando usuarios...';
+    loading.message = 'Buscando mesas...';
     document.body.appendChild(loading);
     await loading.present();
 
     try {
-      const usuarios = await api.getUsuarios();
-      this.renderUsuarios(usuarios);
+      const mesas = await api.getMesas();
+      this.renderMesas(mesas);
     } catch (error) {
-      console.error('Erro ao buscar usuarios:', error);
+      console.error('Erro ao buscar mesas:', error);
       const alert = document.createElement('ion-alert');
       alert.header = 'Erro';
-      alert.message = 'Não foi possível carregar os usuarios. Tente novamente mais tarde.';
+      alert.message = 'Não foi possível carregar as mesas.';
       alert.buttons = ['OK'];
       document.body.appendChild(alert);
       await alert.present();
@@ -49,82 +48,64 @@ class ListUsuarioPage extends HTMLElement {
     fab.vertical = 'bottom';
     fab.horizontal = 'end';
     fab.slot = 'fixed';
-
-    fab.innerHTML = `
-      <ion-fab-button>
-        <ion-icon name="add"></ion-icon>
-      </ion-fab-button>
-    `;
-
-    fab.addEventListener('click', () => {
-      window.location.href = '/usuario/register';
-    });
-
+    fab.innerHTML = `<ion-fab-button><ion-icon name="add"></ion-icon></ion-fab-button>`;
+    fab.addEventListener('click', () => { window.location.href = '/mesa/register'; });
     content.appendChild(fab);
   }
 
-
-  renderUsuarios(usuarios) {
-    const container = this.querySelector('.list-usuario-container');
-    if (usuarios.length === 0) {
-      container.innerHTML = `<p class="ion-text-center">Nenhum usuario encontrado.</p>`;
+  renderMesas(mesas) {
+    const container = this.querySelector('.list-mesa-container');
+    if (mesas.length === 0) {
+      container.innerHTML = `<p class="ion-text-center">Nenhuma mesa encontrada.</p>`;
       return;
     }
 
-    const userItems = usuarios.map(usuario => `
+    const mesaItems = mesas.map(mesa => `
       <ion-item>
         <ion-label>
           <h2 style="display: flex; align-items: center; gap: 8px;">
             <ion-icon
-              name="${usuario.perfil == 0 ? 'restaurant' : 'person'}"
-              color="${usuario.perfil == 0 ? 'primary' : 'secondary'}"
-              style="flex-shrink: 0;"
+              name="${mesa.status ? 'checkmark-circle' : 'close-circle'}"
+              color="${mesa.status ? 'success' : 'danger'}"
             ></ion-icon>
-            <span>${usuario.nome}</span>
+            <span>Mesa #${mesa.id}</span>
           </h2>
-          <p>${usuario.usuario}</p>
+          <p>Cadeiras: ${mesa.qtd_cadeiras}</p>
         </ion-label>
-
         <ion-buttons slot="end">
-          <ion-button fill="clear" class="btn-edit" data-id="${usuario.id}">
+          <ion-button fill="clear" class="btn-edit" data-id="${mesa.id}">
             <ion-icon slot="icon-only" name="create-outline"></ion-icon>
           </ion-button>
-          <ion-button fill="clear" color="danger" class="btn-delete" data-id="${usuario.id}">
+          <ion-button fill="clear" color="danger" class="btn-delete" data-id="${mesa.id}">
             <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-item>
     `).join('');
 
-    container.innerHTML = `
-      <ion-list>${userItems}</ion-list>
-    `;
+    container.innerHTML = `<ion-list>${mesaItems}</ion-list>`;
 
-    // Adiciona eventos para os botões de edição
     container.querySelectorAll('.btn-edit').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-id');
-        const router = document.querySelector('ion-router');
-        router.push(`/usuario/edit?id=${id}`);
+        document.querySelector('ion-router').push(`/mesa/edit?id=${id}`);
       });
     });
 
-    // Adiciona eventos para os botões de exclusão
     container.querySelectorAll('.btn-delete').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
-        
         const alert = document.createElement('ion-alert');
         alert.header = 'Confirmar';
-        alert.message = 'Deseja realmente excluir este usuario?';
+        alert.message = 'Deseja realmente excluir esta mesa?';
         alert.buttons = [
           { text: 'Cancelar', role: 'cancel' },
           {
             text: 'Excluir',
             handler: async () => {
               try {
-                await api.deleteUsuario(id);
-                await this.fetchUsuarios(); // Recarrega a lista
+                await api.deleteMesa(id);
+                await this.fetchMesas();
               } catch (error) {
                 console.error('Erro ao excluir:', error);
               }
@@ -138,4 +119,4 @@ class ListUsuarioPage extends HTMLElement {
   }
 }
 
-customElements.define('list-usuario-page', ListUsuarioPage);
+customElements.define('list-mesa-page', ListMesaPage);
