@@ -25,6 +25,7 @@ export class ComandaService {
   async findAll(listComandaDto: ListComandaDto): Promise<IComandaOutput[]> {
     return await this.comandaRepository.find({
       where: listComandaDto,
+      relations: ['mesa', 'itens', 'itens.produto'],
     });
   }
 

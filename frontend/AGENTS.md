@@ -27,7 +27,7 @@ npx cap build android    # build APK directly
 
 - `src/main.js` - Entry point, imports all pages
 - `src/services/api.js` - API client (singleton `api` export)
-- `src/pages/` - Page components (login, home, produto, usuario, mesa)
+- `src/pages/` - Page components (login, home, produto, usuario, mesa, comanda)
   - Pages are defined as **Custom Elements** (Web Components) extending `HTMLElement`.
   - Logic usually resides in `connectedCallback`.
   - Navigation is handled by `ion-router` and `ion-nav`.
