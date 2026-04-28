@@ -18,6 +18,22 @@ class ListUsuarioPage extends HTMLElement {
     this.querySelector('#logout-btn').addEventListener('click', logout);
     this.renderFabButton();
     await this.fetchUsuarios();
+
+    window.addEventListener('popstate', () => this.onRouteChange());
+    this._routeListener = () => this.onRouteChange();
+    document.querySelector('ion-router').addEventListener('urlChanged', this._routeListener);
+  }
+
+  disconnectedCallback() {
+    if (this._routeListener) {
+      document.querySelector('ion-router').removeEventListener('urlChanged', this._routeListener);
+    }
+  }
+
+  onRouteChange() {
+    if (window.location.pathname === '/usuarios') {
+      this.fetchUsuarios();
+    }
   }
 
   async fetchUsuarios() {

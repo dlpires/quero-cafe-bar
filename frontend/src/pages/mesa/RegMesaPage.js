@@ -54,7 +54,8 @@ class RegMesaPage extends HTMLElement {
   }
 
   navigateBack() {
-    window.history.back();
+    const router = document.querySelector('ion-router');
+    router.push('/mesas', 'root');
   }
 }
 

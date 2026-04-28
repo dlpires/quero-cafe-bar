@@ -23,14 +23,22 @@ npx cap build android    # build APK directly
 - **API URL**: Configured in `src/environments/environment.js` (default: `http://localhost:3001`)
 - **Build output**: `dist/` folder (used by Capacitor)
 
-## Structure
+## Technical Structure
 
 - `src/main.js` - Entry point, imports all pages
 - `src/services/api.js` - API client (singleton `api` export)
 - `src/pages/` - Page components (login, home, produto, usuario, mesa)
+  - Pages are defined as **Custom Elements** (Web Components) extending `HTMLElement`.
+  - Logic usually resides in `connectedCallback`.
+  - Navigation is handled by `ion-router` and `ion-nav`.
 - `src/environments/` - Environment configs (dev vs prod)
 
 ## Capacitor Config
 
 - `capacitor.config.json`: appId `com.example.querocafebar`, webDir `dist`
 - Allows navigation to `localhost` and `*.ngrok-free.dev`
+
+## Common Patterns
+- **Header**: `src/shared/Header.js` dynamically injects the `ion-menu` and `ion-header`.
+- **Forms**: Uses `FormData` to extract values from Ionic inputs (`ion-input`, `ion-select`).
+- **Feedback**: Uses `ion-toast`, `ion-alert`, and `ion-loading` for UX.

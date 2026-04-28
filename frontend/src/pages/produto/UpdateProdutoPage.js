@@ -98,7 +98,8 @@ class UpdateProdutoPage extends HTMLElement {
   }
 
   navigateBack() {
-    window.history.back();
+    const router = document.querySelector('ion-router');
+    router.push('/produtos', 'root');
   }
 }
 

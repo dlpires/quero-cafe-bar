@@ -1,5 +1,11 @@
 # AGENTS.md
 
+## Project Overview
+- **Name**: Quero Café Bar
+- **Purpose**: Educational system for order management (products, tables, users).
+- **Stack**: NestJS (Backend) + Ionic Vanilla JS (Frontend) + MySQL (DB).
+- **Main Workflow**: Admin/Waiters manage products and tables, opening "comandas" (orders) for customers.
+
 ## Dev Commands
 
 ### Backend (NestJS)
@@ -31,6 +37,10 @@ npx cap run android      # run on device/emulator
 - **Backend**: `backend/src/` - NestJS modules under `src/modules/`
   - Modules: `comanda`, `comanda-item`, `mesa`, `produto`, `usuario`
   - Entry: `src/main.ts`, root module: `src/app.module.ts`
+  - Logic: Controllers handle routes, Services handle business logic, Entities define DB schema.
+
+- **Frontend**: `frontend/src/` - Vanilla JS with Ionic web components
+  - State: Managed via a singleton `api.js` service and local storage for JWT.
   - Database config: `src/config/orm.config.ts` (TypeORM + MySQL)
   - Migrations: `src/database/migrations/`
 
@@ -46,4 +56,6 @@ npx cap run android      # run on device/emulator
 - **DB migrations required**: `synchronize: false` - always use `yarn make:migration` before `yarn migrate`
 - **CORS enabled**: Backend allows all origins (`*`) in `main.ts`
 - **ESLint rule**: `prettier/prettier` uses `endOfLine: "auto"` - do not change line endings manually
-- **Ionic loaded from CDN**: Vite copies Ionic from `node_modules/@ionic/core/dist/ionic/` to `dist/` via `vite-plugin-static-copy`
+- **Ionic loaded from CDN/Local**: Vite copies Ionic from `node_modules/@ionic/core/dist/ionic/` to `dist/`.
+- **Mobile Development**: Uses Capacitor for Android. Backend URL in `environment.prod.js` often uses `ngrok` or `10.0.2.2` for emulator access.
+- **Authentication**: JWT-based. Token stored in `localStorage` and sent in `Authorization: Bearer <token>` header.
