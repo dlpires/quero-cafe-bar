@@ -1,0 +1,8 @@
+.list-comanda-container {
+  padding: 16px;
+}
+
+.list-comanda-container ion-item {
+  margin-bottom: 8px;
+  border-radius: 8px;
+}

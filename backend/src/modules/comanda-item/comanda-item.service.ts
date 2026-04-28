@@ -23,6 +23,7 @@ export class ComandaItemService {
   async findAll(listComandaItemDto: ListComandaItemDto): Promise<IComandaItemOutput[]> {
     return await this.comandaItemRepository.find({
       where: listComandaItemDto,
+      relations: ['produto'],
     });
   }
 

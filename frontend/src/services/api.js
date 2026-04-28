@@ -160,6 +160,64 @@ class Api {
             method: 'DELETE',
         });
     }
+
+    // --- Métodos de Comandas ---
+    async getComandas() {
+        return this.request('/comanda');
+    }
+
+    async addComanda(comandaData) {
+        return this.request('/comanda', {
+            method: 'POST',
+            body: JSON.stringify(comandaData),
+        });
+    }
+
+    async getComandaById(id) {
+        return this.request(`/comanda/${id}`);
+    }
+
+    async getComandaByMesaId(id_mesa) {
+        return this.request(`/comanda/mesa/${id_mesa}`);
+    }
+
+    async updateComanda(id, comandaData) {
+        return this.request(`/comanda/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(comandaData),
+        });
+    }
+
+    async deleteComanda(id) {
+        return this.request(`/comanda/${id}`, {
+            method: 'DELETE',
+        });
+    }
+
+    // --- Métodos de Itens de Comanda ---
+    async getItensComanda(id_comanda) {
+        return this.request(`/comanda-item/${id_comanda}`);
+    }
+
+    async addItemComanda(itemData) {
+        return this.request('/comanda-item', {
+            method: 'POST',
+            body: JSON.stringify(itemData),
+        });
+    }
+
+    async updateItemComanda(id_comanda, id_produto, itemData) {
+        return this.request(`/comanda-item/${id_comanda}/${id_produto}`, {
+            method: 'PATCH',
+            body: JSON.stringify(itemData),
+        });
+    }
+
+    async deleteItemComanda(id_comanda, id_produto) {
+        return this.request(`/comanda-item/${id_comanda}/${id_produto}`, {
+            method: 'DELETE',
+        });
+    }
 }
 
 // Exporta uma instância única (Singleton) da classe Api para ser usada em toda a aplicação.
