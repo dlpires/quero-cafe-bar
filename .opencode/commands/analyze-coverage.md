@@ -1,6 +1,6 @@
 ---
 description: Analise cobertura de testes e sugere melhorias
-agent: build
+agent: plan
 # model: ollama/qwen2.5-coder:14b
 ---
 

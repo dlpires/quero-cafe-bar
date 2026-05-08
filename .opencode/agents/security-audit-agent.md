@@ -1,6 +1,6 @@
 ---
 description: Auditoria de Segurança e Análise de Vulnerabilidades (SAST)
-agent: build
+agent: plan
 # model: ollama/qwen2.5-coder:14b
 ---
 
