@@ -32,7 +32,7 @@ describe('ProdutoService', () => {
     }).compile();
 
     service = module.get<ProdutoService>(ProdutoService);
-    mockRepository = module.get(getRepositoryToken(Produto)) as jest.Mocked<Repository<Produto>>;
+    mockRepository = module.get(getRepositoryToken(Produto));
     jest.clearAllMocks();
   });
 
@@ -41,11 +41,14 @@ describe('ProdutoService', () => {
       // Arrange
       const createProdutoDto: CreateProdutoDto = {
         dsc_produto: 'Café Expresso',
-        valor_unit: 5.50,
+        valor_unit: 5.5,
         status: true,
       };
 
-      const produtoCriado = { id: 1, ...createProdutoDto } as unknown as Produto;
+      const produtoCriado = {
+        id: 1,
+        ...createProdutoDto,
+      } as unknown as Produto;
       mockProdutoRepository.create.mockReturnValue(produtoCriado);
       mockProdutoRepository.save.mockResolvedValue(produtoCriado);
 
@@ -53,11 +56,13 @@ describe('ProdutoService', () => {
       const result = await service.create(createProdutoDto);
 
       // Assert
-      expect(mockProdutoRepository.create).toHaveBeenCalledWith(createProdutoDto);
+      expect(mockProdutoRepository.create).toHaveBeenCalledWith(
+        createProdutoDto,
+      );
       expect(mockProdutoRepository.save).toHaveBeenCalledWith(produtoCriado);
       expect(result).toEqual(produtoCriado);
       expect(result.dsc_produto).toBe('Café Expresso');
-      expect((result as any).valor_unit).toBe(5.50);
+      expect((result as any).valor_unit).toBe(5.5);
     });
   });
 
@@ -65,8 +70,8 @@ describe('ProdutoService', () => {
     it('deve retornar todos os produtos (Happy Path)', async () => {
       // Arrange
       const produtosMock = [
-        { id:1, dsc_produto: 'Café', valor_unit: 5.00, status: true },
-        { id:2, dsc_produto: 'Pão', valor_unit: 3.50, status: true },
+        { id: 1, dsc_produto: 'Café', valor_unit: 5.0, status: true },
+        { id: 2, dsc_produto: 'Pão', valor_unit: 3.5, status: true },
       ];
 
       const listProdutoDto: ListProdutoDto = {};
@@ -86,7 +91,7 @@ describe('ProdutoService', () => {
     it('deve filtrar produtos por id (Edge Case)', async () => {
       // Arrange
       const produtosFiltrados = [
-        { id:1, dsc_produto: 'Café', valor_unit: 5.00, status: true },
+        { id: 1, dsc_produto: 'Café', valor_unit: 5.0, status: true },
       ];
 
       const listProdutoDto: ListProdutoDto = { id: 1 };
@@ -109,7 +114,7 @@ describe('ProdutoService', () => {
       const produtoMock = {
         id: 1,
         dsc_produto: 'Café Expresso',
-        valor_unit: 5.50,
+        valor_unit: 5.5,
         status: true,
       } as unknown as Produto;
 
@@ -142,14 +147,14 @@ describe('ProdutoService', () => {
       const produtoExistente = {
         id: 1,
         dsc_produto: 'Café',
-        valor_unit: 5.00,
+        valor_unit: 5.0,
         status: true,
       };
 
       const updateProdutoDto = {
         id: 1,
         dsc_produto: 'Café Expresso Premium',
-        valor_unit: 6.50,
+        valor_unit: 6.5,
       };
 
       const produtoAtualizado = { ...produtoExistente, ...updateProdutoDto };
@@ -167,7 +172,7 @@ describe('ProdutoService', () => {
         expect.objectContaining(updateProdutoDto),
       );
       expect(result.dsc_produto).toBe('Café Expresso Premium');
-      expect(result.valor_unit).toBe(6.50);
+      expect(result.valor_unit).toBe(6.5);
     });
 
     it('deve lançar NotFoundException ao atualizar produto inexistente (Edge Case)', async () => {
@@ -177,9 +182,7 @@ describe('ProdutoService', () => {
       const updateDto = { id: 999, dsc_produto: 'Teste' };
 
       // Act & Assert
-      await expect(
-        service.update(999, updateDto),
-      ).rejects.toThrow(
+      await expect(service.update(999, updateDto)).rejects.toThrow(
         new NotFoundException(`Produto com ID 999 não encontrado`),
       );
     });

@@ -89,6 +89,7 @@ describe('Api Service', () => {
           'Content-Type': 'application/json',
           'ngrok-skip-browser-warning': 'true',
         },
+        signal: expect.any(AbortSignal),
       });
       expect(result).toEqual({ id: 1, nome: 'Teste' });
     });
@@ -112,6 +113,7 @@ describe('Api Service', () => {
           'ngrok-skip-browser-warning': 'true',
           'Authorization': 'Bearer token-jwt',
         },
+        signal: expect.any(AbortSignal),
       });
     });
 
@@ -136,6 +138,7 @@ describe('Api Service', () => {
           'Content-Type': 'application/json',
           'ngrok-skip-browser-warning': 'true',
         },
+        signal: expect.any(AbortSignal),
       });
     });
 
@@ -192,6 +195,7 @@ describe('Api Service', () => {
           'ngrok-skip-browser-warning': 'true',
           'Custom-Header': 'value',
         },
+        signal: expect.any(AbortSignal),
       });
     });
   });
@@ -213,8 +217,35 @@ describe('Api Service', () => {
           'Content-Type': 'application/json',
           'ngrok-skip-browser-warning': 'true',
         },
+        signal: expect.any(AbortSignal),
       });
       expect(result).toEqual({ token: 'jwt-token', user: { id: 1 } });
+    });
+
+    it('deve lançar erro específico para status 401 (Edge Case)', async () => {
+      const mockResponse = {
+        ok: false,
+        status: 401,
+        json: jest.fn().mockResolvedValue({ message: 'Usuário ou senha inválidos' }),
+      };
+      fetch.mockResolvedValue(mockResponse);
+
+      await expect(api.login('admin', 'senha_errada')).rejects.toThrow(
+        'Usuário ou senha inválidos.',
+      );
+    });
+
+    it('deve lançar erro quando resposta não tem token (Edge Case)', async () => {
+      const mockResponse = {
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({}),
+      };
+      fetch.mockResolvedValue(mockResponse);
+
+      await expect(api.login('admin', 'senha123')).rejects.toThrow(
+        'Resposta inválida do servidor. Token não recebido.',
+      );
     });
   });
 

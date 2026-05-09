@@ -32,7 +32,7 @@ describe('ComandaService', () => {
     }).compile();
 
     service = module.get<ComandaService>(ComandaService);
-    mockRepository = module.get(getRepositoryToken(Comanda)) as jest.Mocked<Repository<Comanda>>;
+    mockRepository = module.get(getRepositoryToken(Comanda));
     jest.clearAllMocks();
   });
 
@@ -46,8 +46,7 @@ describe('ComandaService', () => {
       const comandaCriada = {
         id: 1,
         id_mesa: 1,
-        dt_abertura: new Date(),
-        dt_fechamento: null,
+        obs_comanda: 'Teste',
       };
 
       mockComandaRepository.create.mockReturnValue(comandaCriada);
@@ -57,7 +56,9 @@ describe('ComandaService', () => {
       const result = await service.create(createComandaDto);
 
       // Assert
-      expect(mockComandaRepository.create).toHaveBeenCalledWith(createComandaDto);
+      expect(mockComandaRepository.create).toHaveBeenCalledWith(
+        createComandaDto,
+      );
       expect(mockComandaRepository.save).toHaveBeenCalledWith(comandaCriada);
       expect(result).toEqual(comandaCriada);
       expect(result.id_mesa).toBe(1);
@@ -167,12 +168,12 @@ describe('ComandaService', () => {
       const comandaExistente = {
         id: 1,
         id_mesa: 1,
-        dt_fechamento: null,
+        obs_comanda: 'Original',
       };
 
       const updateComandaDto = {
-        id: 1,
-        dt_fechamento: new Date(),
+        id_mesa: 2,
+        obs_comanda: 'Atualizado',
       };
 
       const comandaAtualizada = { ...comandaExistente, ...updateComandaDto };
@@ -189,19 +190,18 @@ describe('ComandaService', () => {
       expect(mockComandaRepository.save).toHaveBeenCalledWith(
         expect.objectContaining(updateComandaDto),
       );
-      expect((result as any).dt_fechamento).toBeDefined();
+      expect(result.id_mesa).toBe(2);
+      expect(result.obs_comanda).toBe('Atualizado');
     });
 
     it('deve lançar NotFoundException ao atualizar comanda inexistente (Edge Case)', async () => {
       // Arrange
       mockComandaRepository.findOne.mockResolvedValue(null);
 
-      const updateDto = { id: 999, dt_fechamento: new Date() };
+      const updateDto = { id_mesa: 2 };
 
       // Act & Assert
-      await expect(
-        service.update(999, updateDto),
-      ).rejects.toThrow(
+      await expect(service.update(999, updateDto)).rejects.toThrow(
         new NotFoundException(`Comanda com ID 999 não encontrada`),
       );
     });

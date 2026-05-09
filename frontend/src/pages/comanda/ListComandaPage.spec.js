@@ -220,7 +220,7 @@ describe('ListComandaPage', () => {
     it('deve renderizar comandas quando disponíveis (Happy Path)', async () => {
       api.getComandas.mockResolvedValue(mockComandas);
 
-      const container = { innerHTML: '' };
+      const container = { innerHTML: '', querySelectorAll: jest.fn(() => []), querySelector: jest.fn(() => null) };
       listComandaPage.querySelector = jest.fn((selector) => {
         if (selector === '.comandas-list') return container;
         return null;
@@ -250,10 +250,12 @@ describe('ListComandaPage', () => {
     it('deve navegar para registro ao clicar em Nova Comanda (Happy Path)', () => {
       const addBtn = { addEventListener: jest.fn() };
       const mockRouter = { push: jest.fn() };
+      const container = { innerHTML: '', querySelectorAll: jest.fn(() => []), querySelector: jest.fn(() => null) };
 
       listComandaPage.querySelector = jest.fn((selector) => {
         if (selector === '#add-btn') return addBtn;
         if (selector === 'ion-router') return mockRouter;
+        if (selector === '.comandas-list') return container;
         return null;
       });
 

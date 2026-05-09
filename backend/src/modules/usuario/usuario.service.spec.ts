@@ -7,6 +7,9 @@ import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { ListUsuarioDto } from './dto/list-usuario.dto';
 
+
+
+
 describe('UsuarioService', () => {
   let service: UsuarioService;
   let mockRepository: jest.Mocked<Repository<Usuario>>;
@@ -32,7 +35,7 @@ describe('UsuarioService', () => {
     }).compile();
 
     service = module.get<UsuarioService>(UsuarioService);
-    mockRepository = module.get(getRepositoryToken(Usuario)) as jest.Mocked<Repository<Usuario>>;
+    mockRepository = module.get(getRepositoryToken(Usuario));
 
     // Limpa todos os mocks antes de cada teste
     jest.clearAllMocks();
@@ -60,7 +63,9 @@ describe('UsuarioService', () => {
       const result = await service.create(createUsuarioDto);
 
       // Assert
-      expect(mockUsuarioRepository.create).toHaveBeenCalledWith(createUsuarioDto);
+      expect(mockUsuarioRepository.create).toHaveBeenCalledWith(
+        createUsuarioDto,
+      );
       expect(mockUsuarioRepository.save).toHaveBeenCalledWith(usuarioCriado);
       expect(result).toEqual(usuarioCriado);
     });
@@ -94,8 +99,20 @@ describe('UsuarioService', () => {
     it('deve retornar todos os usuários quando não há filtros (Happy Path)', async () => {
       // Arrange
       const usuariosMock: Usuario[] = [
-        { id: 1, nome: 'Admin', usuario: 'admin', senha: '123', perfil: 0 } as Usuario,
-        { id: 2, nome: 'Garçom', usuario: 'garcom', senha: '456', perfil: 1 } as Usuario,
+        {
+          id: 1,
+          nome: 'Admin',
+          usuario: 'admin',
+          senha: '123',
+          perfil: 0,
+        } as Usuario,
+        {
+          id: 2,
+          nome: 'Garçom',
+          usuario: 'garcom',
+          senha: '456',
+          perfil: 1,
+        } as Usuario,
       ];
 
       const listUsuarioDto: ListUsuarioDto = {};
@@ -114,7 +131,13 @@ describe('UsuarioService', () => {
     it('deve filtrar usuários por perfil', async () => {
       // Arrange
       const usuariosMock: Usuario[] = [
-        { id: 2, nome: 'Garçom', usuario: 'garcom', senha: '456', perfil: 1 } as Usuario,
+        {
+          id: 2,
+          nome: 'Garçom',
+          usuario: 'garcom',
+          senha: '456',
+          perfil: 1,
+        } as Usuario,
       ];
 
       const listUsuarioDto: ListUsuarioDto = { perfil: 1 };
@@ -235,7 +258,7 @@ describe('UsuarioService', () => {
   });
 
   describe('Login', () => {
-    it('deve retornar usuário quando credenciais está corretas (Happy Path)', async () => {
+    it('deve retornar usuário quando credenciais estão corretas (Happy Path)', async () => {
       // Arrange
       const usuarioMock: Usuario = {
         id: 1,
@@ -252,19 +275,9 @@ describe('UsuarioService', () => {
 
       // Assert
       expect(mockUsuarioRepository.findOne).toHaveBeenCalledWith({
-        where: { usuario: 'admin', senha: 'senha123' },
+        where: { usuario: 'admin' },
       });
       expect(result).toEqual(usuarioMock);
-    });
-
-    it('deve lançar erro quando usuário ou senha estão incorretos (Edge Case)', async () => {
-      // Arrange
-      mockUsuarioRepository.findOne.mockResolvedValue(null);
-
-      // Act & Assert
-      await expect(service.login('admin', 'senha_errada')).rejects.toThrow(
-        'Usuário ou senha inválidos',
-      );
     });
 
     it('deve lançar erro quando usuário não existe (Edge Case)', async () => {
@@ -272,7 +285,25 @@ describe('UsuarioService', () => {
       mockUsuarioRepository.findOne.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.login('usuario_inexistente', 'senha')).rejects.toThrow(
+      await expect(
+        service.login('usuario_inexistente', 'senha'),
+      ).rejects.toThrow('Usuário ou senha inválidos');
+    });
+
+    it('deve lançar erro quando senha está incorreta (Edge Case)', async () => {
+      // Arrange
+      const usuarioMock: Usuario = {
+        id: 1,
+        nome: 'Admin',
+        usuario: 'admin',
+        senha: 'senha_correta',
+        perfil: 0,
+      } as Usuario;
+
+      mockUsuarioRepository.findOne.mockResolvedValue(usuarioMock);
+
+      // Act & Assert
+      await expect(service.login('admin', 'senha_errada')).rejects.toThrow(
         'Usuário ou senha inválidos',
       );
     });

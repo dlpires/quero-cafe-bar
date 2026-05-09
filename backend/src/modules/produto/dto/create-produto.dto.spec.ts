@@ -7,7 +7,7 @@ describe('CreateProdutoDto - Validação', () => {
       // Arrange
       const dto = new CreateProdutoDto();
       dto.dsc_produto = 'Café Expresso';
-      dto.valor_unit = 5.50;
+      dto.valor_unit = 5.5;
       dto.status = true;
 
       // Act
@@ -21,7 +21,7 @@ describe('CreateProdutoDto - Validação', () => {
       // Arrange
       const dto = new CreateProdutoDto();
       dto.dsc_produto = 'Produto Inativo';
-      dto.valor_unit = 10.00;
+      dto.valor_unit = 10.0;
       dto.status = false;
 
       // Act
@@ -37,7 +37,7 @@ describe('CreateProdutoDto - Validação', () => {
       // Arrange
       const dto = new CreateProdutoDto();
       dto.dsc_produto = ''; // Inválido
-      dto.valor_unit = 5.00;
+      dto.valor_unit = 5.0;
       dto.status = true;
 
       // Act
@@ -52,7 +52,7 @@ describe('CreateProdutoDto - Validação', () => {
       // Arrange
       const dto = new CreateProdutoDto();
       dto.dsc_produto = 123 as any; // Inválido
-      dto.valor_unit = 5.00;
+      dto.valor_unit = 5.0;
 
       // Act
       const errors = await validate(dto);
@@ -79,7 +79,7 @@ describe('CreateProdutoDto - Validação', () => {
       // Arrange
       const dto = new CreateProdutoDto();
       dto.dsc_produto = 'Café';
-      dto.valor_unit = -5.00; // Negativo (provavelmente inválido)
+      dto.valor_unit = -5.0; // Negativo (provavelmente inválido)
 
       // Act
       const errors = await validate(dto);
@@ -92,7 +92,7 @@ describe('CreateProdutoDto - Validação', () => {
       // Arrange
       const dto = new CreateProdutoDto();
       dto.dsc_produto = 'Café';
-      dto.valor_unit = 5.00;
+      dto.valor_unit = 5.0;
       dto.status = 'true' as any; // Inválido - deve ser boolean
 
       // Act

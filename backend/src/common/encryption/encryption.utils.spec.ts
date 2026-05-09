@@ -28,7 +28,10 @@ describe('Encryption Utils', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env = { ...originalEnv, ENCRYPTION_KEY: 'test-key-32-characters-long-1234' };
+    process.env = {
+      ...originalEnv,
+      ENCRYPTION_KEY: 'test-key-32-characters-long-1234',
+    };
   });
 
   afterAll(() => {

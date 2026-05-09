@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import * as jwt from 'jsonwebtoken';
 import { UsuarioController } from './usuario.controller';
 import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
@@ -34,7 +35,7 @@ describe('UsuarioController', () => {
     }).compile();
 
     controller = module.get<UsuarioController>(UsuarioController);
-    service = module.get(UsuarioService) as jest.Mocked<UsuarioService>;
+    service = module.get(UsuarioService);
 
     jest.clearAllMocks();
   });
@@ -49,7 +50,13 @@ describe('UsuarioController', () => {
         perfil: 1,
       };
 
-      const usuarioCriado = { id: 1, nome: 'Novo Usuário', usuario: 'novo.usuario', senha: 'senha123', perfil: 1 };
+      const usuarioCriado = {
+        id: 1,
+        nome: 'Novo Usuário',
+        usuario: 'novo.usuario',
+        senha: 'senha123',
+        perfil: 1,
+      };
       service.create.mockResolvedValue(usuarioCriado);
 
       // Act
@@ -165,7 +172,7 @@ describe('UsuarioController', () => {
   });
 
   describe('POST /usuario/login - Login', () => {
-    it('deve realizar login com sucesso (Happy Path)', async () => {
+    it('deve realizar login com sucesso e retornar JWT válido (Happy Path)', async () => {
       // Arrange
       const usuarioMock = {
         id: 1,
@@ -173,17 +180,25 @@ describe('UsuarioController', () => {
         usuario: 'admin',
         senha: 'senha123',
         perfil: 0,
-        token: 'jwt-token-mock',
       };
 
+      process.env.JWT_SECRET = 'test-secret';
       service.login.mockResolvedValue(usuarioMock);
 
       // Act
-      const result = await controller.login('admin', 'senha123');
+      const result = await controller.login({
+        username: 'admin',
+        password: 'senha123',
+      });
 
       // Assert
       expect(service.login).toHaveBeenCalledWith('admin', 'senha123');
-      expect(result).toEqual(usuarioMock);
+      expect(result).toHaveProperty('token');
+
+      const decoded = jwt.verify(result.token, 'test-secret') as any;
+      expect(decoded.id).toBe(1);
+      expect(decoded.perfil).toBe(0);
+      expect(decoded.exp).toBeDefined();
     });
   });
 

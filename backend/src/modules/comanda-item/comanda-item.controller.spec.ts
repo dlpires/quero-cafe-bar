@@ -13,10 +13,33 @@ describe('ComandaItemController', () => {
         {
           provide: ComandaItemService,
           useValue: {
-            findOne: jest.fn().mockResolvedValue({ id_comanda: 1, id_produto: 1, qtd_item: 2, valor_venda: 10.5, statusPg: false, statusEntrega: false }),
-            create: jest.fn().mockResolvedValue({ id_comanda: 1, id_produto: 1, qtd_item: 2, valor_venda: 10.5, statusPg: false, statusEntrega: false }),
-            update: jest.fn().mockResolvedValue({ id_comanda: 1, id_produto: 1, qtd_item: 2, valor_venda: 10.5, statusPg: false, statusEntrega: false }),
-            remove: jest.fn().mockResolvedValue({ id_comanda: 1, id_produto: 1 }),
+            findOne: jest.fn().mockResolvedValue({
+              id_comanda: 1,
+              id_produto: 1,
+              qtd_item: 2,
+              valor_venda: 10.5,
+              statusPg: false,
+              statusEntrega: false,
+            }),
+            create: jest.fn().mockResolvedValue({
+              id_comanda: 1,
+              id_produto: 1,
+              qtd_item: 2,
+              valor_venda: 10.5,
+              statusPg: false,
+              statusEntrega: false,
+            }),
+            update: jest.fn().mockResolvedValue({
+              id_comanda: 1,
+              id_produto: 1,
+              qtd_item: 2,
+              valor_venda: 10.5,
+              statusPg: false,
+              statusEntrega: false,
+            }),
+            remove: jest
+              .fn()
+              .mockResolvedValue({ id_comanda: 1, id_produto: 1 }),
             findAll: jest.fn().mockResolvedValue([]),
           },
         },
@@ -33,7 +56,12 @@ describe('ComandaItemController', () => {
 
   describe('create', () => {
     it('should create a comanda item', async () => {
-      const dto = { id_comanda: 1, id_produto: 1, qtd_item: 2, valor_venda: 10.5 };
+      const dto = {
+        id_comanda: 1,
+        id_produto: 1,
+        qtd_item: 2,
+        valor_venda: 10.5,
+      };
       const result = { ...dto, statusPg: false, statusEntrega: false };
       jest.spyOn(service, 'create').mockResolvedValue(result);
 
@@ -44,7 +72,16 @@ describe('ComandaItemController', () => {
 
   describe('findAll', () => {
     it('should return an array of comanda items', async () => {
-      const result = [{ id_comanda: 1, id_produto: 1, qtd_item: 2, valor_venda: 10.5, statusPg: false, statusEntrega: false }];
+      const result = [
+        {
+          id_comanda: 1,
+          id_produto: 1,
+          qtd_item: 2,
+          valor_venda: 10.5,
+          statusPg: false,
+          statusEntrega: false,
+        },
+      ];
       jest.spyOn(service, 'findAll').mockResolvedValue(result);
 
       expect(await controller.findAll({})).toBe(result);
@@ -54,7 +91,14 @@ describe('ComandaItemController', () => {
 
   describe('findOne', () => {
     it('should return a single comanda item', async () => {
-      const result = { id_comanda: 1, id_produto: 1, qtd_item: 2, valor_venda: 10.5, statusPg: false, statusEntrega: false };
+      const result = {
+        id_comanda: 1,
+        id_produto: 1,
+        qtd_item: 2,
+        valor_venda: 10.5,
+        statusPg: false,
+        statusEntrega: false,
+      };
       jest.spyOn(service, 'findOne').mockResolvedValue(result);
 
       expect(await controller.findOne(1, 1)).toBe(result);
@@ -64,7 +108,16 @@ describe('ComandaItemController', () => {
 
   describe('findByComanda', () => {
     it('should return items for a specific comanda', async () => {
-      const result = [{ id_comanda: 1, id_produto: 1, qtd_item: 2, valor_venda: 10.5, statusPg: false, statusEntrega: false }];
+      const result = [
+        {
+          id_comanda: 1,
+          id_produto: 1,
+          qtd_item: 2,
+          valor_venda: 10.5,
+          statusPg: false,
+          statusEntrega: false,
+        },
+      ];
       jest.spyOn(service, 'findAll').mockResolvedValue(result);
 
       expect(await controller.findByComanda(1)).toBe(result);
@@ -74,28 +127,59 @@ describe('ComandaItemController', () => {
 
   describe('findByComandaPaga', () => {
     it('should return paid items for a specific comanda', async () => {
-      const result = [{ id_comanda: 1, id_produto: 1, qtd_item: 2, valor_venda: 10.5, statusPg: true, statusEntrega: false }];
+      const result = [
+        {
+          id_comanda: 1,
+          id_produto: 1,
+          qtd_item: 2,
+          valor_venda: 10.5,
+          statusPg: true,
+          statusEntrega: false,
+        },
+      ];
       jest.spyOn(service, 'findAll').mockResolvedValue(result);
 
-      expect(await controller.findByComandaPaga(1, true)).toBe(result);
-      expect(service.findAll).toHaveBeenCalledWith({ id_comanda: 1, statusPg: true });
+      expect(await controller.findByComandaPaga(1)).toBe(result);
+      expect(service.findAll).toHaveBeenCalledWith({
+        id_comanda: 1,
+        statusPg: true,
+      });
     });
   });
 
   describe('findByComandaEntrega', () => {
     it('should return delivery items for a specific comanda', async () => {
-      const result = [{ id_comanda: 1, id_produto: 1, qtd_item: 2, valor_venda: 10.5, statusPg: false, statusEntrega: true }];
+      const result = [
+        {
+          id_comanda: 1,
+          id_produto: 1,
+          qtd_item: 2,
+          valor_venda: 10.5,
+          statusPg: false,
+          statusEntrega: true,
+        },
+      ];
       jest.spyOn(service, 'findAll').mockResolvedValue(result);
 
-      expect(await controller.findByComandaEntrega(1, true)).toBe(result);
-      expect(service.findAll).toHaveBeenCalledWith({ id_comanda: 1, statusEntrega: true });
+      expect(await controller.findByComandaEntrega(1)).toBe(result);
+      expect(service.findAll).toHaveBeenCalledWith({
+        id_comanda: 1,
+        statusEntrega: true,
+      });
     });
   });
 
   describe('update', () => {
     it('should update a comanda item', async () => {
       const updateDto = { id_comanda: 1, id_produto: 1, qtd_item: 5 };
-      const result = { id_comanda: 1, id_produto: 1, qtd_item: 5, valor_venda: 10.5, statusPg: false, statusEntrega: false };
+      const result = {
+        id_comanda: 1,
+        id_produto: 1,
+        qtd_item: 5,
+        valor_venda: 10.5,
+        statusPg: false,
+        statusEntrega: false,
+      };
       jest.spyOn(service, 'update').mockResolvedValue(result);
 
       expect(await controller.update(1, 1, updateDto)).toBe(result);

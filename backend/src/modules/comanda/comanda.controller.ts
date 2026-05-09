@@ -9,16 +9,19 @@ import { Body, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 
 @Controller('comanda')
 export class ComandaController {
-    
   constructor(private readonly comandaService: ComandaService) {}
 
   @Post()
-  async create(@Body() createComandaDto: CreateComandaDto): Promise<IComandaOutput> {
+  async create(
+    @Body() createComandaDto: CreateComandaDto,
+  ): Promise<IComandaOutput> {
     return await this.comandaService.create(createComandaDto);
   }
 
   @Get()
-  async findAll(@Query() listComandaDto: ListComandaDto): Promise<IComandaOutput[]> {
+  async findAll(
+    @Query() listComandaDto: ListComandaDto,
+  ): Promise<IComandaOutput[]> {
     return await this.comandaService.findAll(listComandaDto);
   }
 
@@ -28,7 +31,9 @@ export class ComandaController {
   }
 
   @Get('mesa/:id_mesa')
-  async findOneByMesaId(@Param('id_mesa') id_mesa: number): Promise<IComandaOutput> {
+  async findOneByMesaId(
+    @Param('id_mesa') id_mesa: number,
+  ): Promise<IComandaOutput> {
     return await this.comandaService.findOneByMesaId(id_mesa);
   }
 
@@ -44,5 +49,4 @@ export class ComandaController {
   async remove(@Param('id') id: number): Promise<DeleteComandaDto> {
     return await this.comandaService.remove(id);
   }
-
 }

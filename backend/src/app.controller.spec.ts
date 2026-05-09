@@ -17,7 +17,11 @@ describe('AppController', () => {
 
   describe('root', () => {
     it('should return health system', () => {
-      expect(appController.getHello()).toStrictEqual({app_name: name, health: "ok", version: version});
+      expect(appController.getHello()).toStrictEqual({
+        app_name: name,
+        health: 'ok',
+        version: version,
+      });
     });
   });
 });

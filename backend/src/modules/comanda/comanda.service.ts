@@ -11,7 +11,6 @@ import { NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class ComandaService {
-    
   constructor(
     @InjectRepository(Comanda)
     private readonly comandaRepository: Repository<Comanda>,
@@ -38,14 +37,21 @@ export class ComandaService {
   }
 
   async findOneByMesaId(id_mesa: number): Promise<IComandaOutput> {
-    const comanda = await this.comandaRepository.findOne({ where: { id_mesa } });
+    const comanda = await this.comandaRepository.findOne({
+      where: { id_mesa },
+    });
     if (!comanda) {
-      throw new NotFoundException(`Comanda da Mesa com ID ${id_mesa} não encontrada`);
+      throw new NotFoundException(
+        `Comanda da Mesa com ID ${id_mesa} não encontrada`,
+      );
     }
     return comanda;
   }
 
-  async update(id: number, updateComandaDto: UpdateComandaDto): Promise<IComandaOutput> {
+  async update(
+    id: number,
+    updateComandaDto: UpdateComandaDto,
+  ): Promise<IComandaOutput> {
     const comanda = await this.findOne(id);
     const updatedComanda = Object.assign(comanda, updateComandaDto);
     return await this.comandaRepository.save(updatedComanda);
@@ -56,5 +62,4 @@ export class ComandaService {
     await this.comandaRepository.delete(id);
     return { id };
   }
-
 }

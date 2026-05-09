@@ -14,7 +14,7 @@ export class Usuario {
 
   @Column({
     type: 'text',
-    transformer: new EncryptionTransformer()
+    transformer: new EncryptionTransformer(),
   })
   senha: string;
 

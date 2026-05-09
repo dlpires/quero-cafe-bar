@@ -57,6 +57,12 @@ class RegComandaPage extends HTMLElement {
       });
     } catch (error) {
       console.error('Erro ao carregar mesas:', error);
+      const toast = document.createElement('ion-toast');
+      toast.message = 'Erro ao carregar lista de mesas.';
+      toast.duration = 3000;
+      toast.color = 'danger';
+      document.body.appendChild(toast);
+      await toast.present();
     }
   }
 

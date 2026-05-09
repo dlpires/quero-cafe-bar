@@ -72,6 +72,12 @@ class UpdateComandaPage extends HTMLElement {
       });
     } catch (error) {
       console.error('Erro ao carregar mesas:', error);
+      const toast = document.createElement('ion-toast');
+      toast.message = 'Erro ao carregar lista de mesas.';
+      toast.duration = 3000;
+      toast.color = 'danger';
+      document.body.appendChild(toast);
+      await toast.present();
     }
   }
 
@@ -99,6 +105,12 @@ class UpdateComandaPage extends HTMLElement {
       this.renderItens(itens);
     } catch (error) {
       console.error('Erro ao carregar itens:', error);
+      const toast = document.createElement('ion-toast');
+      toast.message = 'Erro ao carregar itens da comanda.';
+      toast.duration = 3000;
+      toast.color = 'danger';
+      document.body.appendChild(toast);
+      await toast.present();
     }
   }
 
@@ -122,8 +134,8 @@ class UpdateComandaPage extends HTMLElement {
             <p>Qtd: ${item.qtd_item} x ${formatCurrency(item.valor_venda)} = ${formatCurrency(total)}</p>
           </ion-label>
           <div slot="end" class="item-status">
-            <ion-checkbox id="statusPg-${item.id_produto}" ${item.statusPg ? 'checked' : ''} data-produto="${item.id_produto}" @ionChange="${() => this.toggleStatusPg(item.id_produto)}">Pago</ion-checkbox>
-            <ion-checkbox id="statusEntrega-${item.id_produto}" ${item.statusEntrega ? 'checked' : ''} data-produto="${item.id_produto}" @ionChange="${() => this.toggleStatusEntrega(item.id_produto)}">Entregue</ion-checkbox>
+            <ion-checkbox id="statusPg-${item.id_produto}" ${item.statusPg ? 'checked' : ''} data-produto="${item.id_produto}">Pago</ion-checkbox>
+            <ion-checkbox id="statusEntrega-${item.id_produto}" ${item.statusEntrega ? 'checked' : ''} data-produto="${item.id_produto}">Entregue</ion-checkbox>
             <ion-button fill="clear" color="danger" class="btn-remove-item" data-produto="${item.id_produto}">
               <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
             </ion-button>
@@ -156,28 +168,18 @@ class UpdateComandaPage extends HTMLElement {
     });
   }
 
-  async toggleStatusPg(id_produto) {
-    const itens = await api.getItensComanda(this.comandaId);
-    const item = itens.find(i => i.id_produto === id_produto);
-    if (item) {
-      await this.updateItemStatus(id_produto, 'statusPg', !item.statusPg);
-    }
-  }
-
-  async toggleStatusEntrega(id_produto) {
-    const itens = await api.getItensComanda(this.comandaId);
-    const item = itens.find(i => i.id_produto === id_produto);
-    if (item) {
-      await this.updateItemStatus(id_produto, 'statusEntrega', !item.statusEntrega);
-    }
-  }
-
   async updateItemStatus(id_produto, field, value) {
     try {
       await api.updateItemComanda(this.comandaId, id_produto, { [field]: value });
       await this.loadItens();
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
+      const toast = document.createElement('ion-toast');
+      toast.message = 'Erro ao atualizar status do item.';
+      toast.duration = 3000;
+      toast.color = 'danger';
+      document.body.appendChild(toast);
+      await toast.present();
     }
   }
 
@@ -195,6 +197,12 @@ class UpdateComandaPage extends HTMLElement {
             await this.loadItens();
           } catch (error) {
             console.error('Erro ao remover item:', error);
+            const toast = document.createElement('ion-toast');
+            toast.message = 'Erro ao remover item. Tente novamente.';
+            toast.duration = 3000;
+            toast.color = 'danger';
+            document.body.appendChild(toast);
+            await toast.present();
           }
         }
       }
@@ -204,8 +212,28 @@ class UpdateComandaPage extends HTMLElement {
   }
 
   async showAddItemModal() {
-    const produtos = await api.getProdutos();
-    const itensAtuais = await api.getItensComanda(this.comandaId);
+    const loading = document.createElement('ion-loading');
+    loading.message = 'Carregando...';
+    document.body.appendChild(loading);
+    await loading.present();
+
+    try {
+      const produtos = await api.getProdutos();
+      const itensAtuais = await api.getItensComanda(this.comandaId);
+    } catch (error) {
+      await loading.dismiss();
+      console.error('Erro ao carregar dados:', error);
+      const alert = document.createElement('ion-alert');
+      alert.header = 'Erro';
+      alert.message = 'Erro ao carregar dados. Tente novamente.';
+      alert.buttons = ['OK'];
+      document.body.appendChild(alert);
+      await alert.present();
+      return;
+    }
+
+    await loading.dismiss();
+
     const idsExistentes = itensAtuais.map(i => i.id_produto);
     const produtosDisponiveis = produtos.filter(p => p.status && !idsExistentes.includes(p.id));
 

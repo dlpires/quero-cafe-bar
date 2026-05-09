@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ProdutoService } from './produto.service';
 import { CreateProdutoDto } from './dto/create-produto.dto';
 import { ListProdutoDto } from './dto/list-produto.dto';
@@ -11,12 +20,16 @@ export class ProdutoController {
   constructor(private readonly produtoService: ProdutoService) {}
 
   @Post()
-  async create(@Body() createProdutoDto: CreateProdutoDto): Promise<IProdutoOutput> {
+  async create(
+    @Body() createProdutoDto: CreateProdutoDto,
+  ): Promise<IProdutoOutput> {
     return await this.produtoService.create(createProdutoDto);
   }
 
   @Get()
-  async findAll(@Query() listProdutoDto: ListProdutoDto): Promise<IProdutoOutput[]> {
+  async findAll(
+    @Query() listProdutoDto: ListProdutoDto,
+  ): Promise<IProdutoOutput[]> {
     return await this.produtoService.findAll(listProdutoDto);
   }
 

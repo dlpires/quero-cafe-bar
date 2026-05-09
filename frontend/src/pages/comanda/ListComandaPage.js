@@ -155,13 +155,25 @@ class ListComandaPage extends HTMLElement {
           { text: 'Cancelar', role: 'cancel' },
           {
             text: 'Excluir',
-            handler: async () => {
-              try {
-                await api.deleteComanda(id);
-                await this.fetchComandas();
-              } catch (error) {
-                console.error('Erro ao excluir:', error);
-              }
+              handler: async () => {
+                try {
+                  await api.deleteComanda(id);
+                  const toast = document.createElement('ion-toast');
+                  toast.message = 'Comanda excluída com sucesso!';
+                  toast.duration = 2000;
+                  toast.color = 'success';
+                  document.body.appendChild(toast);
+                  await toast.present();
+                  await this.fetchComandas();
+                } catch (error) {
+                  console.error('Erro ao excluir:', error);
+                  const toast = document.createElement('ion-toast');
+                  toast.message = 'Erro ao excluir comanda. Tente novamente.';
+                  toast.duration = 3000;
+                  toast.color = 'danger';
+                  document.body.appendChild(toast);
+                  await toast.present();
+                }
             }
           }
         ];

@@ -29,34 +29,27 @@ describe('EncryptionTransformer', () => {
       expect(result).toBe(encryptedText);
     });
 
-    it('deve retornar null quando valor é null (Edge Case)', () => {
-      // Act
-      const result = transformer.to(null);
-
-      // Assert
-      expect(result).toBeNull();
+    it('deve lançar erro quando valor é null (Edge Case)', () => {
+      // Act & Assert
+      expect(() => transformer.to(null)).toThrow(
+        'EncryptionTransformer: valor inválido para criptografia',
+      );
       expect(encryptionUtils.encrypt).not.toHaveBeenCalled();
     });
 
-    it('deve retornar undefined quando valor é undefined (Edge Case)', () => {
-      // Act
-      const result = transformer.to(undefined);
-
-      // Assert
-      expect(result).toBeUndefined();
+    it('deve lançar erro quando valor é undefined (Edge Case)', () => {
+      // Act & Assert
+      expect(() => transformer.to(undefined)).toThrow(
+        'EncryptionTransformer: valor inválido para criptografia',
+      );
       expect(encryptionUtils.encrypt).not.toHaveBeenCalled();
     });
 
-    it('deve retornar valor vazio quando string vazia (Edge Case)', () => {
-      // Arrange
-      const emptyString = '';
-      (encryptionUtils.encrypt as jest.Mock).mockReturnValue('');
-
-      // Act
-      const result = transformer.to(emptyString);
-
-      // Assert
-      expect(result).toBe('');
+    it('deve lançar erro quando string vazia (Edge Case)', () => {
+      // Act & Assert
+      expect(() => transformer.to('')).toThrow(
+        'EncryptionTransformer: valor inválido para criptografia',
+      );
       expect(encryptionUtils.encrypt).not.toHaveBeenCalled();
     });
   });
@@ -76,34 +69,27 @@ describe('EncryptionTransformer', () => {
       expect(result).toBe(decryptedText);
     });
 
-    it('deve retornar null quando valor é null (Edge Case)', () => {
-      // Act
-      const result = transformer.from(null);
-
-      // Assert
-      expect(result).toBeNull();
+    it('deve lançar erro quando valor é null (Edge Case)', () => {
+      // Act & Assert
+      expect(() => transformer.from(null)).toThrow(
+        'EncryptionTransformer: valor inválido para descriptografia',
+      );
       expect(encryptionUtils.decrypt).not.toHaveBeenCalled();
     });
 
-    it('deve retornar undefined quando valor é undefined (Edge Case)', () => {
-      // Act
-      const result = transformer.from(undefined);
-
-      // Assert
-      expect(result).toBeUndefined();
+    it('deve lançar erro quando valor é undefined (Edge Case)', () => {
+      // Act & Assert
+      expect(() => transformer.from(undefined)).toThrow(
+        'EncryptionTransformer: valor inválido para descriptografia',
+      );
       expect(encryptionUtils.decrypt).not.toHaveBeenCalled();
     });
 
-    it('deve retornar valor vazio quando string vazia (Edge Case)', () => {
-      // Arrange
-      const emptyString = '';
-      (encryptionUtils.decrypt as jest.Mock).mockReturnValue('');
-
-      // Act
-      const result = transformer.from(emptyString);
-
-      // Assert
-      expect(result).toBe('');
+    it('deve lançar erro quando string vazia (Edge Case)', () => {
+      // Act & Assert
+      expect(() => transformer.from('')).toThrow(
+        'EncryptionTransformer: valor inválido para descriptografia',
+      );
       expect(encryptionUtils.decrypt).not.toHaveBeenCalled();
     });
   });

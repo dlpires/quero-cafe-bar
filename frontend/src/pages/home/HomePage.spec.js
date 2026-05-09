@@ -300,13 +300,15 @@ describe('HomePage', () => {
   });
 
   describe('Renderização Inicial', () => {
-    it('deve adicionar classe ion-page (Happy Path)', () => {
-      homePage.connectedCallback();
+    it('deve adicionar classe ion-page (Happy Path)', async () => {
+      api.getComandas.mockResolvedValue([]);
+      await homePage.connectedCallback();
       expect(homePage.classList.add).toHaveBeenCalledWith('ion-page');
     });
 
-    it('deve renderizar header da Cozinha', () => {
-      homePage.connectedCallback();
+    it('deve renderizar header da Cozinha', async () => {
+      api.getComandas.mockResolvedValue([]);
+      await homePage.connectedCallback();
       expect(homePage.innerHTML).toContain('Cozinha');
     });
 
@@ -321,9 +323,10 @@ describe('HomePage', () => {
     it('deve renderizar comandas quando disponíveis (Happy Path)', async () => {
       api.getComandas.mockResolvedValue(mockComandas);
       
+      const container = { innerHTML: '', querySelectorAll: jest.fn(() => []), querySelector: jest.fn(() => null) };
       homePage.querySelector = jest.fn((selector) => {
         if (selector === '.home-container') {
-          return { innerHTML: '' };
+          return container;
         }
         if (selector === '#logout-btn') {
           return { addEventListener: jest.fn() };
@@ -469,15 +472,18 @@ describe('HomePage', () => {
   });
 
   describe('Logout', () => {
-    it('deve chamar função logout ao clicar no botão', () => {
+    it('deve chamar função logout ao clicar no botão', async () => {
       const logoutBtn = { addEventListener: jest.fn() };
+      const container = { innerHTML: '', querySelectorAll: jest.fn(() => []), querySelector: jest.fn(() => null) };
       
+      api.getComandas.mockResolvedValue([]);
       homePage.querySelector = jest.fn((selector) => {
         if (selector === '#logout-btn') return logoutBtn;
+        if (selector === '.home-container') return container;
         return null;
       });
 
-      homePage.connectedCallback();
+      await homePage.connectedCallback();
 
       expect(logoutBtn.addEventListener).toHaveBeenCalledWith('click', logout);
     });

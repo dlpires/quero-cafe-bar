@@ -32,7 +32,7 @@ describe('ComandaItemService', () => {
     }).compile();
 
     service = module.get<ComandaItemService>(ComandaItemService);
-    mockRepository = module.get(getRepositoryToken(ComandaItem)) as jest.Mocked<Repository<ComandaItem>>;
+    mockRepository = module.get(getRepositoryToken(ComandaItem));
     jest.clearAllMocks();
   });
 
@@ -43,16 +43,18 @@ describe('ComandaItemService', () => {
         id_comanda: 1,
         id_produto: 10,
         qtd_item: 2,
+        valor_venda: 5.5,
+        statusPg: false,
         statusEntrega: false,
-        valor_venda: 5.50,
-      } as unknown as CreateComandaItemDto;
+      };
 
       const itemCriado = {
         id_comanda: 1,
         id_produto: 10,
         qtd_item: 2,
+        valor_venda: 5.5,
+        statusPg: false,
         statusEntrega: false,
-        valor_venda: 5.50,
         produto: { dsc_produto: 'Café' },
       } as unknown as ComandaItem;
 
@@ -63,7 +65,9 @@ describe('ComandaItemService', () => {
       const result = await service.create(createComandaItemDto);
 
       // Assert
-      expect(mockComandaItemRepository.create).toHaveBeenCalledWith(createComandaItemDto);
+      expect(mockComandaItemRepository.create).toHaveBeenCalledWith(
+        createComandaItemDto,
+      );
       expect(mockComandaItemRepository.save).toHaveBeenCalledWith(itemCriado);
       expect(result).toEqual(itemCriado);
       expect(result.qtd_item).toBe(2);
@@ -79,13 +83,13 @@ describe('ComandaItemService', () => {
           id_comanda: 1,
           id_produto: 10,
           qtd_item: 2,
-          produto: { dsc_produto: 'Café', vlr_produto: 5.00 },
+          produto: { dsc_produto: 'Café', vlr_produto: 5.0 },
         },
         {
           id_comanda: 1,
           id_produto: 11,
           qtd_item: 1,
-          produto: { dsc_produto: 'Pão', vlr_produto: 3.50 },
+          produto: { dsc_produto: 'Pão', vlr_produto: 3.5 },
         },
       ];
 
@@ -155,7 +159,9 @@ describe('ComandaItemService', () => {
 
       // Act & Assert
       await expect(service.findOne(999, 888)).rejects.toThrow(
-        new NotFoundException(`Item da comanda 999 e produto 888 não encontrado`),
+        new NotFoundException(
+          `Item da comanda 999 e produto 888 não encontrado`,
+        ),
       );
     });
   });
@@ -167,8 +173,9 @@ describe('ComandaItemService', () => {
         id_comanda: 1,
         id_produto: 10,
         qtd_item: 2,
+        valor_venda: 5.5,
+        statusPg: false,
         statusEntrega: false,
-        valor_venda: 5.50,
       } as unknown as ComandaItem;
 
       const updateComandaItemDto: UpdateComandaItemDto = {
@@ -176,7 +183,7 @@ describe('ComandaItemService', () => {
         id_produto: 10,
         qtd_item: 3,
         statusEntrega: true,
-      } as unknown as UpdateComandaItemDto;
+      };
 
       const itemAtualizado: ComandaItem = {
         ...itemExistente,
@@ -208,13 +215,13 @@ describe('ComandaItemService', () => {
         id_comanda: 999,
         id_produto: 888,
         statusEntrega: true,
-      } as unknown as UpdateComandaItemDto;
+      };
 
       // Act & Assert
-      await expect(
-        service.update(999, 888, updateDto),
-      ).rejects.toThrow(
-        new NotFoundException(`Item da comanda 999 e produto 888 não encontrado`),
+      await expect(service.update(999, 888, updateDto)).rejects.toThrow(
+        new NotFoundException(
+          `Item da comanda 999 e produto 888 não encontrado`,
+        ),
       );
     });
   });
@@ -226,7 +233,9 @@ describe('ComandaItemService', () => {
         id_comanda: 1,
         id_produto: 10,
         qtd_item: 2,
-        valor_venda: 5.50,
+        valor_venda: 5.5,
+        statusPg: false,
+        statusEntrega: false,
       } as unknown as ComandaItem;
 
       mockComandaItemRepository.findOne.mockResolvedValue(itemExistente);
@@ -252,7 +261,9 @@ describe('ComandaItemService', () => {
 
       // Act & Assert
       await expect(service.remove(999, 888)).rejects.toThrow(
-        new NotFoundException(`Item da comanda 999 e produto 888 não encontrado`),
+        new NotFoundException(
+          `Item da comanda 999 e produto 888 não encontrado`,
+        ),
       );
     });
   });

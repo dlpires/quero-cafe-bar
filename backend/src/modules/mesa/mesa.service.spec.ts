@@ -32,7 +32,7 @@ describe('MesaService', () => {
     }).compile();
 
     service = module.get<MesaService>(MesaService);
-    mockRepository = module.get(getRepositoryToken(Mesa)) as jest.Mocked<Repository<Mesa>>;
+    mockRepository = module.get(getRepositoryToken(Mesa));
     jest.clearAllMocks();
   });
 
@@ -89,7 +89,9 @@ describe('MesaService', () => {
         { id: 2, qtd_cadeiras: 6, status: true } as unknown as Mesa,
       ];
 
-      const listMesaDto: ListMesaDto = { status: true } as unknown as ListMesaDto;
+      const listMesaDto: ListMesaDto = {
+        status: true,
+      } as unknown as ListMesaDto;
       mockMesaRepository.find.mockResolvedValue(mesasAtivas);
 
       // Act
@@ -107,7 +109,11 @@ describe('MesaService', () => {
   describe('Busca de Mesa por ID', () => {
     it('deve retornar mesa quando ID existe (Happy Path)', async () => {
       // Arrange
-      const mesaMock: Mesa = { id: 1, qtd_cadeiras: 4, status: true } as unknown as Mesa;
+      const mesaMock: Mesa = {
+        id: 1,
+        qtd_cadeiras: 4,
+        status: true,
+      } as unknown as Mesa;
 
       mockMesaRepository.findOne.mockResolvedValue(mesaMock);
 
@@ -135,9 +141,19 @@ describe('MesaService', () => {
   describe('Atualização de Mesa', () => {
     it('deve atualizar mesa com sucesso (Happy Path)', async () => {
       // Arrange
-      const mesaExistente: Mesa = { id: 1, qtd_cadeiras: 4, status: true } as unknown as Mesa;
-      const updateMesaDto: UpdateMesaDto = { id: 1, status: false } as unknown as UpdateMesaDto;
-      const mesaAtualizada = { ...mesaExistente, ...updateMesaDto } as unknown as Mesa;
+      const mesaExistente: Mesa = {
+        id: 1,
+        qtd_cadeiras: 4,
+        status: true,
+      } as unknown as Mesa;
+      const updateMesaDto: UpdateMesaDto = {
+        id: 1,
+        status: false,
+      } as unknown as UpdateMesaDto;
+      const mesaAtualizada = {
+        ...mesaExistente,
+        ...updateMesaDto,
+      } as unknown as Mesa;
 
       mockMesaRepository.findOne.mockResolvedValue(mesaExistente);
       mockMesaRepository.save.mockResolvedValue(mesaAtualizada);
@@ -171,7 +187,11 @@ describe('MesaService', () => {
   describe('Remoção de Mesa', () => {
     it('deve remover mesa com sucesso (Happy Path)', async () => {
       // Arrange
-      const mesaExistente: Mesa = { id: 1, qtd_cadeiras: 4, status: true } as unknown as Mesa;
+      const mesaExistente: Mesa = {
+        id: 1,
+        qtd_cadeiras: 4,
+        status: true,
+      } as unknown as Mesa;
       mockMesaRepository.findOne.mockResolvedValue(mesaExistente);
       mockMesaRepository.delete.mockResolvedValue({ affected: 1 });
 

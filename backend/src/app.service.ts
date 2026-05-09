@@ -7,7 +7,7 @@ export class AppService {
     return {
       app_name: name,
       version: version,
-      health: 'ok'
+      health: 'ok',
     };
   }
 }

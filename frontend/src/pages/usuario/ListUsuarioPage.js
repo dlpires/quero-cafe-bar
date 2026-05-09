@@ -137,13 +137,25 @@ class ListUsuarioPage extends HTMLElement {
           { text: 'Cancelar', role: 'cancel' },
           {
             text: 'Excluir',
-            handler: async () => {
-              try {
-                await api.deleteUsuario(id);
-                await this.fetchUsuarios(); // Recarrega a lista
-              } catch (error) {
-                console.error('Erro ao excluir:', error);
-              }
+              handler: async () => {
+                try {
+                  await api.deleteUsuario(id);
+                  const toast = document.createElement('ion-toast');
+                  toast.message = 'Usuário excluído com sucesso!';
+                  toast.duration = 2000;
+                  toast.color = 'success';
+                  document.body.appendChild(toast);
+                  await toast.present();
+                  await this.fetchUsuarios();
+                } catch (error) {
+                  console.error('Erro ao excluir:', error);
+                  const toast = document.createElement('ion-toast');
+                  toast.message = 'Erro ao excluir usuário. Tente novamente.';
+                  toast.duration = 3000;
+                  toast.color = 'danger';
+                  document.body.appendChild(toast);
+                  await toast.present();
+                }
             }
           }
         ];

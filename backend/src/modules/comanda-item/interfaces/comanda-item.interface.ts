@@ -17,8 +17,6 @@ export interface ICreateComandaItemInput {
 }
 
 export interface IUpdateComandaItemInput {
-  id_comanda: number;
-  id_produto: number;
   valor_venda?: number;
   qtd_item?: number;
   statusPg?: boolean;

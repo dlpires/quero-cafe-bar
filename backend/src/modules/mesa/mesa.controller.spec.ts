@@ -13,9 +13,15 @@ describe('MesaController', () => {
         {
           provide: MesaService,
           useValue: {
-            findOne: jest.fn().mockResolvedValue({ id: 1, qtd_cadeiras: 4, status: true }),
-            create: jest.fn().mockResolvedValue({ id: 1, qtd_cadeiras: 4, status: true }),
-            update: jest.fn().mockResolvedValue({ id: 1, qtd_cadeiras: 6, status: true }),
+            findOne: jest
+              .fn()
+              .mockResolvedValue({ id: 1, qtd_cadeiras: 4, status: true }),
+            create: jest
+              .fn()
+              .mockResolvedValue({ id: 1, qtd_cadeiras: 4, status: true }),
+            update: jest
+              .fn()
+              .mockResolvedValue({ id: 1, qtd_cadeiras: 6, status: true }),
             remove: jest.fn().mockResolvedValue({ id: 1 }),
             findAll: jest.fn().mockResolvedValue([]),
           },
@@ -48,9 +54,7 @@ describe('MesaController', () => {
 
   describe('findAll', () => {
     it('should return an array of mesas', async () => {
-      const result = [
-        { id: 1, qtd_cadeiras: 4, status: true },
-      ];
+      const result = [{ id: 1, qtd_cadeiras: 4, status: true }];
 
       jest.spyOn(service, 'findAll').mockResolvedValue(result);
 
@@ -92,5 +96,4 @@ describe('MesaController', () => {
       expect(service.remove).toHaveBeenCalledWith(1);
     });
   });
-
 });

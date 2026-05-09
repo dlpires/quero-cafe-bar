@@ -9,7 +9,6 @@ import { Body, Get, Param, Patch, Post, Query, Delete } from '@nestjs/common';
 
 @Controller('mesa')
 export class MesaController {
-    
   constructor(private readonly mesaService: MesaService) {}
 
   @Post()
@@ -39,5 +38,4 @@ export class MesaController {
   async remove(@Param('id') id: number): Promise<DeleteMesaDto> {
     return await this.mesaService.remove(id);
   }
-
 }

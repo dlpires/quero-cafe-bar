@@ -118,13 +118,25 @@ class ListMesaPage extends HTMLElement {
           { text: 'Cancelar', role: 'cancel' },
           {
             text: 'Excluir',
-            handler: async () => {
-              try {
-                await api.deleteMesa(id);
-                await this.fetchMesas();
-              } catch (error) {
-                console.error('Erro ao excluir:', error);
-              }
+              handler: async () => {
+                try {
+                  await api.deleteMesa(id);
+                  const toast = document.createElement('ion-toast');
+                  toast.message = 'Mesa excluída com sucesso!';
+                  toast.duration = 2000;
+                  toast.color = 'success';
+                  document.body.appendChild(toast);
+                  await toast.present();
+                  await this.fetchMesas();
+                } catch (error) {
+                  console.error('Erro ao excluir:', error);
+                  const toast = document.createElement('ion-toast');
+                  toast.message = 'Erro ao excluir mesa. Tente novamente.';
+                  toast.duration = 3000;
+                  toast.color = 'danger';
+                  document.body.appendChild(toast);
+                  await toast.present();
+                }
             }
           }
         ];

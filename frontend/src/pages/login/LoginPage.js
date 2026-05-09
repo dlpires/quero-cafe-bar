@@ -44,10 +44,16 @@ class LoginPage extends HTMLElement {
     const loginBtn = this.querySelector('#login-btn');
 
     loginBtn.addEventListener('click', async () => {
-      const user = userInput.value;
-      const password = passwordInput.value;
+      const user = userInput.value?.trim();
+      const password = passwordInput.value?.trim();
 
-      // Cria e exibe o Loading de 5 segundos
+      // Validação no frontend antes de chamar a API
+      if (!user || !password) {
+        await presentToast('Informe usuário e senha para acessar.', 'warning');
+        return;
+      }
+
+      // Cria e exibe o Loading
       const loading = document.createElement('ion-loading');
       loading.message = 'Autenticando...';
       
@@ -61,7 +67,11 @@ class LoginPage extends HTMLElement {
         await presentToast('Login realizado com sucesso!', 'success');        
         document.querySelector('ion-router').push('/home', 'forward', 'replace');
       } catch (error) {
-        await presentToast(error.message || 'Usuário ou senha inválidos.');
+        const mensagem =
+          error.message === 'Failed to fetch'
+            ? 'Não foi possível conectar ao servidor. Verifique sua conexão.'
+            : error.message || 'Usuário ou senha inválidos.';
+        await presentToast(mensagem);
         passwordInput.value = '';
       } finally {
         await loading.dismiss();

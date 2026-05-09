@@ -22,3 +22,6 @@ Resultados brutos:
    - Se um código for impossível de testar por estar muito acoplado, sugira uma breve refatoração.
 
 Responda com um sumário dos pontos cegos e os snippets de teste prontos para implementação.
+
+### Rules:
+ - Não é permitido realizar nenhuma alteração, criação ou exclusão de arquivos.
