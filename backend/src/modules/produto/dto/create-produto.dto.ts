@@ -1,4 +1,11 @@
-import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 import { ICreateProdutoInput } from '../interfaces/produto.interface';
 
 export class CreateProdutoDto implements ICreateProdutoInput {

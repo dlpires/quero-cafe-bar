@@ -18,6 +18,22 @@ class ListProdutoPage extends HTMLElement {
     this.querySelector('#logout-btn').addEventListener('click', logout);
     this.renderFabButton();
     await this.fetchProdutos();
+
+    window.addEventListener('popstate', () => this.onRouteChange());
+    this._routeListener = () => this.onRouteChange();
+    document.querySelector('ion-router').addEventListener('urlChanged', this._routeListener);
+  }
+
+  disconnectedCallback() {
+    if (this._routeListener) {
+      document.querySelector('ion-router').removeEventListener('urlChanged', this._routeListener);
+    }
+  }
+
+  onRouteChange() {
+    if (window.location.pathname === '/produtos') {
+      this.fetchProdutos();
+    }
   }
 
   async fetchProdutos() {
@@ -125,13 +141,25 @@ class ListProdutoPage extends HTMLElement {
           { text: 'Cancelar', role: 'cancel' },
           {
             text: 'Excluir',
-            handler: async () => {
-              try {
-                await api.deleteProduto(id);
-                await this.fetchProdutos(); // Recarrega a lista
-              } catch (error) {
-                console.error('Erro ao excluir:', error);
-              }
+              handler: async () => {
+                try {
+                  await api.deleteProduto(id);
+                  const toast = document.createElement('ion-toast');
+                  toast.message = 'Produto excluído com sucesso!';
+                  toast.duration = 2000;
+                  toast.color = 'success';
+                  document.body.appendChild(toast);
+                  await toast.present();
+                  await this.fetchProdutos();
+                } catch (error) {
+                  console.error('Erro ao excluir:', error);
+                  const toast = document.createElement('ion-toast');
+                  toast.message = 'Erro ao excluir produto. Tente novamente.';
+                  toast.duration = 3000;
+                  toast.color = 'danger';
+                  document.body.appendChild(toast);
+                  await toast.present();
+                }
             }
           }
         ];

@@ -11,7 +11,6 @@ import { NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class MesaService {
-    
   constructor(
     @InjectRepository(Mesa)
     private readonly mesaRepository: Repository<Mesa>,
@@ -47,5 +46,4 @@ export class MesaService {
     await this.mesaRepository.delete(id);
     return { id };
   }
-
 }

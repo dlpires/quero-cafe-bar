@@ -1,0 +1,73 @@
+.home-container {
+  padding: 16px;
+}
+
+.comandas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.comanda-card {
+  margin: 0;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.comanda-card ion-card-header {
+  background: var(--ion-color-light);
+  padding-bottom: 8px;
+}
+
+.card-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-header-content ion-icon {
+  font-size: 24px;
+}
+
+.comanda-card ion-card-content {
+  padding-top: 8px;
+}
+
+.comanda-card ion-item {
+  --padding-start: 0;
+  --inner-padding-end: 0;
+}
+
+.comanda-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10;
+  font-size: 16px;
+}
+
+.comanda-card ion-badge {
+  font-size: 12px;
+}
+
+.item-entrega-select {
+  min-width: 120px;
+}
+
+.item-pending {
+  --background: rgba(255, 0, 0, 0.08);
+  border-left: 4px solid var(--ion-color-danger);
+}
+
+.item-delivered {
+  --background: rgba(0, 128, 0, 0.08);
+  border-left: 4px solid var(--ion-color-success);
+}
+
+.item-pending ion-label h3 {
+  color: var(--ion-color-danger-shade);
+}
+
+.item-delivered ion-label h3 {
+  color: var(--ion-color-success-shade);
+}

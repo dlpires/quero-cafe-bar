@@ -10,7 +10,6 @@ export interface ICreateComandaInput {
 }
 
 export interface IUpdateComandaInput {
-  id: number;
   id_mesa?: number;
   obs_comanda?: string;
 }

@@ -43,3 +43,6 @@ capacitor.config.json.timestamp-*
 # Testes
 coverage/
 .nyc_output/
+
+# AI Tools
+.claude/

@@ -4,6 +4,7 @@ import { ProdutoService } from './produto.service';
 
 describe('ProdutoController', () => {
   let controller: ProdutoController;
+  let service: ProdutoService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -12,18 +13,33 @@ describe('ProdutoController', () => {
         {
           provide: ProdutoService,
           useValue: {
-            // Defina aqui os métodos que o controller chama
-            findOne: jest.fn().mockResolvedValue({ id: 1, dsc_produto: 'Café', valor_unit: 5.0, status: true }),
-            create: jest.fn().mockResolvedValue({ id: 1, dsc_produto: 'Café', valor_unit: 5.0, status: true }),
-            update: jest.fn().mockResolvedValue({ id: 1, dsc_produto: 'Café Alterado', valor_unit: 5.0, status: true }),
+            findOne: jest.fn().mockResolvedValue({
+              id: 1,
+              dsc_produto: 'Café',
+              valor_unit: 5.0,
+              status: true,
+            }),
+            create: jest.fn().mockResolvedValue({
+              id: 1,
+              dsc_produto: 'Café',
+              valor_unit: 5.0,
+              status: true,
+            }),
+            update: jest.fn().mockResolvedValue({
+              id: 1,
+              dsc_produto: 'Café Alterado',
+              valor_unit: 5.0,
+              status: true,
+            }),
             remove: jest.fn().mockResolvedValue({ id: 1 }),
-            findAll: jest.fn(),
+            findAll: jest.fn().mockResolvedValue([]),
           },
         },
       ],
     }).compile();
 
     controller = module.get<ProdutoController>(ProdutoController);
+    service = module.get<ProdutoService>(ProdutoService);
   });
 
   it('should be defined', () => {
@@ -39,9 +55,10 @@ describe('ProdutoController', () => {
       };
       const result = { id: 1, ...createProdutoDto };
 
-      jest.spyOn(controller, 'create').mockImplementation(async () => result);
+      jest.spyOn(service, 'create').mockResolvedValue(result);
 
       expect(await controller.create(createProdutoDto)).toBe(result);
+      expect(service.create).toHaveBeenCalledWith(createProdutoDto);
     });
   });
 
@@ -51,30 +68,43 @@ describe('ProdutoController', () => {
         { id: 1, dsc_produto: 'Café', valor_unit: 5.0, status: true },
       ];
 
-      jest.spyOn(controller, 'findAll').mockImplementation(async () => result);
+      jest.spyOn(service, 'findAll').mockResolvedValue(result);
 
       expect(await controller.findAll({})).toBe(result);
+      expect(service.findAll).toHaveBeenCalledWith({});
     });
   });
 
   describe('findOne', () => {
     it('should return a single produto', async () => {
-      const result = { id: 1, dsc_produto: 'Café', valor_unit: 5.0, status: true };
+      const result = {
+        id: 1,
+        dsc_produto: 'Café',
+        valor_unit: 5.0,
+        status: true,
+      };
 
-      jest.spyOn(controller, 'findOne').mockImplementation(async () => result);
+      jest.spyOn(service, 'findOne').mockResolvedValue(result);
 
       expect(await controller.findOne(1)).toBe(result);
+      expect(service.findOne).toHaveBeenCalledWith(1);
     });
   });
 
   describe('update', () => {
     it('should update a produto', async () => {
       const updateProdutoDto = { id: 1, dsc_produto: 'Café Alterado' };
-      const result = { id: 1, dsc_produto: 'Café Alterado', valor_unit: 5.0, status: true };
+      const result = {
+        id: 1,
+        dsc_produto: 'Café Alterado',
+        valor_unit: 5.0,
+        status: true,
+      };
 
-      jest.spyOn(controller, 'update').mockImplementation(async () => result);
+      jest.spyOn(service, 'update').mockResolvedValue(result);
 
       expect(await controller.update(1, updateProdutoDto)).toBe(result);
+      expect(service.update).toHaveBeenCalledWith(1, updateProdutoDto);
     });
   });
 
@@ -82,9 +112,10 @@ describe('ProdutoController', () => {
     it('should remove a produto', async () => {
       const result = { id: 1 };
 
-      jest.spyOn(controller, 'remove').mockImplementation(async () => result);
+      jest.spyOn(service, 'remove').mockResolvedValue(result);
 
       expect(await controller.remove(1)).toBe(result);
+      expect(service.remove).toHaveBeenCalledWith(1);
     });
   });
 });

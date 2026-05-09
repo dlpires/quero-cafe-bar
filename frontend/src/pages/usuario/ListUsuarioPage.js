@@ -18,6 +18,22 @@ class ListUsuarioPage extends HTMLElement {
     this.querySelector('#logout-btn').addEventListener('click', logout);
     this.renderFabButton();
     await this.fetchUsuarios();
+
+    window.addEventListener('popstate', () => this.onRouteChange());
+    this._routeListener = () => this.onRouteChange();
+    document.querySelector('ion-router').addEventListener('urlChanged', this._routeListener);
+  }
+
+  disconnectedCallback() {
+    if (this._routeListener) {
+      document.querySelector('ion-router').removeEventListener('urlChanged', this._routeListener);
+    }
+  }
+
+  onRouteChange() {
+    if (window.location.pathname === '/usuarios') {
+      this.fetchUsuarios();
+    }
   }
 
   async fetchUsuarios() {
@@ -71,7 +87,7 @@ class ListUsuarioPage extends HTMLElement {
       return;
     }
 
-    const productItems = usuarios.map(usuario => `
+    const userItems = usuarios.map(usuario => `
       <ion-item>
         <ion-label>
           <h2 style="display: flex; align-items: center; gap: 8px;">
@@ -97,7 +113,7 @@ class ListUsuarioPage extends HTMLElement {
     `).join('');
 
     container.innerHTML = `
-      <ion-list>${productItems}</ion-list>
+      <ion-list>${userItems}</ion-list>
     `;
 
     // Adiciona eventos para os botões de edição
@@ -121,13 +137,25 @@ class ListUsuarioPage extends HTMLElement {
           { text: 'Cancelar', role: 'cancel' },
           {
             text: 'Excluir',
-            handler: async () => {
-              try {
-                await api.deleteUsuario(id);
-                await this.fetchUsuarios(); // Recarrega a lista
-              } catch (error) {
-                console.error('Erro ao excluir:', error);
-              }
+              handler: async () => {
+                try {
+                  await api.deleteUsuario(id);
+                  const toast = document.createElement('ion-toast');
+                  toast.message = 'Usuário excluído com sucesso!';
+                  toast.duration = 2000;
+                  toast.color = 'success';
+                  document.body.appendChild(toast);
+                  await toast.present();
+                  await this.fetchUsuarios();
+                } catch (error) {
+                  console.error('Erro ao excluir:', error);
+                  const toast = document.createElement('ion-toast');
+                  toast.message = 'Erro ao excluir usuário. Tente novamente.';
+                  toast.duration = 3000;
+                  toast.color = 'danger';
+                  document.body.appendChild(toast);
+                  await toast.present();
+                }
             }
           }
         ];

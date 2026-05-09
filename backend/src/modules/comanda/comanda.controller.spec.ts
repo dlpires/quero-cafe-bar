@@ -1,12 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ComandaController } from './comanda.controller';
 import { ComandaService } from './comanda.service';
-import { find } from 'rxjs';
 
 describe('ComandaController', () => {
   let controller: ComandaController;
   let service: ComandaService;
-
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -16,10 +14,18 @@ describe('ComandaController', () => {
           provide: ComandaService,
           useValue: {
             // Defina aqui os métodos que o controller chama
-            findOne: jest.fn().mockResolvedValue({ id: 1, id_mesa: 1, ts_comanda: new Date() }),
-            findOneByMesaId: jest.fn().mockResolvedValue({ id: 1, id_mesa: 1, ts_comanda: new Date() }),
-            create: jest.fn().mockResolvedValue({ id: 1, id_mesa: 1, ts_comanda: new Date() }),
-            update: jest.fn().mockResolvedValue({ id: 1, id_mesa: 1, ts_comanda: new Date() }),
+            findOne: jest
+              .fn()
+              .mockResolvedValue({ id: 1, id_mesa: 1, obs_comanda: 'Teste' }),
+            findOneByMesaId: jest
+              .fn()
+              .mockResolvedValue({ id: 1, id_mesa: 1, obs_comanda: 'Teste' }),
+            create: jest
+              .fn()
+              .mockResolvedValue({ id: 1, id_mesa: 1, obs_comanda: 'Teste' }),
+            update: jest
+              .fn()
+              .mockResolvedValue({ id: 1, id_mesa: 1, obs_comanda: 'Teste' }),
             remove: jest.fn().mockResolvedValue({ id: 1 }),
             findAll: jest.fn(),
           },
@@ -38,7 +44,7 @@ describe('ComandaController', () => {
   describe('create', () => {
     it('should create a new comanda', async () => {
       const createDto = { id_mesa: 1, obs_comanda: 'Teste' };
-      const result = { id: 1, ts_comanda: new Date(), ...createDto };
+      const result = { id: 1, id_mesa: 1, obs_comanda: 'Teste' };
       jest.spyOn(service, 'create').mockImplementation(async () => result);
 
       expect(await controller.create(createDto)).toBe(result);
@@ -48,7 +54,7 @@ describe('ComandaController', () => {
 
   describe('findAll', () => {
     it('should return an array of comandas', async () => {
-      const result = [{ id: 1, id_mesa: 1, ts_comanda: new Date() }];
+      const result = [{ id: 1, id_mesa: 1, obs_comanda: 'Teste' }];
       const query = { id_mesa: 1 };
       jest.spyOn(service, 'findAll').mockImplementation(async () => result);
 
@@ -59,7 +65,7 @@ describe('ComandaController', () => {
 
   describe('findOne', () => {
     it('should return a single comanda by id', async () => {
-      const result = { id: 1, id_mesa: 1, ts_comanda: new Date() };
+      const result = { id: 1, id_mesa: 1, obs_comanda: 'Teste' };
       jest.spyOn(service, 'findOne').mockImplementation(async () => result);
 
       expect(await controller.findOne(1)).toBe(result);
@@ -69,8 +75,10 @@ describe('ComandaController', () => {
 
   describe('findOneByMesaId', () => {
     it('should return a comanda by mesa id', async () => {
-      const result = { id: 1, id_mesa: 5, ts_comanda: new Date() };
-      jest.spyOn(service, 'findOneByMesaId').mockImplementation(async () => result);
+      const result = { id: 1, id_mesa: 5, obs_comanda: 'Teste' };
+      jest
+        .spyOn(service, 'findOneByMesaId')
+        .mockImplementation(async () => result);
 
       expect(await controller.findOneByMesaId(5)).toBe(result);
       expect(service.findOneByMesaId).toHaveBeenCalledWith(5);
@@ -79,8 +87,8 @@ describe('ComandaController', () => {
 
   describe('update', () => {
     it('should update a comanda', async () => {
-      const updateDto = { id: 1, id_mesa: 1, obs_comanda: 'Teste'};
-      const result = { ts_comanda: new Date(), ...updateDto };
+      const updateDto = { id_mesa: 1, obs_comanda: 'Teste' };
+      const result = { id: 1, id_mesa: 1, obs_comanda: 'Teste' };
       jest.spyOn(service, 'update').mockImplementation(async () => result);
 
       expect(await controller.update(1, updateDto)).toBe(result);
