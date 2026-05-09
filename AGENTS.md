@@ -53,14 +53,30 @@ npx cap build android    # build APK directly
 
 ## Available Subagents
 
-Currently, no custom subagents or commands are configured in `.opencode/commands/`.
+Custom subagents configured in `.opencode/agents/`:
 
-Built-in agent types available:
+| Agent Type | Function | Model |
+|------------|----------|-------|
+| `exception-treatment-agent` | Audits error handling, try-catch coverage, and HTTP status consistency | opencode/big-pickle |
+| `qa-agent` | Generates and analyzes unit tests for NestJS and Ionic | opencode/big-pickle |
+| `security-audit-agent` | SAST analysis: SQL injection, hardcoded secrets, CORS, dependency vulnerabilities | opencode/big-pickle |
+| `ux-agent` | UX/UI audit, accessibility (WCAG/W3C), mobile-first design patterns | opencode/big-pickle |
+
+Built-in agent types also available:
+
 | Agent Type | Function | Model |
 |------------|----------|-------|
 | `explore` | Fast codebase exploration, file search, code patterns | opencode/big-pickle |
 | `general` | General-purpose research and multi-step tasks | opencode/big-pickle |
-| `qa-ionic` | Unit test analyzer/generator for Ionic/Angular/React | opencode/big-pickle |
+
+Custom slash commands configured in `.opencode/commands/`:
+
+| Command | Function | Model |
+|---------|----------|-------|
+| `analyze-coverage` | Analyzes test coverage reports and suggests new test cases | opencode/big-pickle |
+| `review-changes` | Reviews recent git changes and suggests improvements | opencode/big-pickle |
+| `run-tests` | Executes full test suite and fixes failures | opencode/big-pickle |
+| `update-docs` | Syncs AGENTS.md and README.md with project state | opencode/big-pickle |
 
 ## Important Quirks
 
@@ -71,13 +87,26 @@ Built-in agent types available:
 - **ESLint rule**: `prettier/prettier` uses `endOfLine: "auto"` - do not change line endings manually
 - **Ionic loading**: Vite copies Ionic from `node_modules/@ionic/core/dist/ionic/` to `dist/` via `vite-plugin-static-copy`
 - **Mobile Development**: Uses Capacitor 8.x for Android. Backend URL in `environment.prod.js` uses `ngrok` or `10.0.2.2` for emulator access.
-- **Authentication**: JWT-based. Token stored in `localStorage` and sent in `Authorization: Bearer <token>` header.
-- **Kitchen View**: Home page displays all comandas with item delivery status (red = pending, green = delivered).
+- **Authentication**: JWT-based using `jsonwebtoken` library (signed with `JWT_SECRET`, 24h expiry). Token stored in `localStorage` and sent in `Authorization: Bearer <token>` header.
+- **Password encryption**: AES-256-CTR via `EncryptionTransformer` (TypeORM column transformer) — transparent encrypt/decrypt at ORM level.
+- **Global validation**: `ValidationPipe` with `whitelist: true`, `forbidNonWhitelisted: true`, `transform: true` — unknown fields rejected with 400.
+- **Global exception filter**: `GlobalExceptionFilter` catches unhandled errors and returns sanitized 500 responses.
+- **Kitchen View**: Home page displays comandas with item delivery status (red = pending, green = delivered).
+
+## Test Status
+
+```bash
+# Backend — 18 suites, 136 tests passing
+cd backend && yarn test
+
+# Frontend — 6 suites, 64 tests passing
+cd frontend && npm test
+```
 
 ## Prerequisites
 
 - Node.js >= 18.x
 - MySQL 8.x (or compatible)
-- Yarn (backend)
-- npm (frontend)
-- Java JDK + Android Studio (for mobile builds)
+- Yarn >= 1.22 (backend)
+- npm >= 9.x (frontend)
+- Java JDK 17+ + Android Studio (for mobile builds)

@@ -18,7 +18,9 @@ O projeto visa simular um cenário real de desenvolvimento de software, abrangen
 - **Linguagem:** TypeScript
 - **Gerenciador de Pacotes:** Yarn
 - **Validação:** class-validator, class-transformer
-- **Autenticação:** JWT (JSON Web Token)
+- **Autenticação:** JWT (JSON Web Token via `jsonwebtoken`)
+- **Criptografia:** AES-256-CTR via `EncryptionTransformer` (TypeORM column transformer)
+- **Filtro Global de Erros:** `GlobalExceptionFilter` para respostas sanitizadas
 
 ### Frontend
 - **Framework:** [Ionic Framework](https://ionicframework.com/) 8.x
@@ -40,7 +42,10 @@ O projeto visa simular um cenário real de desenvolvimento de software, abrangen
 - [x] Integração com Banco de Dados (TypeORM + MySQL)
 - [x] Autenticação JWT implementada
 - [x] Relacionamentos entre entidades configurados
-- [ ] Testes unitários completos
+- [x] Testes unitários completos (136 testes, 18 suítes)
+- [x] Tratamento global de exceções
+- [x] Validação global (whitelist + transform)
+- [x] Criptografia de senhas via ORM transformer
 
 ### Frontend
 - [x] Configuração inicial do ambiente Ionic + Vite
@@ -56,7 +61,7 @@ O projeto visa simular um cenário real de desenvolvimento de software, abrangen
 - [x] Feedback visual (toast, alert, loading)
 - [x] Build para Android configurado (Capacitor)
 - [ ] Temas personalizados
-- [ ] Testes unitários
+- [x] Testes unitários (64 testes, 6 suítes)
 
 ## 📂 Estrutura de Pastas
 
@@ -165,15 +170,18 @@ Este projeto possui configurações para agentes de IA no arquivo [AGENTS.md](./
 |--------|--------|--------|
 | `explore` | Exploração rápida de código, busca de arquivos e padrões | opencode/big-pickle |
 | `general` | Pesquisa geral e tarefas multi-step | opencode/big-pickle |
-| `qa-ionic` | Gerador/analisador de testes unitários para Ionic/Angular/React | opencode/big-pickle |
+| `exception-treatment-agent` | Auditoria de tratamento de exceções e resiliência | opencode/big-pickle |
+| `qa-agent` | Geração e análise de testes unitários (NestJS + Ionic) | opencode/big-pickle |
+| `security-audit-agent` | Análise de segurança SAST (SQLi, segredos, CORS) | opencode/big-pickle |
+| `ux-agent` | Auditoria de UX/UI e acessibilidade (WCAG/W3C) | opencode/big-pickle |
 
 ## 🔧 Pré-requisitos
 
 - **Node.js** >= 18.x
 - **MySQL** 8.x (ou compatível)
-- **Yarn** (para o backend)
-- **npm** (para o frontend)
-- **Java JDK** + **Android Studio** (para builds mobile)
+- **Yarn** >= 1.22 (para o backend)
+- **npm** >= 9.x (para o frontend)
+- **Java JDK** 17+ + **Android Studio** (para builds mobile)
 - **Git** para controle de versão
 
 ## 📝 Scripts Disponíveis
@@ -184,9 +192,10 @@ Este projeto possui configurações para agentes de IA no arquivo [AGENTS.md](./
 | `yarn start:dev` | Servidor com hot-reload |
 | `yarn build` | Build de produção |
 | `yarn lint` | ESLint + Prettier |
-| `yarn test` | Jest unit tests |
+| `yarn test` | Jest unit tests (136 testes) |
 | `yarn make:migration <nome>` | Gerar migration |
 | `yarn migrate` | Executar migrations |
+| `yarn migrate:rollback` | Reverter última migration |
 
 ### Frontend (npm)
 | Comando | Descrição |
@@ -194,6 +203,8 @@ Este projeto possui configurações para agentes de IA no arquivo [AGENTS.md](./
 | `npm run dev` | Servidor Vite (desenvolvimento) |
 | `npm run build` | Build web |
 | `npm run build:prod` | Build de produção |
+| `npm test` | Jest unit tests (64 testes) |
+| `npm run test:coverage` | Testes com relatório de cobertura |
 | `npx cap sync` | Sincronizar com Capacitor |
 
 ## 🎨 Funcionalidades da Cozinha

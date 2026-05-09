@@ -7,6 +7,9 @@ npm install              # Note: uses npm, not yarn
 npm run dev              # dev server
 npm run build            # web build (outputs to dist/)
 npm run build:prod       # production build
+npm test                 # Jest unit tests (64 tests)
+npm run test:watch       # Jest in watch mode
+npm run test:coverage    # Jest with coverage report
 
 # Capacitor (Android)
 npx cap add android      # first time only
@@ -26,7 +29,7 @@ npx cap build android    # build APK directly
 ## Technical Structure
 
 - `src/main.js` - Entry point, imports all pages
-- `src/services/api.js` - API client (singleton `api` export)
+- `src/services/api.js` - API client (singleton `api` export, JWT auth via `jsonwebtoken`)
 - `src/pages/` - Page components (login, home, produto, usuario, mesa, comanda)
   - Pages are defined as **Custom Elements** (Web Components) extending `HTMLElement`.
   - Logic usually resides in `connectedCallback`.
