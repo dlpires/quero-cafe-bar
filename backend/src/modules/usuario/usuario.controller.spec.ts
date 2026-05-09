@@ -200,6 +200,31 @@ describe('UsuarioController', () => {
       expect(decoded.perfil).toBe(0);
       expect(decoded.exp).toBeDefined();
     });
+
+    it('deve usar fallback dev-secret quando JWT_SECRET não está definido', async () => {
+      delete process.env.JWT_SECRET;
+
+      const usuarioMock = {
+        id: 2,
+        nome: 'Garçom',
+        usuario: 'garcom',
+        senha: 'senha456',
+        perfil: 1,
+      };
+      service.login.mockResolvedValue(usuarioMock);
+
+      const result = await controller.login({
+        username: 'garcom',
+        password: 'senha456',
+      });
+
+      expect(result).toHaveProperty('token');
+      const decoded = jwt.verify(result.token, 'dev-secret-change-in-production') as any;
+      expect(decoded.id).toBe(2);
+      expect(decoded.perfil).toBe(1);
+
+      process.env.JWT_SECRET = 'test-secret';
+    });
   });
 
   describe('PATCH /usuario/:id - Atualizar Usuário', () => {

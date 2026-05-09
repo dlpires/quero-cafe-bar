@@ -49,4 +49,20 @@ describe('Util - logout (simplificado)', () => {
 
     expect(() => logout()).not.toThrow();
   });
+
+  it('deve usar rota sem hash quando useHash é false', () => {
+    const mockRouter = { useHash: false };
+    const originalQS = document.querySelector;
+    document.querySelector = jest.fn((selector) => {
+      if (selector === 'ion-router') return mockRouter;
+      return originalQS.call(document, selector);
+    });
+    delete window.location;
+    window.location = { href: 'http://localhost' };
+
+    const { logout } = require('./util.js');
+    logout();
+
+    expect(window.location.href).toContain('/login');
+  });
 });

@@ -249,6 +249,35 @@ describe('Api Service', () => {
     });
   });
 
+  describe('request - Error Handling', () => {
+    it('deve limpar localStorage e redirecionar para login em 401', async () => {
+      const mockResponse = {
+        ok: false,
+        status: 401,
+        json: jest.fn().mockResolvedValue({}),
+      };
+      fetch.mockResolvedValue(mockResponse);
+      delete window.location;
+      window.location = { href: 'http://localhost' };
+
+      await expect(api.request('/produto')).rejects.toThrow(
+        'Sessão expirada. Faça login novamente.',
+      );
+      expect(localStorageMock.clear).toHaveBeenCalled();
+      expect(window.location.href).toContain('#/login');
+    });
+
+    it('deve lançar erro de timeout quando requisição é abortada (AbortError)', async () => {
+      const abortError = new Error('The operation was aborted');
+      abortError.name = 'AbortError';
+      fetch.mockRejectedValue(abortError);
+
+      await expect(api.request('/produto')).rejects.toThrow(
+        'A requisição excedeu o tempo limite. Verifique sua conexão.',
+      );
+    });
+  });
+
   describe('Métodos de Produtos', () => {
     it('deve buscar todos os produtos (getProdutos)', async () => {
       const mockResponse = {
@@ -341,6 +370,66 @@ describe('Api Service', () => {
         expect.any(Object)
       );
     });
+
+    it('deve adicionar usuário (addUsuario)', async () => {
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({ id: 1 }),
+      };
+      fetch.mockResolvedValue(mockResponse);
+
+      await api.addUsuario({ nome: 'Novo', usuario: 'novo', senha: '123', perfil: 1 });
+
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/usuario',
+        expect.objectContaining({ method: 'POST' })
+      );
+    });
+
+    it('deve buscar usuário por ID (getUsuarioById)', async () => {
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({ id: 1 }),
+      };
+      fetch.mockResolvedValue(mockResponse);
+
+      await api.getUsuarioById(1);
+
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/usuario/1',
+        expect.any(Object)
+      );
+    });
+
+    it('deve atualizar usuário (updateUsuario)', async () => {
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({}),
+      };
+      fetch.mockResolvedValue(mockResponse);
+
+      await api.updateUsuario(1, { nome: 'Atualizado' });
+
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/usuario/1',
+        expect.objectContaining({ method: 'PATCH' })
+      );
+    });
+
+    it('deve deletar usuário (deleteUsuario)', async () => {
+      const mockResponse = {
+        ok: true,
+        status: 204,
+      };
+      fetch.mockResolvedValue(mockResponse);
+
+      await api.deleteUsuario(1);
+
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/usuario/1',
+        expect.objectContaining({ method: 'DELETE' })
+      );
+    });
   });
 
   describe('Métodos de Mesas', () => {
@@ -356,6 +445,66 @@ describe('Api Service', () => {
       expect(fetch).toHaveBeenCalledWith(
         'http://localhost:3001/mesa',
         expect.any(Object)
+      );
+    });
+
+    it('deve adicionar mesa (addMesa)', async () => {
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({ id: 1 }),
+      };
+      fetch.mockResolvedValue(mockResponse);
+
+      await api.addMesa({ numero: 5 });
+
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/mesa',
+        expect.objectContaining({ method: 'POST' })
+      );
+    });
+
+    it('deve buscar mesa por ID (getMesaById)', async () => {
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({ id: 1 }),
+      };
+      fetch.mockResolvedValue(mockResponse);
+
+      await api.getMesaById(1);
+
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/mesa/1',
+        expect.any(Object)
+      );
+    });
+
+    it('deve atualizar mesa (updateMesa)', async () => {
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({}),
+      };
+      fetch.mockResolvedValue(mockResponse);
+
+      await api.updateMesa(1, { status: false });
+
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/mesa/1',
+        expect.objectContaining({ method: 'PATCH' })
+      );
+    });
+
+    it('deve deletar mesa (deleteMesa)', async () => {
+      const mockResponse = {
+        ok: true,
+        status: 204,
+      };
+      fetch.mockResolvedValue(mockResponse);
+
+      await api.deleteMesa(1);
+
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/mesa/1',
+        expect.objectContaining({ method: 'DELETE' })
       );
     });
   });
@@ -390,6 +539,66 @@ describe('Api Service', () => {
         expect.any(Object)
       );
     });
+
+    it('deve adicionar comanda (addComanda)', async () => {
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({ id: 1 }),
+      };
+      fetch.mockResolvedValue(mockResponse);
+
+      await api.addComanda({ id_mesa: 1, obs_comanda: 'teste' });
+
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/comanda',
+        expect.objectContaining({ method: 'POST' })
+      );
+    });
+
+    it('deve buscar comanda por ID (getComandaById)', async () => {
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({ id: 1 }),
+      };
+      fetch.mockResolvedValue(mockResponse);
+
+      await api.getComandaById(1);
+
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/comanda/1',
+        expect.any(Object)
+      );
+    });
+
+    it('deve atualizar comanda (updateComanda)', async () => {
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({}),
+      };
+      fetch.mockResolvedValue(mockResponse);
+
+      await api.updateComanda(1, { obs_comanda: 'atualizado' });
+
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/comanda/1',
+        expect.objectContaining({ method: 'PATCH' })
+      );
+    });
+
+    it('deve deletar comanda (deleteComanda)', async () => {
+      const mockResponse = {
+        ok: true,
+        status: 204,
+      };
+      fetch.mockResolvedValue(mockResponse);
+
+      await api.deleteComanda(1);
+
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/comanda/1',
+        expect.objectContaining({ method: 'DELETE' })
+      );
+    });
   });
 
   describe('Métodos de Itens de Comanda', () => {
@@ -420,6 +629,48 @@ describe('Api Service', () => {
       expect(fetch).toHaveBeenCalledWith(
         'http://localhost:3001/comanda-item/1/2',
         expect.objectContaining({ method: 'PATCH' })
+      );
+    });
+
+    it('deve adicionar item na comanda (addItemComanda)', async () => {
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({ id: 1 }),
+      };
+      fetch.mockResolvedValue(mockResponse);
+
+      await api.addItemComanda({ id_comanda: 1, id_produto: 1, qtd: 2 });
+
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/comanda-item',
+        expect.objectContaining({ method: 'POST' })
+      );
+    });
+
+    it('deve deletar item da comanda (deleteItemComanda)', async () => {
+      const mockResponse = {
+        ok: true,
+        status: 204,
+      };
+      fetch.mockResolvedValue(mockResponse);
+
+      await api.deleteItemComanda(1, 2);
+
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/comanda-item/1/2',
+        expect.objectContaining({ method: 'DELETE' })
+      );
+    });
+  });
+
+  describe('Login - Error Handling', () => {
+    it('deve lançar erro de timeout quando login é abortado (AbortError)', async () => {
+      const abortError = new Error('The operation was aborted');
+      abortError.name = 'AbortError';
+      fetch.mockRejectedValue(abortError);
+
+      await expect(api.login('admin', 'senha123')).rejects.toThrow(
+        'A requisição excedeu o tempo limite. Verifique sua conexão.',
       );
     });
   });

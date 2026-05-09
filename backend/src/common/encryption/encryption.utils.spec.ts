@@ -58,6 +58,16 @@ describe('Encryption Utils', () => {
   });
 
   describe('decrypt', () => {
+    it('deve lançar erro quando formato de hash é inválido', () => {
+      expect(() => decrypt('invalid-hash-without-colon')).toThrow(
+        'Formato de hash inválido',
+      );
+    });
+
+    it('deve lançar erro quando hash é string vazia', () => {
+      expect(() => decrypt('')).toThrow('Formato de hash inválido');
+    });
+
     it('deve descriptografar uma string criptografada (Happy Path)', () => {
       const encryptedText = 'abcd1234:ef567890';
 
