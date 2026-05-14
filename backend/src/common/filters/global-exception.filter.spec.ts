@@ -127,4 +127,30 @@ describe('GlobalExceptionFilter', () => {
       }),
     );
   });
+
+  it('deve normalizar resposta com campos padrão (statusCode, message, timestamp)', () => {
+    filter.catch('string error', mockHost);
+
+    expect(mockJson).toHaveBeenCalledWith({
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      message: 'Erro interno do servidor',
+      timestamp: expect.any(String),
+    });
+  });
+
+  it('deve passar pela normalização da linha 42 com mensagem já resolvida', () => {
+    const exception = new HttpException(
+      ['erro direto no array', 'sem chave message'],
+      HttpStatus.BAD_REQUEST,
+    );
+    filter.catch(exception, mockHost);
+
+    expect(mockStatus).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST);
+    expect(mockJson).toHaveBeenCalledWith(
+      expect.objectContaining({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'Erro interno do servidor',
+      }),
+    );
+  });
 });

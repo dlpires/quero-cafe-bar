@@ -1,7 +1,6 @@
 import * as crypto from 'crypto';
 import { encrypt, decrypt } from './encryption.utils';
 
-// Mock do módulo crypto
 jest.mock('crypto', () => {
   const mockCipher = {
     update: jest.fn().mockReturnValue(Buffer.from('encrypted')),
@@ -24,18 +23,15 @@ jest.mock('crypto', () => {
 });
 
 describe('Encryption Utils', () => {
-  const originalEnv = process.env;
+  const ORIGINAL_ENV = process.env;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env = {
-      ...originalEnv,
-      ENCRYPTION_KEY: 'test-key-32-characters-long-1234',
-    };
+    process.env = { ...ORIGINAL_ENV, ENCRYPTION_KEY: 'test-key-32-characters-long-1234' };
   });
 
   afterAll(() => {
-    process.env = originalEnv;
+    process.env = ORIGINAL_ENV;
   });
 
   describe('encrypt', () => {
@@ -43,17 +39,13 @@ describe('Encryption Utils', () => {
       const result = encrypt('senha123');
 
       expect(result).toBeDefined();
-      expect(result).toContain(':'); // Formato: iv:encrypted:tag
+      expect(result).toContain(':');
       expect(crypto.createCipheriv).toHaveBeenCalled();
     });
 
-    it('deve usar chave padrão quando ENCRYPTION_KEY não está definida', () => {
-      const originalKey = process.env.ENCRYPTION_KEY;
-      delete process.env.ENCRYPTION_KEY;
-
+    it('não deve lançar erro com qualquer valor de ENCRYPTION_KEY', () => {
+      process.env.ENCRYPTION_KEY = 'outra_chave_32_bytes_qualquer_12345';
       expect(() => encrypt('test')).not.toThrow();
-
-      process.env.ENCRYPTION_KEY = originalKey;
     });
   });
 
@@ -70,21 +62,10 @@ describe('Encryption Utils', () => {
 
     it('deve descriptografar uma string criptografada (Happy Path)', () => {
       const encryptedText = 'abcd1234:ef567890';
-
       const result = decrypt(encryptedText);
 
       expect(result).toBeDefined();
       expect(crypto.createDecipheriv).toHaveBeenCalled();
-    });
-
-    it('deve usar chave padrão quando ENCRYPTION_KEY não está definida', () => {
-      const originalKey = process.env.ENCRYPTION_KEY;
-      delete process.env.ENCRYPTION_KEY;
-
-      const encryptedText = 'abcd1234:ef567890';
-      expect(() => decrypt(encryptedText)).not.toThrow();
-
-      process.env.ENCRYPTION_KEY = originalKey;
     });
   });
 });

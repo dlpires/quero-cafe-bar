@@ -22,6 +22,7 @@ export default {
   moduleNameMapper: {
     '^@environment$': '<rootDir>/src/environments/environment.js',
     '^@environment/(.*)$': '<rootDir>/src/environments/$1',
+    '\\.css$': '<rootDir>/src/__mocks__/styleMock.js',
   },
   
   collectCoverageFrom: [

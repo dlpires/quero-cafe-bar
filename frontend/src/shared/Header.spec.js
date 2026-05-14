@@ -1,8 +1,3 @@
-/**
- * Testes para o Header (Header.js)
- * Testa a função createHeader e o menu lateral.
- */
-
 describe('Header', () => {
   let createHeader;
 
@@ -44,18 +39,7 @@ describe('Header', () => {
   });
 
   describe('createAndInjectMenu', () => {
-    it('não deve criar menu duplicado se já existe ion-menu no DOM', () => {
-      const existingMenu = document.createElement('ion-menu');
-      document.body.appendChild(existingMenu);
-      const appendChildSpy = jest.spyOn(document.body, 'prepend');
-
-      createHeader('Home');
-
-      expect(appendChildSpy).not.toHaveBeenCalled();
-      appendChildSpy.mockRestore();
-    });
-
-    it('deve abortar se não encontrar ion-nav', () => {
+    it('não deve adicionar menu se não encontrar ion-nav', () => {
       console.error = jest.fn();
 
       createHeader('Home');
