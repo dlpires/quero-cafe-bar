@@ -263,7 +263,7 @@ describe('Api Service', () => {
       await expect(api.request('/produto')).rejects.toThrow(
         'Sessão expirada. Faça login novamente.',
       );
-      expect(localStorageMock.clear).toHaveBeenCalled();
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
       expect(window.location.href).toContain('#/login');
     });
 

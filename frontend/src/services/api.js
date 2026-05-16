@@ -30,7 +30,7 @@ class Api {
     async request(endpoint, options = {}) {
         const headers = {
             'Content-Type': 'application/json',
-            'ngrok-skip-browser-warning': 'true',
+            ...(!environment.production ? { 'ngrok-skip-browser-warning': 'true' } : {}),
             ...options.headers,
         };
 
@@ -51,7 +51,7 @@ class Api {
             clearTimeout(timeoutId);
 
             if (response.status === 401) {
-                localStorage.clear();
+                localStorage.removeItem('token');
                 window.location.href = '#/login';
                 throw new Error('Sessão expirada. Faça login novamente.');
             }
@@ -85,7 +85,7 @@ class Api {
     async login(username, password) {
         const headers = {
             'Content-Type': 'application/json',
-            'ngrok-skip-browser-warning': 'true',
+            ...(!environment.production ? { 'ngrok-skip-browser-warning': 'true' } : {}),
         };
 
         const controller = new AbortController();

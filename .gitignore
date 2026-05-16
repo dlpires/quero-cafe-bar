@@ -46,3 +46,4 @@ coverage/
 
 # AI Tools
 .claude/
+.specify/
