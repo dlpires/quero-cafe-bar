@@ -2,11 +2,13 @@ import './ListProdutoPage.css'
 import { createHeader } from '../../shared/Header.js';
 import { logout } from '../../shared/util.js';
 import { api } from '../../services/api.js';
+import { requireAuth } from '../../services/auth.js';
 
 const pageName = 'Produtos';
 
 class ListProdutoPage extends HTMLElement {
   async connectedCallback() {
+    if (!requireAuth()) return;
     this.classList.add('ion-page');
     this.innerHTML = `
       ${createHeader(pageName)}

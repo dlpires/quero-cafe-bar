@@ -158,6 +158,6 @@ cd frontend && npm test
 - Java JDK 17+ + Android Studio (for mobile builds)
 
 <!-- SPECKIT START -->
-For additional context about the current feature (UX Foundation — Shared
-Utilities & Fixes), read specs/001-ux-shared-utilities/plan.md
+For additional context about the current feature (Frontend Route Protection —
+Auth Guard), read specs/002-frontend-route-guard/plan.md
 <!-- SPECKIT END -->

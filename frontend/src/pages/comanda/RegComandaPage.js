@@ -1,11 +1,13 @@
 import './RegComandaPage.css';
 import { createHeader } from '../../shared/Header.js';
 import { api } from '../../services/api.js';
+import { requireAuth } from '../../services/auth.js';
 
 const pageName = 'Abrir Comanda';
 
 class RegComandaPage extends HTMLElement {
   async connectedCallback() {
+    if (!requireAuth()) return;
     this.classList.add('ion-page');
     this.innerHTML = `
       ${createHeader(pageName)}
