@@ -42,7 +42,26 @@ import './pages/comanda/RegComandaPage.js';
 import './pages/comanda/ListComandaPage.js';
 import './pages/comanda/UpdateComandaPage.js';
 
-// Redirect to Login Page
-// if (window.location.hash === '' || window.location.hash === '#/') {
-//   window.location.hash = '#/login';
-// }
+import { isAuthenticated, setupSessionSync } from './services/auth.js';
+
+// Global navigation guard
+(async function setupRouteGuard() {
+  await customElements.whenDefined('ion-router');
+  const router = document.querySelector('ion-router');
+  if (!router) return;
+
+  setupSessionSync();
+
+  router.addEventListener('ionRouteDidChange', async (ev) => {
+    const toPath = ev.detail?.to?.pathname;
+    if (!toPath) return;
+
+    const authenticated = !!localStorage.getItem('token');
+
+    if (toPath !== '/login' && !authenticated) {
+      await router.push('/login', 'root');
+    } else if (toPath === '/login' && authenticated) {
+      await router.push('/home', 'root');
+    }
+  });
+})();

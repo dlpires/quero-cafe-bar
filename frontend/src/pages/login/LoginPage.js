@@ -1,11 +1,16 @@
 import './LoginPage.css'
 import { createHeader } from '../../shared/Header.js';
 import { api } from '../../services/api.js';
+import { isAuthenticated, redirectToHome } from '../../services/auth.js';
 
 const pageName = 'Login';
 
 class LoginPage extends HTMLElement {
   connectedCallback() {
+    if (isAuthenticated()) {
+      redirectToHome();
+      return;
+    }
     this.classList.add('ion-page');
     this.innerHTML = `
       ${createHeader(pageName)}

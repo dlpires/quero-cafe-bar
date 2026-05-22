@@ -73,10 +73,9 @@ Um usuário que está navegando no sistema tem sua sessão invalidada (ex: expir
 - **FR-001**: Sistema DEVE verificar se o usuário possui uma sessão válida antes de permitir acesso a qualquer funcionalidade protegida.
 - **FR-002**: Sistema DEVE redirecionar usuários não autenticados para a página de login (`/login`) ao tentar acessar qualquer rota protegida.
 - **FR-003**: Sistema DEVE redirecionar usuários autenticados da página de login (`/login`) para a página inicial (`/home`).
-- **FR-004**: Sistema DEVE impedir a exibição de dados ou a execução de operações quando o usuário não possui sessão válida, em cada carregamento de tela protegida.
-- **FR-005**: Sistema DEVE verificar a validade da sessão do usuário a cada navegação entre telas, como segunda camada de proteção.
-- **FR-006**: Sistema DEVE manter compatibilidade com o mecanismo de sessão existente no sistema.
-- **FR-007**: Página de login DEVE ser a única rota publicamente acessível sem autenticação.
+- **FR-004**: Sistema DEVE verificar a validade da sessão do usuário em cada acesso a tela protegida, impedindo exibição de dados e execução de operações quando não autenticado, através de guarda global de navegação e verificação no carregamento de cada página.
+- **FR-005**: Sistema DEVE manter compatibilidade com o mecanismo de sessão existente no sistema.
+- **FR-006**: Página de login DEVE ser a única rota publicamente acessível sem autenticação.
 
 ### Key Entities
 
@@ -92,7 +91,7 @@ Um usuário que está navegando no sistema tem sua sessão invalidada (ex: expir
 - **SC-002**: Usuários autenticados acessando `/login` são redirecionados para `/home` sem perceber conteúdo da página de login.
 - **SC-003**: Nenhuma operação do sistema é executada por telas protegidas quando o usuário não está autenticado.
 - **SC-004**: 100% das rotas protegidas (excluindo `/login`) redirecionam corretamente usuários não autenticados — verificado por teste funcional em cada rota.
-- **SC-005**: Nenhum conteúdo ou informação do sistema é visível para usuários não autenticados, mesmo com inspeção visual momentânea (flash prevention).
+- **SC-005**: Nenhum conteúdo ou informação do sistema é inserido no DOM da página protegida antes da conclusão do redirecionamento para `/login`, verificado por teste de renderização condicional.
 
 ## Assumptions
 

@@ -1,11 +1,13 @@
 import './UpdateMesaPage.css'
 import { createHeader } from '../../shared/Header.js';
 import { api } from '../../services/api.js';
+import { requireAuth } from '../../services/auth.js';
 
 const pageName = 'Editar Mesa';
 
 class UpdateMesaPage extends HTMLElement {
   async connectedCallback() {
+    if (!requireAuth()) return;
     const urlParams = new URLSearchParams(window.location.search);
     this.mesaId = urlParams.get('id');
     this.classList.add('ion-page');

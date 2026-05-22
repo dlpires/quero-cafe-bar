@@ -2,11 +2,13 @@ import './HomePage.css'
 import { createHeader } from '../../shared/Header.js';
 import { logout } from '../../shared/util.js';
 import { api } from '../../services/api.js';
+import { requireAuth } from '../../services/auth.js';
 
 const pageName = 'Cozinha';
 
 class HomePage extends HTMLElement {
   async connectedCallback() {
+    if (!requireAuth()) return;
     this.classList.add('ion-page');
     this.innerHTML = `
       ${createHeader(pageName)}
