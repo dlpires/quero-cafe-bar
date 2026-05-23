@@ -1,6 +1,6 @@
 import './ListUsuarioPage.css'
 import { createHeader } from '../../shared/Header.js';
-import { logout } from '../../shared/util.js';
+import { logout, createEmptyState } from '../../shared/util.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
 
@@ -40,25 +40,36 @@ class ListUsuarioPage extends HTMLElement {
 
   async fetchUsuarios() {
     const container = this.querySelector('.list-usuario-container');
-    const loading = document.createElement('ion-loading');
-    loading.message = 'Buscando usuarios...';
-    document.body.appendChild(loading);
-    await loading.present();
+    this.renderSkeleton(container);
 
     try {
       const usuarios = await api.getUsuarios();
       this.renderUsuarios(usuarios);
     } catch (error) {
       console.error('Erro ao buscar usuarios:', error);
+      container.innerHTML = '';
       const alert = document.createElement('ion-alert');
       alert.header = 'Erro';
       alert.message = 'Não foi possível carregar os usuarios. Tente novamente mais tarde.';
       alert.buttons = ['OK'];
       document.body.appendChild(alert);
       await alert.present();
-    } finally {
-      await loading.dismiss();
     }
+  }
+
+  renderSkeleton(container) {
+    container.innerHTML = `
+      <ion-list>
+        ${[1,2,3].map(() => `
+          <ion-item>
+            <ion-label>
+              <h3><ion-skeleton-text animated style="width: 50%"></ion-skeleton-text></h3>
+              <p><ion-skeleton-text animated style="width: 80%"></ion-skeleton-text></p>
+            </ion-label>
+          </ion-item>
+        `).join('')}
+      </ion-list>
+    `;
   }
 
   renderFabButton() {
@@ -75,7 +86,8 @@ class ListUsuarioPage extends HTMLElement {
     `;
 
     fab.addEventListener('click', () => {
-      window.location.href = '/usuario/register';
+      const router = document.querySelector('ion-router');
+      router.push('/usuario/register');
     });
 
     content.appendChild(fab);
@@ -85,18 +97,26 @@ class ListUsuarioPage extends HTMLElement {
   renderUsuarios(usuarios) {
     const container = this.querySelector('.list-usuario-container');
     if (usuarios.length === 0) {
-      container.innerHTML = `<p class="ion-text-center">Nenhum usuario encontrado.</p>`;
+      createEmptyState(container, {
+        icon: 'people-outline',
+        message: 'Nenhum usuario encontrado.',
+        actionLabel: 'Cadastrar Usuário',
+        actionHandler: () => {
+          const router = document.querySelector('ion-router');
+          router.push('/usuario/register');
+        }
+      });
       return;
     }
 
     const userItems = usuarios.map(usuario => `
       <ion-item>
         <ion-label>
-          <h2 style="display: flex; align-items: center; gap: 8px;">
+          <h2 class="item-title">
             <ion-icon
               name="${usuario.perfil == 0 ? 'restaurant' : 'person'}"
               color="${usuario.perfil == 0 ? 'primary' : 'secondary'}"
-              style="flex-shrink: 0;"
+              class="item-icon"
             ></ion-icon>
             <span>${usuario.nome}</span>
           </h2>
@@ -118,7 +138,6 @@ class ListUsuarioPage extends HTMLElement {
       <ion-list>${userItems}</ion-list>
     `;
 
-    // Adiciona eventos para os botões de edição
     container.querySelectorAll('.btn-edit').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-id');
@@ -127,7 +146,6 @@ class ListUsuarioPage extends HTMLElement {
       });
     });
 
-    // Adiciona eventos para os botões de exclusão
     container.querySelectorAll('.btn-delete').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');

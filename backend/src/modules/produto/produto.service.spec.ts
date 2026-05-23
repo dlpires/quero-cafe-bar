@@ -152,7 +152,6 @@ describe('ProdutoService', () => {
       };
 
       const updateProdutoDto = {
-        id: 1,
         dsc_produto: 'Café Expresso Premium',
         valor_unit: 6.5,
       };

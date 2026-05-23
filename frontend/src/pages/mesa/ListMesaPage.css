@@ -1,0 +1,15 @@
+.list-mesa-container {
+  padding: 16px;
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+.list-mesa-container ion-item {
+  margin-bottom: 8px;
+  border-radius: 8px;
+}
+
+ion-input,
+ion-select {
+  font-size: 16px;
+}
