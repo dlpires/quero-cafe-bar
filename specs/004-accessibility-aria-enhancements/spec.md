@@ -8,15 +8,22 @@
 
 **Input**: User description: "Implementação 3 (Fase 2) do plano de melhorias UX/UI — Acessibilidade e ARIA. Inclui atributos ARIA em botões de ícone, gerenciamento de foco, mensagens de erro contextuais, proteção contra auto-exclusão e confirmação ao cancelar formulários."
 
+## Clarifications
+
+### Session 2026-05-22
+
+- Q: O escopo de mensagens de erro deve incluir apenas o frontend ou também alterar o backend? → A: Frontend + Backend — melhorar mensagens de erro em ambas as camadas.
+- Q: A acessibilidade mobile inclui o app Android nativo (Capacitor) ou apenas versão web? → A: Apenas web responsivo (desktop e mobile browsers). App Android nativo está fora de escopo.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Navegação por Leitor de Tela (Priority: P1)
 
-Usuários que utilizam leitores de tela (como NVDA, VoiceOver, TalkBack) conseguem identificar corretamente todos os botões de ação na aplicação — logout, editar, excluir, marcar entrega — porque cada botão de ícone puro possui um `aria-label` descritivo.
+Usuários que utilizam leitores de tela (como NVDA no Windows, VoiceOver no macOS) conseguem identificar corretamente todos os botões de ação na aplicação — logout, editar, excluir, marcar entrega — porque cada botão de ícone puro possui um `aria-label` descritivo.
 
 **Why this priority**: Este é o bloqueio WCAG mais grave identificado (falha nos critérios 2.5.3 e 4.1.2 da WCAG). Sem `aria-label`, o leitor de tela anuncia apenas "botão" ou lê o nome do ícone, sem contexto de ação.
 
-**Independent Test**: Pode ser testado independentemente abrindo a ferramenta de inspeção de acessibilidade do navegador (Chrome DevTools > Accessibility) ou utilizando um leitor de tela para verificar que cada botão de ícone anuncia sua ação corretamente.
+**Independent Test**: Pode ser testado independentemente abrindo a ferramenta de inspeção de acessibilidade do navegador (Chrome DevTools > Accessibility) ou utilizando um leitor de tela (NVDA no Windows, VoiceOver no macOS) para verificar que cada botão de ícone anuncia sua ação corretamente.
 
 **Acceptance Scenarios**:
 
@@ -106,7 +113,7 @@ Usuários que preenchem formulários de cadastro/edição e clicam em Cancelar r
 - **FR-005**: O sistema NÃO DEVE permitir que um usuário exclua seu próprio registro. A verificação DEVE usar o ID do usuário armazenado no token JWT.
 - **FR-006**: Ao clicar em Cancelar em formulários de cadastro/edição com dados alterados, o sistema DEVE exibir um diálogo de confirmação antes de navegar de volta.
 - **FR-007**: Formulários sem alterações (Cancelar sem dados modificados) DEVEM navegar de volta sem confirmação.
-- **FR-008**: [NEEDS CLARIFICATION: O escopo inclui apenas a correção de mensagens de erro no frontend (tradução de códigos HTTP em mensagens), ou também requer alterações no backend para retornar mensagens mais descritivas?]
+- **FR-008**: Mensagens de erro DEVEM ser tratadas em ambas as camadas: o backend DEVE retornar mensagens descritivas por código de status, e o frontend DEVE exibi-las com tratamento amigável por categoria de erro (400, 401, 403, 404, 409, 500).
 
 ### Key Entities
 
@@ -116,7 +123,7 @@ Nenhuma nova entidade de dados é introduzida por esta especificação. As alter
 
 ### Measurable Outcomes
 
-- **SC-001**: Lighthouse Accessibility score ≥ 90 ao auditar todas as páginas principais (login, listagens, formulários, cozinha).
+- **SC-001**: Lighthouse Accessibility score ≥ 90 ao auditar todas as páginas principais (login, listagens, formulários, cozinha) em ambiente web (desktop e mobile viewports).
 - **SC-002**: Navegação por teclado funcional em 100% das páginas — usuário consegue acessar todos os botões e campos usando apenas Tab, Enter e Space.
 - **SC-003**: Leitor de tela (NVDA ou VoiceOver) consegue identificar corretamente a ação de todos os botões de ícone — nenhum botão de ação é anunciado apenas como "botão".
 - **SC-004**: Usuário não consegue excluir a si mesmo em nenhum cenário — a operação é bloqueada com feedback visual.
@@ -125,11 +132,11 @@ Nenhuma nova entidade de dados é introduzida por esta especificação. As alter
 
 ## Assumptions
 
-- Leitor de tela padrão será usado para validação (NVDA no Windows, VoiceOver no macOS/iOS, TalkBack no Android).
+- Leitor de tela padrão será usado para validação (NVDA no Windows, VoiceOver no macOS). O app Android nativo (Capacitor) está fora de escopo — a validação mobile será feita via navegador mobile (Chrome DevTools com emulação de dispositivos).
 - Os atributos ARIA seguem as especificações WAI-ARIA 1.2.
 - A verificação de auto-exclusão usa o ID do usuário do token JWT armazenado no `localStorage`.
 - A funcionalidade de confirmação ao cancelar será implementada via `ion-alert` (já utilizado em outras partes da aplicação).
-- As mensagens de erro específicas serão mapeadas no frontend com base nos códigos HTTP recebidos — sem alterações no backend.
+- As mensagens de erro específicas serão tratadas em ambas as camadas: o backend deve retornar mensagens descritivas por código HTTP, e o frontend deve exibi-las com tratamento contextual.
 - O foco pós-navegação será gerenciado via JavaScript (não por comportamento nativo do Ionic).
-- Os testes de acessibilidade serão realizados em Chrome DevTools, não sendo escopo deste projeto a aquisição de ferramentas de auditoria pagas.
+- Os testes de acessibilidade web serão realizados em Chrome DevTools (Lighthouse + painel Accessibility), não sendo escopo deste projeto a aquisição de ferramentas de auditoria pagas.
 - Dependência: As funções utilitárias `focusFirstElement()` e `showToast()` (definidas na Fase 0 das melhorias) devem estar disponíveis em `shared/util.js`.

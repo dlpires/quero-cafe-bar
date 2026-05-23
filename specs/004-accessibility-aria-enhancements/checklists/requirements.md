@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -32,4 +32,4 @@
 ## Notes
 
 - Items marked incomplete require spec updates before `/speckit.clarify` or `/speckit.plan`
-- Item "No [NEEDS CLARIFICATION] markers remain" is currently FAILING: **FR-008** contains a `[NEEDS CLARIFICATION]` marker regarding error message scope (frontend only vs backend changes)
+- Todos os marcadores [NEEDS CLARIFICATION] foram resolvidos na sessão de clarificação de 2026-05-22.
