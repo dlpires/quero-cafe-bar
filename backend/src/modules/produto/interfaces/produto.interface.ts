@@ -12,7 +12,6 @@ export interface ICreateProdutoInput {
 }
 
 export interface IUpdateProdutoInput {
-  id: number;
   dsc_produto?: string;
   valor_unit?: number;
   status?: boolean;

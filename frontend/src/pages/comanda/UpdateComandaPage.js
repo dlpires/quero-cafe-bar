@@ -2,6 +2,7 @@ import './UpdateComandaPage.css';
 import { createHeader } from '../../shared/Header.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
+import { showToast, withLoading, focusFirstElement } from '../../shared/util.js';
 
 const pageName = 'Editar Comanda';
 
@@ -29,7 +30,7 @@ class UpdateComandaPage extends HTMLElement {
           </ion-list>
 
           <ion-button expand="block" type="submit" class="ion-margin-top">
-            <ion-icon name="checkmark-circle" style="margin-right: 8px;"></ion-icon>
+            <ion-icon name="checkmark-circle" class="radio-icon"></ion-icon>
             Salvar Dados
           </ion-button>
         </form>
@@ -38,14 +39,14 @@ class UpdateComandaPage extends HTMLElement {
           <h3>Itens da Comanda</h3>
           <div class="itens-container"></div>
           <ion-button expand="block" id="btn-add-item" class="ion-margin-top">
-            <ion-icon name="add-circle" style="margin-right: 8px;"></ion-icon>
+            <ion-icon name="add-circle" class="radio-icon"></ion-icon>
             Adicionar Item
           </ion-button>
         </div>
 
         <div class="ion-padding">
           <ion-button expand="block" color="danger" id="btn-cancelar">
-            <ion-icon name="close-circle" style="margin-right: 8px;"></ion-icon>
+            <ion-icon name="close-circle" class="radio-icon"></ion-icon>
             Voltar
           </ion-button>
         </div>
@@ -219,9 +220,11 @@ class UpdateComandaPage extends HTMLElement {
     document.body.appendChild(loading);
     await loading.present();
 
+    let produtos;
+    let itensAtuais;
     try {
-      const produtos = await api.getProdutos();
-      const itensAtuais = await api.getItensComanda(this.comandaId);
+      produtos = await api.getProdutos();
+      itensAtuais = await api.getItensComanda(this.comandaId);
     } catch (error) {
       await loading.dismiss();
       console.error('Erro ao carregar dados:', error);
@@ -325,24 +328,35 @@ class UpdateComandaPage extends HTMLElement {
 
   async handleSubmit(event) {
     event.preventDefault();
-    const formData = new FormData(event.target);
-    
+    const form = event.target;
+    const formData = new FormData(form);
+
+    const id_mesa = formData.get('id_mesa');
+    if (!id_mesa) {
+      await showToast('O campo Mesa é obrigatório.', 'warning', 3000);
+      focusFirstElement(form);
+      return;
+    }
+
     const comandaData = {
-      id_mesa: parseInt(formData.get('id_mesa')),
+      id_mesa: parseInt(id_mesa),
       obs_comanda: formData.get('obs_comanda') || undefined,
     };
 
+    const submitBtn = this.querySelector('ion-button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'Salvando...';
+
     try {
-      await api.updateComanda(this.comandaId, comandaData);
+      await withLoading(api.updateComanda(this.comandaId, comandaData));
+      await showToast('Registro atualizado com sucesso!', 'success', 3000);
       this.navigateBack();
     } catch (error) {
       console.error('Erro ao salvar comanda:', error);
-      const alert = document.createElement('ion-alert');
-      alert.header = 'Erro';
-      alert.message = 'Não foi possível salvar a comanda.';
-      alert.buttons = ['OK'];
-      document.body.appendChild(alert);
-      await alert.present();
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+      await showToast('Não foi possível salvar a comanda.', 'error', 5000);
     }
   }
 

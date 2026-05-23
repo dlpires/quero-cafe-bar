@@ -1,6 +1,6 @@
 import './ListProdutoPage.css'
 import { createHeader } from '../../shared/Header.js';
-import { logout } from '../../shared/util.js';
+import { logout, createEmptyState } from '../../shared/util.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
 
@@ -40,25 +40,36 @@ class ListProdutoPage extends HTMLElement {
 
   async fetchProdutos() {
     const container = this.querySelector('.list-produto-container');
-    const loading = document.createElement('ion-loading');
-    loading.message = 'Buscando produtos...';
-    document.body.appendChild(loading);
-    await loading.present();
+    this.renderSkeleton(container);
 
     try {
       const produtos = await api.getProdutos();
       this.renderProdutos(produtos);
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
+      container.innerHTML = '';
       const alert = document.createElement('ion-alert');
       alert.header = 'Erro';
       alert.message = 'Não foi possível carregar os produtos. Tente novamente mais tarde.';
       alert.buttons = ['OK'];
       document.body.appendChild(alert);
       await alert.present();
-    } finally {
-      await loading.dismiss();
     }
+  }
+
+  renderSkeleton(container) {
+    container.innerHTML = `
+      <ion-list>
+        ${[1,2,3].map(() => `
+          <ion-item>
+            <ion-label>
+              <h3><ion-skeleton-text animated style="width: 50%"></ion-skeleton-text></h3>
+              <p><ion-skeleton-text animated style="width: 80%"></ion-skeleton-text></p>
+            </ion-label>
+          </ion-item>
+        `).join('')}
+      </ion-list>
+    `;
   }
 
   renderFabButton() {
@@ -75,7 +86,8 @@ class ListProdutoPage extends HTMLElement {
     `;
 
     fab.addEventListener('click', () => {
-      window.location.href = '/produto/register';
+      const router = document.querySelector('ion-router');
+      router.push('/produto/register');
     });
 
     content.appendChild(fab);
@@ -85,7 +97,15 @@ class ListProdutoPage extends HTMLElement {
   renderProdutos(produtos) {
     const container = this.querySelector('.list-produto-container');
     if (produtos.length === 0) {
-      container.innerHTML = `<p class="ion-text-center">Nenhum produto encontrado.</p>`;
+      createEmptyState(container, {
+        icon: 'file-tray-outline',
+        message: 'Nenhum produto encontrado.',
+        actionLabel: 'Cadastrar Produto',
+        actionHandler: () => {
+          const router = document.querySelector('ion-router');
+          router.push('/produto/register');
+        }
+      });
       return;
     }
 
@@ -96,11 +116,11 @@ class ListProdutoPage extends HTMLElement {
     const productItems = produtos.map(produto => `
       <ion-item>
         <ion-label>
-          <h2 style="display: flex; align-items: center; gap: 8px;">
+          <h2 class="item-title">
             <ion-icon
               name="${produto.status ? 'checkmark-circle' : 'close-circle'}"
               color="${produto.status ? 'success' : 'danger'}"
-              style="flex-shrink: 0;"
+              class="item-icon"
             ></ion-icon>
             <span>${produto.dsc_produto}</span>
           </h2>
@@ -122,7 +142,6 @@ class ListProdutoPage extends HTMLElement {
       <ion-list>${productItems}</ion-list>
     `;
 
-    // Adiciona eventos para os botões de edição
     container.querySelectorAll('.btn-edit').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-id');
@@ -131,7 +150,6 @@ class ListProdutoPage extends HTMLElement {
       });
     });
 
-    // Adiciona eventos para os botões de exclusão
     container.querySelectorAll('.btn-delete').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');

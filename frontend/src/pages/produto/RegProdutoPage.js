@@ -2,6 +2,7 @@ import './RegProdutoPage.css';
 import { createHeader } from '../../shared/Header.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
+import { showToast, withLoading, validateRequired, validatePositiveNumber, focusFirstElement } from '../../shared/util.js';
 
 const pageName = 'Cadastrar Produto';
 
@@ -29,12 +30,12 @@ class RegProdutoPage extends HTMLElement {
           </ion-list>
 
           <div class="ion-padding">
-            <ion-button expand="block" type="submit" class="ion-margin-top">
-              <ion-icon name="checkmark-circle" style="margin-right: 8px;"></ion-icon>
+            <ion-button expand="block" type="submit" class="ion-margin-top" id="btn-submit">
+              <ion-icon name="checkmark-circle" class="radio-icon"></ion-icon>
               Salvar Produto
             </ion-button>
             <ion-button expand="block" color="danger" id="btn-cancelar">
-              <ion-icon name="close-circle" style="margin-right: 8px;"></ion-icon>
+              <ion-icon name="close-circle" class="radio-icon"></ion-icon>
               Cancelar
             </ion-button>
           </div>
@@ -48,25 +49,38 @@ class RegProdutoPage extends HTMLElement {
 
   async handleSubmit(event) {
     event.preventDefault();
-    const formData = new FormData(event.target);
-    
+    const form = event.target;
+    const formData = new FormData(form);
+
+    const dscError = validateRequired(formData.get('dsc_produto'), 'Descrição do Produto');
+    const valorError = validatePositiveNumber(formData.get('valor_unit'), 'Valor Unitário');
+
+    if (dscError || valorError) {
+      await showToast(dscError || valorError, 'warning', 3000);
+      focusFirstElement(form);
+      return;
+    }
+
     const produtoData = {
       dsc_produto: formData.get('dsc_produto'),
       valor_unit: parseFloat(formData.get('valor_unit')),
       status: formData.get('status') === 'on',
     };
 
+    const submitBtn = this.querySelector('#btn-submit');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'Salvando...';
+
     try {
-      await api.addProduto(produtoData);
+      await withLoading(api.addProduto(produtoData));
+      await showToast('Registro salvo com sucesso!', 'success', 3000);
       this.navigateBack();
     } catch (error) {
       console.error('Erro ao cadastrar produto:', error);
-      const alert = document.createElement('ion-alert');
-      alert.header = 'Erro';
-      alert.message = 'Não foi possível cadastrar o produto. Tente novamente mais tarde.';
-      alert.buttons = ['OK'];
-      document.body.appendChild(alert);
-      await alert.present();
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+      await showToast('Não foi possível cadastrar o produto. Tente novamente mais tarde.', 'error', 5000);
     }
   }
 
