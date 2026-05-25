@@ -1,4 +1,4 @@
-import { Controller } from '@nestjs/common';
+import { Controller, ConflictException } from '@nestjs/common';
 import { MesaService } from './mesa.service';
 import { CreateMesaDto } from './dto/create-mesa.dto';
 import { ListMesaDto } from './dto/list-mesa.dto';
@@ -36,6 +36,20 @@ export class MesaController {
 
   @Delete(':id')
   async remove(@Param('id') id: number): Promise<DeleteMesaDto> {
-    return await this.mesaService.remove(id);
+    try {
+      return await this.mesaService.remove(id);
+    } catch (error: unknown) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        (error as Record<string, unknown>).code === 'ER_ROW_IS_REFERENCED_2'
+      ) {
+        throw new ConflictException(
+          'Não é possível excluir a mesa pois existem comandas vinculadas a ela',
+        );
+      }
+      throw error;
+    }
   }
 }

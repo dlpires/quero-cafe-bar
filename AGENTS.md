@@ -158,6 +158,6 @@ cd frontend && npm test
 - Java JDK 17+ + Android Studio (for mobile builds)
 
 <!-- SPECKIT START -->
-For additional context about the current feature (UX CRUD Improvements), read
-specs/003-ux-crud-improvements/plan.md
+For additional context about the current feature (Acessibilidade e ARIA — Fase 2), read
+specs/004-accessibility-aria-enhancements/plan.md
 <!-- SPECKIT END -->

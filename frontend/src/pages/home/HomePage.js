@@ -1,6 +1,6 @@
 import './HomePage.css'
 import { createHeader } from '../../shared/Header.js';
-import { logout, createEmptyState } from '../../shared/util.js';
+import { logout, createEmptyState, focusFirstElement, showToast } from '../../shared/util.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
 
@@ -18,6 +18,7 @@ class HomePage extends HTMLElement {
     `;
 
     this.querySelector('#logout-btn').addEventListener('click', logout);
+    focusFirstElement(this);
     await this.fetchComandas();
 
     window.addEventListener('popstate', () => this.onRouteChange());
@@ -31,9 +32,10 @@ class HomePage extends HTMLElement {
     }
   }
 
-  onRouteChange() {
+  async onRouteChange() {
     if (window.location.pathname === '/home') {
-      this.fetchComandas();
+      await this.fetchComandas();
+      focusFirstElement(this);
     }
   }
 
@@ -131,6 +133,7 @@ class HomePage extends HTMLElement {
           value="${item.statusEntrega.toString()}"
           interface="popover"
           slot="end"
+          aria-label="Status de entrega do item ${item.produto.dsc_produto}"
         >
           <ion-select-option value="false">Pendente</ion-select-option>
           <ion-select-option value="true">Entregue</ion-select-option>
@@ -145,7 +148,7 @@ class HomePage extends HTMLElement {
             <div class="card-header-content">
               <span>Comanda #${comanda.id}</span>
               <span>Mesa: ${comanda.mesa.id}</span>
-              <ion-icon name="${statusIcon}" color="${statusColor}" class="status-icon"></ion-icon>
+              <ion-icon name="${statusIcon}" color="${statusColor}" class="status-icon" aria-hidden="true"></ion-icon>
             </div>
           </ion-card-title>
         </ion-card-header>
@@ -160,20 +163,10 @@ class HomePage extends HTMLElement {
     try {
       await api.updateItemComanda(id_comanda, id_produto, { statusEntrega });
       this.updateCardStatusIcon(cardElement);
-      const toast = document.createElement('ion-toast');
-      toast.message = 'Status do item atualizado!';
-      toast.duration = 2000;
-      toast.color = 'success';
-      document.body.appendChild(toast);
-      await toast.present();
+      await showToast('Status do item atualizado!', 'success', 2000);
     } catch (error) {
       console.error('Erro ao atualizar item:', error);
-      const toast = document.createElement('ion-toast');
-      toast.message = 'Erro ao atualizar status. Tente novamente.';
-      toast.duration = 2000;
-      toast.color = 'danger';
-      document.body.appendChild(toast);
-      await toast.present();
+      await showToast(error.message, 'error', 5000);
     }
   }
 

@@ -2,7 +2,7 @@ import './RegComandaPage.css';
 import { createHeader } from '../../shared/Header.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
-import { showToast, withLoading, focusFirstElement } from '../../shared/util.js';
+import { showToast, withLoading, focusFirstElement, hasFormChanges } from '../../shared/util.js';
 
 const pageName = 'Abrir Comanda';
 
@@ -41,9 +41,10 @@ class RegComandaPage extends HTMLElement {
     `;
 
     this.querySelector('#form-comanda').addEventListener('submit', (e) => this.handleSubmit(e));
-    this.querySelector('#btn-cancelar').addEventListener('click', () => this.navigateBack());
+    this.querySelector('#btn-cancelar').addEventListener('click', () => this.confirmCancel());
 
     await this.loadMesas();
+    focusFirstElement(this);
   }
 
   async loadMesas() {
@@ -94,7 +95,24 @@ class RegComandaPage extends HTMLElement {
       console.error('Erro ao abrir comanda:', error);
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalText;
-      await showToast('Não foi possível abrir a comanda. Tente novamente mais tarde.', 'error', 5000);
+      await showToast(error.message, 'error', 5000);
+    }
+  }
+
+  async confirmCancel() {
+    const form = this.querySelector('#form-comanda');
+    if (hasFormChanges(form)) {
+      const alert = document.createElement('ion-alert');
+      alert.header = 'Descartar alterações?';
+      alert.message = 'Há alterações não salvas. Deseja realmente cancelar?';
+      alert.buttons = [
+        { text: 'Continuar Editando', role: 'cancel' },
+        { text: 'Descartar', handler: () => this.navigateBack() },
+      ];
+      document.body.appendChild(alert);
+      await alert.present();
+    } else {
+      this.navigateBack();
     }
   }
 

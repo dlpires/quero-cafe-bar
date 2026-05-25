@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Produto } from './entities/produto.entity';
@@ -16,6 +20,12 @@ export class ProdutoService {
   ) {}
 
   async create(createProdutoDto: CreateProdutoDto): Promise<IProdutoOutput> {
+    const existing = await this.produtoRepository.findOne({
+      where: { dsc_produto: createProdutoDto.dsc_produto },
+    });
+    if (existing) {
+      throw new ConflictException('Já existe um produto com esta descrição');
+    }
     const produto = this.produtoRepository.create(createProdutoDto);
     return await this.produtoRepository.save(produto);
   }
@@ -38,6 +48,14 @@ export class ProdutoService {
     id: number,
     updateProdutoDto: UpdateProdutoDto,
   ): Promise<IProdutoOutput> {
+    if (updateProdutoDto.dsc_produto) {
+      const existing = await this.produtoRepository.findOne({
+        where: { dsc_produto: updateProdutoDto.dsc_produto },
+      });
+      if (existing && existing.id !== id) {
+        throw new ConflictException('Já existe um produto com esta descrição');
+      }
+    }
     const produto = await this.findOne(id);
     const updatedProduto = Object.assign(produto, updateProdutoDto);
     return await this.produtoRepository.save(updatedProduto);

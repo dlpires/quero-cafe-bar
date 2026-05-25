@@ -2,7 +2,7 @@ import './UpdateMesaPage.css'
 import { createHeader } from '../../shared/Header.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
-import { showToast, withLoading, validatePositiveNumber, focusFirstElement } from '../../shared/util.js';
+import { showToast, withLoading, validatePositiveNumber, focusFirstElement, hasFormChanges } from '../../shared/util.js';
 
 const pageName = 'Editar Mesa';
 
@@ -33,8 +33,9 @@ class UpdateMesaPage extends HTMLElement {
       </ion-content>
     `;
     this.querySelector('#form-mesa').addEventListener('submit', (e) => this.handleSubmit(e));
-    this.querySelector('#btn-cancelar').addEventListener('click', () => this.navigateBack());
+    this.querySelector('#btn-cancelar').addEventListener('click', () => this.confirmCancel());
     if (this.mesaId) await this.loadMesaData();
+    focusFirstElement(this);
   }
 
   async loadMesaData() {
@@ -78,7 +79,24 @@ class UpdateMesaPage extends HTMLElement {
     } catch (error) {
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalText;
-      await showToast('Não foi possível salvar as alterações.', 'error', 5000);
+      await showToast(error.message, 'error', 5000);
+    }
+  }
+
+  async confirmCancel() {
+    const form = this.querySelector('#form-mesa');
+    if (hasFormChanges(form)) {
+      const alert = document.createElement('ion-alert');
+      alert.header = 'Descartar alterações?';
+      alert.message = 'Há alterações não salvas. Deseja realmente cancelar?';
+      alert.buttons = [
+        { text: 'Continuar Editando', role: 'cancel' },
+        { text: 'Descartar', handler: () => this.navigateBack() },
+      ];
+      document.body.appendChild(alert);
+      await alert.present();
+    } else {
+      this.navigateBack();
     }
   }
 

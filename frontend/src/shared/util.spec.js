@@ -54,20 +54,18 @@ describe('Util - shared utilities', () => {
             expect(() => logout()).not.toThrow();
         });
 
-        it('deve usar rota sem hash quando useHash é false', () => {
-            const mockRouter = { useHash: false };
+        it('deve usar router.push para navegar ao login', () => {
+            const mockRouter = { push: jest.fn() };
             const originalQS = document.querySelector;
             document.querySelector = jest.fn((selector) => {
                 if (selector === 'ion-router') return mockRouter;
                 return originalQS.call(document, selector);
             });
-            delete window.location;
-            window.location = { href: 'http://localhost' };
 
             const { logout } = require('./util.js');
             logout();
 
-            expect(window.location.href).toContain('/login');
+            expect(mockRouter.push).toHaveBeenCalledWith('/login', 'root');
             document.querySelector = originalQS;
         });
     });

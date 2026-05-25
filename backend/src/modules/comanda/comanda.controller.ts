@@ -1,4 +1,4 @@
-import { Controller } from '@nestjs/common';
+import { Controller, ConflictException } from '@nestjs/common';
 import { ComandaService } from './comanda.service';
 import { CreateComandaDto } from './dto/create-comanda.dto';
 import { ListComandaDto } from './dto/list-comanda.dto';
@@ -47,6 +47,20 @@ export class ComandaController {
 
   @Delete(':id')
   async remove(@Param('id') id: number): Promise<DeleteComandaDto> {
-    return await this.comandaService.remove(id);
+    try {
+      return await this.comandaService.remove(id);
+    } catch (error: unknown) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        (error as Record<string, unknown>).code === 'ER_ROW_IS_REFERENCED_2'
+      ) {
+        throw new ConflictException(
+          'Não é possível excluir a comanda pois existem itens vinculados a ela',
+        );
+      }
+      throw error;
+    }
   }
 }

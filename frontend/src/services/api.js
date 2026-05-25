@@ -2,6 +2,19 @@ import { environment } from '@environment';
 /**
  * Classe para centralizar e gerenciar as chamadas à API do backend.
  */
+const ERROR_MESSAGES = {
+    400: 'Dados inválidos. Verifique as informações e tente novamente.',
+    401: 'Sua sessão expirou. Faça login novamente.',
+    403: 'Você não tem permissão para realizar esta ação.',
+    404: 'Registro não encontrado.',
+    409: 'Este registro já existe. Verifique os dados e tente novamente.',
+    500: 'Erro interno. Tente novamente em alguns instantes.',
+};
+
+function getErrorMessage(status, fallback) {
+    return ERROR_MESSAGES[status] || fallback || `HTTP error! status: ${status}`;
+}
+
 class Api {
     constructor() {
         this.apiUrl = environment.apiUrl;
@@ -52,13 +65,18 @@ class Api {
 
             if (response.status === 401) {
                 localStorage.removeItem('token');
-                window.location.href = '#/login';
+                const router = document.querySelector('ion-router');
+                if (router) {
+                    router.push('/login', 'root');
+                } else {
+                    window.location.href = '#/login';
+                }
                 throw new Error('Sessão expirada. Faça login novamente.');
             }
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ message: 'Erro na requisição' }));
-                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || getErrorMessage(response.status));
             }
 
             if (response.status === 204) {

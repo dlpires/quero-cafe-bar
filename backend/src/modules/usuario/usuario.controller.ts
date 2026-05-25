@@ -7,8 +7,11 @@ import {
   Patch,
   Delete,
   Query,
+  Req,
+  ConflictException,
 } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
+import { Request } from 'express';
 import { UsuarioService } from './usuario.service';
 import { IUsuarioOutput } from './interfaces/usuario.interface';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
@@ -74,7 +77,28 @@ export class UsuarioController {
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: number): Promise<DeleteUsuarioDto> {
+  async remove(
+    @Param('id') id: number,
+    @Req() request: Request,
+  ): Promise<DeleteUsuarioDto> {
+    const authHeader = request.headers.authorization;
+    if (authHeader) {
+      const token = authHeader.replace('Bearer ', '');
+      try {
+        const secret =
+          process.env.JWT_SECRET || 'dev-secret-change-in-production';
+        const decoded = jwt.verify(token, secret) as { id: number };
+        if (decoded.id === id) {
+          throw new ConflictException(
+            'Você não pode excluir seu próprio usuário',
+          );
+        }
+      } catch (error) {
+        if (error instanceof ConflictException) {
+          throw error;
+        }
+      }
+    }
     return await this.usuarioService.remove(id);
   }
 }
