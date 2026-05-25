@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
+  ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Usuario } from './entities/usuario.entity';
@@ -18,6 +19,12 @@ export class UsuarioService {
   ) {}
 
   async create(createUsuarioDto: CreateUsuarioDto) {
+    const existing = await this.usuarioRepository.findOne({
+      where: { usuario: createUsuarioDto.usuario },
+    });
+    if (existing) {
+      throw new ConflictException('Já existe um usuário com este login');
+    }
     const usuario = this.usuarioRepository.create(createUsuarioDto);
     return await this.usuarioRepository.save(usuario);
   }
@@ -72,6 +79,14 @@ export class UsuarioService {
   }
 
   async update(id: number, updateUsuarioDto: UpdateUsuarioDto) {
+    if (updateUsuarioDto.usuario) {
+      const existing = await this.usuarioRepository.findOne({
+        where: { usuario: updateUsuarioDto.usuario },
+      });
+      if (existing && existing.id !== id) {
+        throw new ConflictException('Já existe um usuário com este login');
+      }
+    }
     const usuario = await this.findOne(id);
     const updatedUsuario = Object.assign(usuario, updateUsuarioDto);
     return await this.usuarioRepository.save(updatedUsuario);

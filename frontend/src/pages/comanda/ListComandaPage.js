@@ -1,12 +1,14 @@
 import './ListComandaPage.css'
 import { createHeader } from '../../shared/Header.js';
-import { logout } from '../../shared/util.js';
+import { logout, createEmptyState, focusFirstElement, showToast } from '../../shared/util.js';
 import { api } from '../../services/api.js';
+import { requireAuth } from '../../services/auth.js';
 
 const pageName = 'Comandas';
 
 class ListComandaPage extends HTMLElement {
   async connectedCallback() {
+    if (!requireAuth()) return;
     this.classList.add('ion-page');
     this.innerHTML = `
       ${createHeader(pageName)}
@@ -16,6 +18,7 @@ class ListComandaPage extends HTMLElement {
     `;
 
     this.querySelector('#logout-btn').addEventListener('click', logout);
+    focusFirstElement(this);
     this.renderFabButton();
     await this.fetchComandas();
 
@@ -30,18 +33,16 @@ class ListComandaPage extends HTMLElement {
     }
   }
 
-  onRouteChange() {
+  async onRouteChange() {
     if (window.location.pathname === '/comandas') {
-      this.fetchComandas();
+      await this.fetchComandas();
+      focusFirstElement(this);
     }
   }
 
   async fetchComandas() {
     const container = this.querySelector('.list-comanda-container');
-    const loading = document.createElement('ion-loading');
-    loading.message = 'Buscando comandas...';
-    document.body.appendChild(loading);
-    await loading.present();
+    this.renderSkeleton(container);
 
     try {
       const comandas = await api.getComandas();
@@ -58,15 +59,29 @@ class ListComandaPage extends HTMLElement {
       this.renderComandas(comandasWithDetails);
     } catch (error) {
       console.error('Erro ao buscar comandas:', error);
+      container.innerHTML = '';
       const alert = document.createElement('ion-alert');
       alert.header = 'Erro';
       alert.message = 'Não foi possível carregar as comandas. Tente novamente mais tarde.';
       alert.buttons = ['OK'];
       document.body.appendChild(alert);
       await alert.present();
-    } finally {
-      await loading.dismiss();
     }
+  }
+
+  renderSkeleton(container) {
+    container.innerHTML = `
+      <ion-list>
+        ${[1,2,3].map(() => `
+          <ion-item>
+            <ion-label>
+              <h3><ion-skeleton-text animated style="width: 50%"></ion-skeleton-text></h3>
+              <p><ion-skeleton-text animated style="width: 80%"></ion-skeleton-text></p>
+            </ion-label>
+          </ion-item>
+        `).join('')}
+      </ion-list>
+    `;
   }
 
   renderFabButton() {
@@ -77,13 +92,14 @@ class ListComandaPage extends HTMLElement {
     fab.slot = 'fixed';
 
     fab.innerHTML = `
-      <ion-fab-button>
+      <ion-fab-button aria-label="Nova Comanda">
         <ion-icon name="add"></ion-icon>
       </ion-fab-button>
     `;
 
     fab.addEventListener('click', () => {
-      window.location.href = '/comanda/register';
+      const router = document.querySelector('ion-router');
+      router.push('/comanda/register');
     });
 
     content.appendChild(fab);
@@ -92,7 +108,15 @@ class ListComandaPage extends HTMLElement {
   renderComandas(comandas) {
     const container = this.querySelector('.list-comanda-container');
     if (comandas.length === 0) {
-      container.innerHTML = `<p class="ion-text-center">Nenhuma comanda encontrada.</p>`;
+      createEmptyState(container, {
+        icon: 'receipt-outline',
+        message: 'Nenhuma comanda encontrada.',
+        actionLabel: 'Abrir Comanda',
+        actionHandler: () => {
+          const router = document.querySelector('ion-router');
+          router.push('/comanda/register');
+        }
+      });
       return;
     }
 
@@ -103,29 +127,30 @@ class ListComandaPage extends HTMLElement {
     const comandaItems = comandas.map(comanda => `
       <ion-item>
         <ion-label>
-          <h2 style="display: flex; align-items: center; gap: 8px;">
+          <h2 class="item-title">
             <ion-icon
               name="${comanda.todosPagos ? 'checkmark-circle' : 'cash-outline'}"
               color="${comanda.todosPagos ? 'success' : 'warning'}"
-              style="flex-shrink: 0;"
+              class="item-icon"
+              aria-hidden="true"
             ></ion-icon>
             <span>Comanda #${comanda.id}</span>
           </h2>
           <p>Mesa: ${comanda.id_mesa}</p>
           <p>Itens: ${comanda.qtdItens} | Total: ${formatCurrency(comanda.valorTotal)}</p>
           <p>
-            <ion-icon name="${comanda.todosPagos ? 'checkmark-circle' : 'close-circle'}" color="${comanda.todosPagos ? 'success' : 'danger'}"></ion-icon>
-            <span style="margin-left: 4px;">${comanda.todosPagos ? 'Pago' : 'Não Pago'}</span>
-            <ion-icon name="${comanda.todosEntregues ? 'checkmark-circle' : 'close-circle'}" color="${comanda.todosEntregues ? 'success' : 'danger'}" style="margin-left: 12px;"></ion-icon>
-            <span style="margin-left: 4px;">${comanda.todosEntregues ? 'Entregue' : 'Não Entregue'}</span>
+            <ion-icon name="${comanda.todosPagos ? 'checkmark-circle' : 'close-circle'}" color="${comanda.todosPagos ? 'success' : 'danger'}" aria-hidden="true"></ion-icon>
+            <span class="status-text">${comanda.todosPagos ? 'Pago' : 'Não Pago'}</span>
+            <ion-icon name="${comanda.todosEntregues ? 'checkmark-circle' : 'close-circle'}" color="${comanda.todosEntregues ? 'success' : 'danger'}" class="status-text-separator" aria-hidden="true"></ion-icon>
+            <span class="status-text">${comanda.todosEntregues ? 'Entregue' : 'Não Entregue'}</span>
           </p>
         </ion-label>
 
         <ion-buttons slot="end">
-          <ion-button fill="clear" class="btn-edit" data-id="${comanda.id}">
+          <ion-button fill="clear" class="btn-edit" data-id="${comanda.id}" aria-label="Editar Comanda ${comanda.id}">
             <ion-icon slot="icon-only" name="create-outline"></ion-icon>
           </ion-button>
-          <ion-button fill="clear" color="danger" class="btn-delete" data-id="${comanda.id}">
+          <ion-button fill="clear" color="danger" class="btn-delete" data-id="${comanda.id}" aria-label="Excluir Comanda ${comanda.id}">
             <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
           </ion-button>
         </ion-buttons>
@@ -158,21 +183,11 @@ class ListComandaPage extends HTMLElement {
               handler: async () => {
                 try {
                   await api.deleteComanda(id);
-                  const toast = document.createElement('ion-toast');
-                  toast.message = 'Comanda excluída com sucesso!';
-                  toast.duration = 2000;
-                  toast.color = 'success';
-                  document.body.appendChild(toast);
-                  await toast.present();
+                  await showToast('Comanda excluída com sucesso!', 'success', 2000);
                   await this.fetchComandas();
                 } catch (error) {
                   console.error('Erro ao excluir:', error);
-                  const toast = document.createElement('ion-toast');
-                  toast.message = 'Erro ao excluir comanda. Tente novamente.';
-                  toast.duration = 3000;
-                  toast.color = 'danger';
-                  document.body.appendChild(toast);
-                  await toast.present();
+                  await showToast(error.message, 'error', 5000);
                 }
             }
           }

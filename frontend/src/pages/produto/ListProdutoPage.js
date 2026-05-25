@@ -1,12 +1,14 @@
 import './ListProdutoPage.css'
 import { createHeader } from '../../shared/Header.js';
-import { logout } from '../../shared/util.js';
+import { logout, createEmptyState, focusFirstElement, showToast } from '../../shared/util.js';
 import { api } from '../../services/api.js';
+import { requireAuth } from '../../services/auth.js';
 
 const pageName = 'Produtos';
 
 class ListProdutoPage extends HTMLElement {
   async connectedCallback() {
+    if (!requireAuth()) return;
     this.classList.add('ion-page');
     this.innerHTML = `
       ${createHeader(pageName)}
@@ -16,6 +18,7 @@ class ListProdutoPage extends HTMLElement {
     `;
 
     this.querySelector('#logout-btn').addEventListener('click', logout);
+    focusFirstElement(this);
     this.renderFabButton();
     await this.fetchProdutos();
 
@@ -30,33 +33,45 @@ class ListProdutoPage extends HTMLElement {
     }
   }
 
-  onRouteChange() {
+  async onRouteChange() {
     if (window.location.pathname === '/produtos') {
-      this.fetchProdutos();
+      await this.fetchProdutos();
+      focusFirstElement(this);
     }
   }
 
   async fetchProdutos() {
     const container = this.querySelector('.list-produto-container');
-    const loading = document.createElement('ion-loading');
-    loading.message = 'Buscando produtos...';
-    document.body.appendChild(loading);
-    await loading.present();
+    this.renderSkeleton(container);
 
     try {
       const produtos = await api.getProdutos();
       this.renderProdutos(produtos);
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
+      container.innerHTML = '';
       const alert = document.createElement('ion-alert');
       alert.header = 'Erro';
       alert.message = 'Não foi possível carregar os produtos. Tente novamente mais tarde.';
       alert.buttons = ['OK'];
       document.body.appendChild(alert);
       await alert.present();
-    } finally {
-      await loading.dismiss();
     }
+  }
+
+  renderSkeleton(container) {
+    container.innerHTML = `
+      <ion-list>
+        ${[1,2,3].map(() => `
+          <ion-item>
+            <ion-label>
+              <h3><ion-skeleton-text animated style="width: 50%"></ion-skeleton-text></h3>
+              <p><ion-skeleton-text animated style="width: 80%"></ion-skeleton-text></p>
+            </ion-label>
+          </ion-item>
+        `).join('')}
+      </ion-list>
+    `;
   }
 
   renderFabButton() {
@@ -67,13 +82,14 @@ class ListProdutoPage extends HTMLElement {
     fab.slot = 'fixed';
 
     fab.innerHTML = `
-      <ion-fab-button>
+      <ion-fab-button aria-label="Adicionar Produto">
         <ion-icon name="add"></ion-icon>
       </ion-fab-button>
     `;
 
     fab.addEventListener('click', () => {
-      window.location.href = '/produto/register';
+      const router = document.querySelector('ion-router');
+      router.push('/produto/register');
     });
 
     content.appendChild(fab);
@@ -83,7 +99,15 @@ class ListProdutoPage extends HTMLElement {
   renderProdutos(produtos) {
     const container = this.querySelector('.list-produto-container');
     if (produtos.length === 0) {
-      container.innerHTML = `<p class="ion-text-center">Nenhum produto encontrado.</p>`;
+      createEmptyState(container, {
+        icon: 'file-tray-outline',
+        message: 'Nenhum produto encontrado.',
+        actionLabel: 'Cadastrar Produto',
+        actionHandler: () => {
+          const router = document.querySelector('ion-router');
+          router.push('/produto/register');
+        }
+      });
       return;
     }
 
@@ -94,11 +118,12 @@ class ListProdutoPage extends HTMLElement {
     const productItems = produtos.map(produto => `
       <ion-item>
         <ion-label>
-          <h2 style="display: flex; align-items: center; gap: 8px;">
+          <h2 class="item-title">
             <ion-icon
               name="${produto.status ? 'checkmark-circle' : 'close-circle'}"
               color="${produto.status ? 'success' : 'danger'}"
-              style="flex-shrink: 0;"
+              class="item-icon"
+              aria-hidden="true"
             ></ion-icon>
             <span>${produto.dsc_produto}</span>
           </h2>
@@ -106,10 +131,10 @@ class ListProdutoPage extends HTMLElement {
         </ion-label>
 
         <ion-buttons slot="end">
-          <ion-button fill="clear" class="btn-edit" data-id="${produto.id}">
+          <ion-button fill="clear" class="btn-edit" data-id="${produto.id}" aria-label="Editar ${produto.dsc_produto}">
             <ion-icon slot="icon-only" name="create-outline"></ion-icon>
           </ion-button>
-          <ion-button fill="clear" color="danger" class="btn-delete" data-id="${produto.id}">
+          <ion-button fill="clear" color="danger" class="btn-delete" data-id="${produto.id}" aria-label="Excluir ${produto.dsc_produto}">
             <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
           </ion-button>
         </ion-buttons>
@@ -120,7 +145,6 @@ class ListProdutoPage extends HTMLElement {
       <ion-list>${productItems}</ion-list>
     `;
 
-    // Adiciona eventos para os botões de edição
     container.querySelectorAll('.btn-edit').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-id');
@@ -129,7 +153,6 @@ class ListProdutoPage extends HTMLElement {
       });
     });
 
-    // Adiciona eventos para os botões de exclusão
     container.querySelectorAll('.btn-delete').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
@@ -144,21 +167,11 @@ class ListProdutoPage extends HTMLElement {
               handler: async () => {
                 try {
                   await api.deleteProduto(id);
-                  const toast = document.createElement('ion-toast');
-                  toast.message = 'Produto excluído com sucesso!';
-                  toast.duration = 2000;
-                  toast.color = 'success';
-                  document.body.appendChild(toast);
-                  await toast.present();
+                  await showToast('Produto excluído com sucesso!', 'success', 2000);
                   await this.fetchProdutos();
                 } catch (error) {
                   console.error('Erro ao excluir:', error);
-                  const toast = document.createElement('ion-toast');
-                  toast.message = 'Erro ao excluir produto. Tente novamente.';
-                  toast.duration = 3000;
-                  toast.color = 'danger';
-                  document.body.appendChild(toast);
-                  await toast.present();
+                  await showToast(error.message, 'error', 5000);
                 }
             }
           }

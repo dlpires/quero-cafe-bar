@@ -1,11 +1,14 @@
 import './UpdateUsuarioPage.css'
 import { createHeader } from '../../shared/Header.js';
 import { api } from '../../services/api.js';
+import { requireAuth } from '../../services/auth.js';
+import { showToast, withLoading, validateRequired, focusFirstElement, hasFormChanges } from '../../shared/util.js';
 
 const pageName = 'Editar Usuário';
 
 class UpdateUsuarioPage extends HTMLElement {
   async connectedCallback() {
+    if (!requireAuth()) return;
     const urlParams = new URLSearchParams(window.location.search);
     this.usuarioId = urlParams.get('id');
 
@@ -36,12 +39,12 @@ class UpdateUsuarioPage extends HTMLElement {
           </ion-list>
 
           <div class="ion-padding">
-            <ion-button expand="block" type="submit" class="ion-margin-top">
-              <ion-icon name="checkmark-circle" slot="start" style="margin-right: 8px;"></ion-icon>
+            <ion-button expand="block" type="submit" class="ion-margin-top" id="btn-submit">
+              <ion-icon name="checkmark-circle" slot="start" class="radio-icon"></ion-icon>
               Salvar Alterações
             </ion-button>
             <ion-button expand="block" color="danger" id="btn-cancelar">
-              <ion-icon name="close-circle" slot="start" style="margin-right: 8px;"></ion-icon>
+              <ion-icon name="close-circle" slot="start" class="radio-icon"></ion-icon>
               Cancelar
             </ion-button>
           </div>
@@ -50,11 +53,13 @@ class UpdateUsuarioPage extends HTMLElement {
     `;
 
     this.querySelector('#form-usuario').addEventListener('submit', (e) => this.handleSubmit(e));
-    this.querySelector('#btn-cancelar').addEventListener('click', () => this.navigateBack());
+    this.querySelector('#btn-cancelar').addEventListener('click', () => this.confirmCancel());
 
     if (this.usuarioId) {
       await this.loadUsuarioData();
     }
+
+    focusFirstElement(this);
   }
 
   async loadUsuarioData() {
@@ -65,23 +70,30 @@ class UpdateUsuarioPage extends HTMLElement {
       this.querySelector('#perfil').value = usuario.perfil.toString();
     } catch (error) {
       console.error('Erro ao carregar usuario:', error);
-      const alert = document.createElement('ion-alert');
-      alert.header = 'Erro';
-      alert.message = 'Não foi possível carregar os dados do usuário.';
-      alert.buttons = ['OK'];
-      document.body.appendChild(alert);
-      await alert.present();
+      await showToast('Não foi possível carregar os dados do usuário.', 'error', 5000);
       this.navigateBack();
     }
   }
 
   async handleSubmit(event) {
     event.preventDefault();
-    const formData = new FormData(event.target);
+    const form = event.target;
+    const formData = new FormData(form);
+
+    const nomeError = validateRequired(formData.get('nome'), 'Nome');
+    const usuarioError = validateRequired(formData.get('usuario'), 'Usuário');
+    const perfilVal = formData.get('perfil');
+
+    if (nomeError || usuarioError || !perfilVal) {
+      await showToast(nomeError || usuarioError || 'O campo Perfil é obrigatório.', 'warning', 3000);
+      focusFirstElement(form);
+      return;
+    }
+
     const usuarioData = {
       nome: formData.get('nome'),
       usuario: formData.get('usuario'),
-      perfil: parseInt(formData.get('perfil'))
+      perfil: parseInt(perfilVal)
     };
 
     const senha = formData.get('senha');
@@ -89,17 +101,37 @@ class UpdateUsuarioPage extends HTMLElement {
       usuarioData.senha = senha;
     }
 
+    const submitBtn = this.querySelector('#btn-submit');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'Salvando...';
+
     try {
-      await api.updateUsuario(this.usuarioId, usuarioData);
+      await withLoading(api.updateUsuario(this.usuarioId, usuarioData));
+      await showToast('Registro atualizado com sucesso!', 'success', 3000);
       this.navigateBack();
     } catch (error) {
       console.error('Erro ao salvar usuario:', error);
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+      await showToast(error.message, 'error', 5000);
+    }
+  }
+
+  async confirmCancel() {
+    const form = this.querySelector('#form-usuario');
+    if (hasFormChanges(form)) {
       const alert = document.createElement('ion-alert');
-      alert.header = 'Erro';
-      alert.message = 'Não foi possível salvar as alterações. Tente novamente mais tarde.';
-      alert.buttons = ['OK'];
+      alert.header = 'Descartar alterações?';
+      alert.message = 'Há alterações não salvas. Deseja realmente cancelar?';
+      alert.buttons = [
+        { text: 'Continuar Editando', role: 'cancel' },
+        { text: 'Descartar', handler: () => this.navigateBack() },
+      ];
       document.body.appendChild(alert);
       await alert.present();
+    } else {
+      this.navigateBack();
     }
   }
 

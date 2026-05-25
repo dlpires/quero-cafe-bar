@@ -214,6 +214,8 @@ document.createElement = jest.fn((tagName) => {
       value: '',
       present: jest.fn().mockResolvedValue(undefined),
       dismiss: jest.fn().mockResolvedValue(undefined),
+      onWillDismiss: jest.fn().mockResolvedValue(undefined),
+      remove: jest.fn(),
       addEventListener: jest.fn(),
       appendChild: jest.fn(),
       querySelector: jest.fn(() => null),

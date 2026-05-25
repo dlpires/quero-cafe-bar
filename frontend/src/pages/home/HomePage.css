@@ -1,5 +1,11 @@
 .home-container {
   padding: 16px;
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+.item-produto-nome {
+  padding: 5px;
 }
 
 .comandas-grid {

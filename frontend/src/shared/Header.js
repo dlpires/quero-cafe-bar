@@ -34,23 +34,23 @@ const createAndInjectMenu = () => {
         <ion-content>
             <ion-list>
                 <ion-item button class="menu-item" data-url="/home">
-                    <ion-icon name="home-outline" slot="start"></ion-icon>
+                    <ion-icon name="home-outline" slot="start" aria-hidden="true"></ion-icon>
                     <ion-label>Home</ion-label>
                 </ion-item>
                 <ion-item button class="menu-item" data-url="/produtos">
-                    <ion-icon name="fast-food-outline" slot="start"></ion-icon>
+                    <ion-icon name="fast-food-outline" slot="start" aria-hidden="true"></ion-icon>
                     <ion-label>Produtos</ion-label>
                 </ion-item>
                 <ion-item button class="menu-item" data-url="/usuarios">
-                    <ion-icon name="people-outline" slot="start"></ion-icon>
+                    <ion-icon name="people-outline" slot="start" aria-hidden="true"></ion-icon>
                     <ion-label>Usuários</ion-label>
                 </ion-item>
                 <ion-item button class="menu-item" data-url="/mesas">
-                    <ion-icon name="grid-outline" slot="start"></ion-icon>
+                    <ion-icon name="grid-outline" slot="start" aria-hidden="true"></ion-icon>
                     <ion-label>Mesas</ion-label>
                 </ion-item>
                 <ion-item button class="menu-item" data-url="/comandas">
-                    <ion-icon name="receipt-outline" slot="start"></ion-icon>
+                    <ion-icon name="receipt-outline" slot="start" aria-hidden="true"></ion-icon>
                     <ion-label>Comandas</ion-label>
                 </ion-item>
 
@@ -80,7 +80,7 @@ export function createHeader(pageName) {
     }
 
     const startSlotContent = pageName !== 'Login' ? `<ion-buttons slot="start"><ion-menu-button></ion-menu-button></ion-buttons>` : `<ion-icon name="cafe" slot="start" style="margin-left: 15px; font-size: 24px;"></ion-icon>`;
-    const logoutBtn = pageName !== 'Login' ? `<ion-buttons slot="end"><ion-button id="logout-btn"><ion-icon slot="icon-only" name="log-out-outline"></ion-icon></ion-button></ion-buttons>` : ``;
+    const logoutBtn = pageName !== 'Login' ? `<ion-buttons slot="end"><ion-button id="logout-btn" aria-label="Sair"><ion-icon slot="icon-only" name="log-out-outline"></ion-icon></ion-button></ion-buttons>` : ``;
 
     return `<ion-header>
                 <ion-toolbar color="primary">

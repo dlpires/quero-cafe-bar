@@ -1,11 +1,14 @@
 import './UpdateMesaPage.css'
 import { createHeader } from '../../shared/Header.js';
 import { api } from '../../services/api.js';
+import { requireAuth } from '../../services/auth.js';
+import { showToast, withLoading, validatePositiveNumber, focusFirstElement, hasFormChanges } from '../../shared/util.js';
 
 const pageName = 'Editar Mesa';
 
 class UpdateMesaPage extends HTMLElement {
   async connectedCallback() {
+    if (!requireAuth()) return;
     const urlParams = new URLSearchParams(window.location.search);
     this.mesaId = urlParams.get('id');
     this.classList.add('ion-page');
@@ -23,15 +26,16 @@ class UpdateMesaPage extends HTMLElement {
             </ion-item>
           </ion-list>
           <div class="ion-padding">
-            <ion-button expand="block" type="submit" class="ion-margin-top">Salvar Alterações</ion-button>
+            <ion-button expand="block" type="submit" class="ion-margin-top" id="btn-submit">Salvar Alterações</ion-button>
             <ion-button expand="block" color="danger" id="btn-cancelar">Cancelar</ion-button>
           </div>
         </form>
       </ion-content>
     `;
     this.querySelector('#form-mesa').addEventListener('submit', (e) => this.handleSubmit(e));
-    this.querySelector('#btn-cancelar').addEventListener('click', () => this.navigateBack());
+    this.querySelector('#btn-cancelar').addEventListener('click', () => this.confirmCancel());
     if (this.mesaId) await this.loadMesaData();
+    focusFirstElement(this);
   }
 
   async loadMesaData() {
@@ -40,34 +44,59 @@ class UpdateMesaPage extends HTMLElement {
       this.querySelector('#qtd_cadeiras').value = mesa.qtd_cadeiras;
       this.querySelector('#status').checked = mesa.status;
     } catch (error) {
-      const alert = document.createElement('ion-alert');
-      alert.header = 'Erro';
-      alert.message = 'Não foi possível carregar os dados da mesa.';
-      alert.buttons = ['OK'];
-      document.body.appendChild(alert);
-      await alert.present();
+      await showToast('Não foi possível carregar os dados da mesa.', 'error', 5000);
       this.navigateBack();
     }
   }
 
   async handleSubmit(event) {
     event.preventDefault();
-    const formData = new FormData(event.target);
+    const form = event.target;
+    const formData = new FormData(form);
+
+    const qtdError = validatePositiveNumber(formData.get('qtd_cadeiras'), 'Quantidade de Cadeiras');
+
+    if (qtdError) {
+      await showToast(qtdError, 'warning', 3000);
+      focusFirstElement(form);
+      return;
+    }
+
     const mesaData = {
       qtd_cadeiras: parseInt(formData.get('qtd_cadeiras')),
       status: formData.get('status') === 'on'
     };
 
+    const submitBtn = this.querySelector('#btn-submit');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'Salvando...';
+
     try {
-      await api.updateMesa(this.mesaId, mesaData);
+      await withLoading(api.updateMesa(this.mesaId, mesaData));
+      await showToast('Registro atualizado com sucesso!', 'success', 3000);
       this.navigateBack();
     } catch (error) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+      await showToast(error.message, 'error', 5000);
+    }
+  }
+
+  async confirmCancel() {
+    const form = this.querySelector('#form-mesa');
+    if (hasFormChanges(form)) {
       const alert = document.createElement('ion-alert');
-      alert.header = 'Erro';
-      alert.message = 'Não foi possível salvar as alterações.';
-      alert.buttons = ['OK'];
+      alert.header = 'Descartar alterações?';
+      alert.message = 'Há alterações não salvas. Deseja realmente cancelar?';
+      alert.buttons = [
+        { text: 'Continuar Editando', role: 'cancel' },
+        { text: 'Descartar', handler: () => this.navigateBack() },
+      ];
       document.body.appendChild(alert);
       await alert.present();
+    } else {
+      this.navigateBack();
     }
   }
 

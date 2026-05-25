@@ -1,12 +1,14 @@
 import './ListUsuarioPage.css'
 import { createHeader } from '../../shared/Header.js';
-import { logout } from '../../shared/util.js';
+import { logout, createEmptyState, focusFirstElement, showToast, getLoggedUserId } from '../../shared/util.js';
 import { api } from '../../services/api.js';
+import { requireAuth } from '../../services/auth.js';
 
 const pageName = 'Usuários';
 
 class ListUsuarioPage extends HTMLElement {
   async connectedCallback() {
+    if (!requireAuth()) return;
     this.classList.add('ion-page');
     this.innerHTML = `
       ${createHeader(pageName)}
@@ -16,6 +18,7 @@ class ListUsuarioPage extends HTMLElement {
     `;
 
     this.querySelector('#logout-btn').addEventListener('click', logout);
+    focusFirstElement(this);
     this.renderFabButton();
     await this.fetchUsuarios();
 
@@ -30,33 +33,45 @@ class ListUsuarioPage extends HTMLElement {
     }
   }
 
-  onRouteChange() {
+  async onRouteChange() {
     if (window.location.pathname === '/usuarios') {
-      this.fetchUsuarios();
+      await this.fetchUsuarios();
+      focusFirstElement(this);
     }
   }
 
   async fetchUsuarios() {
     const container = this.querySelector('.list-usuario-container');
-    const loading = document.createElement('ion-loading');
-    loading.message = 'Buscando usuarios...';
-    document.body.appendChild(loading);
-    await loading.present();
+    this.renderSkeleton(container);
 
     try {
       const usuarios = await api.getUsuarios();
       this.renderUsuarios(usuarios);
     } catch (error) {
       console.error('Erro ao buscar usuarios:', error);
+      container.innerHTML = '';
       const alert = document.createElement('ion-alert');
       alert.header = 'Erro';
       alert.message = 'Não foi possível carregar os usuarios. Tente novamente mais tarde.';
       alert.buttons = ['OK'];
       document.body.appendChild(alert);
       await alert.present();
-    } finally {
-      await loading.dismiss();
     }
+  }
+
+  renderSkeleton(container) {
+    container.innerHTML = `
+      <ion-list>
+        ${[1,2,3].map(() => `
+          <ion-item>
+            <ion-label>
+              <h3><ion-skeleton-text animated style="width: 50%"></ion-skeleton-text></h3>
+              <p><ion-skeleton-text animated style="width: 80%"></ion-skeleton-text></p>
+            </ion-label>
+          </ion-item>
+        `).join('')}
+      </ion-list>
+    `;
   }
 
   renderFabButton() {
@@ -67,13 +82,14 @@ class ListUsuarioPage extends HTMLElement {
     fab.slot = 'fixed';
 
     fab.innerHTML = `
-      <ion-fab-button>
+      <ion-fab-button aria-label="Adicionar Usuário">
         <ion-icon name="add"></ion-icon>
       </ion-fab-button>
     `;
 
     fab.addEventListener('click', () => {
-      window.location.href = '/usuario/register';
+      const router = document.querySelector('ion-router');
+      router.push('/usuario/register');
     });
 
     content.appendChild(fab);
@@ -83,18 +99,29 @@ class ListUsuarioPage extends HTMLElement {
   renderUsuarios(usuarios) {
     const container = this.querySelector('.list-usuario-container');
     if (usuarios.length === 0) {
-      container.innerHTML = `<p class="ion-text-center">Nenhum usuario encontrado.</p>`;
+      createEmptyState(container, {
+        icon: 'people-outline',
+        message: 'Nenhum usuario encontrado.',
+        actionLabel: 'Cadastrar Usuário',
+        actionHandler: () => {
+          const router = document.querySelector('ion-router');
+          router.push('/usuario/register');
+        }
+      });
       return;
     }
 
-    const userItems = usuarios.map(usuario => `
+    const loggedUserId = getLoggedUserId();
+    const userItems = usuarios.map(usuario => {
+      const isSelf = loggedUserId !== null && parseInt(loggedUserId) === usuario.id;
+      return `
       <ion-item>
         <ion-label>
-          <h2 style="display: flex; align-items: center; gap: 8px;">
+          <h2 class="item-title">
             <ion-icon
-              name="${usuario.perfil == 0 ? 'restaurant' : 'person'}"
-              color="${usuario.perfil == 0 ? 'primary' : 'secondary'}"
-              style="flex-shrink: 0;"
+              name="${usuario.status ? 'checkmark-circle' : 'close-circle'}"
+              color="${usuario.status ? 'success' : 'danger'}"
+              aria-hidden="true"
             ></ion-icon>
             <span>${usuario.nome}</span>
           </h2>
@@ -102,21 +129,20 @@ class ListUsuarioPage extends HTMLElement {
         </ion-label>
 
         <ion-buttons slot="end">
-          <ion-button fill="clear" class="btn-edit" data-id="${usuario.id}">
+          <ion-button fill="clear" class="btn-edit" data-id="${usuario.id}" aria-label="Editar ${usuario.nome}">
             <ion-icon slot="icon-only" name="create-outline"></ion-icon>
           </ion-button>
-          <ion-button fill="clear" color="danger" class="btn-delete" data-id="${usuario.id}">
+          <ion-button fill="clear" color="danger" class="btn-delete" data-id="${usuario.id}" data-self="${isSelf}" aria-label="${isSelf ? 'Você não pode excluir seu próprio usuário' : 'Excluir ' + usuario.nome}">
             <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-item>
-    `).join('');
+    `}).join('');
 
     container.innerHTML = `
       <ion-list>${userItems}</ion-list>
     `;
 
-    // Adiciona eventos para os botões de edição
     container.querySelectorAll('.btn-edit').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-id');
@@ -125,10 +151,14 @@ class ListUsuarioPage extends HTMLElement {
       });
     });
 
-    // Adiciona eventos para os botões de exclusão
     container.querySelectorAll('.btn-delete').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
+        const isSelf = btn.getAttribute('data-self') === 'true';
+        if (isSelf) {
+          await showToast('Você não pode excluir seu próprio usuário.', 'warning', 3000);
+          return;
+        }
         
         const alert = document.createElement('ion-alert');
         alert.header = 'Confirmar';
@@ -140,21 +170,11 @@ class ListUsuarioPage extends HTMLElement {
               handler: async () => {
                 try {
                   await api.deleteUsuario(id);
-                  const toast = document.createElement('ion-toast');
-                  toast.message = 'Usuário excluído com sucesso!';
-                  toast.duration = 2000;
-                  toast.color = 'success';
-                  document.body.appendChild(toast);
-                  await toast.present();
+                  await showToast('Usuário excluído com sucesso!', 'success', 2000);
                   await this.fetchUsuarios();
                 } catch (error) {
                   console.error('Erro ao excluir:', error);
-                  const toast = document.createElement('ion-toast');
-                  toast.message = 'Erro ao excluir usuário. Tente novamente.';
-                  toast.duration = 3000;
-                  toast.color = 'danger';
-                  document.body.appendChild(toast);
-                  await toast.present();
+                  await showToast(error.message, 'error', 5000);
                 }
             }
           }

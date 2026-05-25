@@ -1,12 +1,14 @@
 import './HomePage.css'
 import { createHeader } from '../../shared/Header.js';
-import { logout } from '../../shared/util.js';
+import { logout, createEmptyState, focusFirstElement, showToast } from '../../shared/util.js';
 import { api } from '../../services/api.js';
+import { requireAuth } from '../../services/auth.js';
 
 const pageName = 'Cozinha';
 
 class HomePage extends HTMLElement {
   async connectedCallback() {
+    if (!requireAuth()) return;
     this.classList.add('ion-page');
     this.innerHTML = `
       ${createHeader(pageName)}
@@ -16,36 +18,79 @@ class HomePage extends HTMLElement {
     `;
 
     this.querySelector('#logout-btn').addEventListener('click', logout);
+    focusFirstElement(this);
     await this.fetchComandas();
+
+    window.addEventListener('popstate', () => this.onRouteChange());
+    this._routeListener = () => this.onRouteChange();
+    document.querySelector('ion-router').addEventListener('urlChanged', this._routeListener);
+  }
+
+  disconnectedCallback() {
+    if (this._routeListener) {
+      document.querySelector('ion-router').removeEventListener('urlChanged', this._routeListener);
+    }
+  }
+
+  async onRouteChange() {
+    if (window.location.pathname === '/home') {
+      await this.fetchComandas();
+      focusFirstElement(this);
+    }
   }
 
   async fetchComandas() {
     const container = this.querySelector('.home-container');
-    const loading = document.createElement('ion-loading');
-    loading.message = 'Carregando pedidos...';
-    document.body.appendChild(loading);
-    await loading.present();
+    this.renderSkeleton(container);
 
     try {
       const comandas = await api.getComandas();
       this.renderComandas(comandas);
     } catch (error) {
       console.error('Erro ao buscar comandas:', error);
+      container.innerHTML = '';
       const alert = document.createElement('ion-alert');
       alert.header = 'Erro';
       alert.message = 'Não foi possível carregar os pedidos. Tente novamente.';
       alert.buttons = ['OK'];
       document.body.appendChild(alert);
       await alert.present();
-    } finally {
-      await loading.dismiss();
     }
+  }
+
+  renderSkeleton(container) {
+    container.innerHTML = `
+      <div class="comandas-grid">
+        ${[1,2,3].map(() => `
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title><ion-skeleton-text animated style="width: 70%"></ion-skeleton-text></ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              ${[1,2].map(() => `
+                <ion-item lines="none">
+                  <ion-label>
+                    <h3><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></h3>
+                  </ion-label>
+                  <ion-skeleton-text animated style="width: 80px; height: 24px" slot="end"></ion-skeleton-text>
+                </ion-item>
+              `).join('')}
+            </ion-card-content>
+          </ion-card>
+        `).join('')}
+      </div>
+    `;
   }
 
   renderComandas(comandas) {
     const container = this.querySelector('.home-container');
     if (comandas.length === 0) {
-      container.innerHTML = `<p class="ion-text-center">Nenhum pedido pendente.</p>`;
+      createEmptyState(container, {
+        icon: 'restaurant-outline',
+        message: 'Nenhum pedido pendente.',
+        actionLabel: '',
+        actionHandler: null
+      });
       return;
     }
 
@@ -79,7 +124,7 @@ class HomePage extends HTMLElement {
     const itensHtml = comanda.itens.map(item => `
       <ion-item lines="none" class="item-entrega ${item.statusEntrega ? 'item-delivered' : 'item-pending'}">
         <ion-label>
-          <h3 style="padding: 5px">${item.produto.dsc_produto} <ion-badge color="primary">x${item.qtd_item}</ion-badge></h3>
+          <h3 class="item-produto-nome">${item.produto.dsc_produto} <ion-badge color="primary">x${item.qtd_item}</ion-badge></h3>
         </ion-label>
         <ion-select
           class="item-entrega-select"
@@ -88,6 +133,7 @@ class HomePage extends HTMLElement {
           value="${item.statusEntrega.toString()}"
           interface="popover"
           slot="end"
+          aria-label="Status de entrega do item ${item.produto.dsc_produto}"
         >
           <ion-select-option value="false">Pendente</ion-select-option>
           <ion-select-option value="true">Entregue</ion-select-option>
@@ -102,7 +148,7 @@ class HomePage extends HTMLElement {
             <div class="card-header-content">
               <span>Comanda #${comanda.id}</span>
               <span>Mesa: ${comanda.mesa.id}</span>
-              <ion-icon name="${statusIcon}" color="${statusColor}" class="status-icon"></ion-icon>
+              <ion-icon name="${statusIcon}" color="${statusColor}" class="status-icon" aria-hidden="true"></ion-icon>
             </div>
           </ion-card-title>
         </ion-card-header>
@@ -117,20 +163,10 @@ class HomePage extends HTMLElement {
     try {
       await api.updateItemComanda(id_comanda, id_produto, { statusEntrega });
       this.updateCardStatusIcon(cardElement);
-      const toast = document.createElement('ion-toast');
-      toast.message = 'Status do item atualizado!';
-      toast.duration = 2000;
-      toast.color = 'success';
-      document.body.appendChild(toast);
-      await toast.present();
+      await showToast('Status do item atualizado!', 'success', 2000);
     } catch (error) {
       console.error('Erro ao atualizar item:', error);
-      const toast = document.createElement('ion-toast');
-      toast.message = 'Erro ao atualizar status. Tente novamente.';
-      toast.duration = 2000;
-      toast.color = 'danger';
-      document.body.appendChild(toast);
-      await toast.present();
+      await showToast(error.message, 'error', 5000);
     }
   }
 

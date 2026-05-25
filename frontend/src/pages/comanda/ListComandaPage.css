@@ -1,8 +1,18 @@
 .list-comanda-container {
   padding: 16px;
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
 }
 
 .list-comanda-container ion-item {
   margin-bottom: 8px;
   border-radius: 8px;
+}
+
+.status-text {
+  margin-left: 4px;
+}
+
+.status-text-separator {
+  margin-left: 12px;
 }

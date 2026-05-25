@@ -1,11 +1,14 @@
 import './RegComandaPage.css';
 import { createHeader } from '../../shared/Header.js';
 import { api } from '../../services/api.js';
+import { requireAuth } from '../../services/auth.js';
+import { showToast, withLoading, focusFirstElement, hasFormChanges } from '../../shared/util.js';
 
 const pageName = 'Abrir Comanda';
 
 class RegComandaPage extends HTMLElement {
   async connectedCallback() {
+    if (!requireAuth()) return;
     this.classList.add('ion-page');
     this.innerHTML = `
       ${createHeader(pageName)}
@@ -24,12 +27,12 @@ class RegComandaPage extends HTMLElement {
           </ion-list>
 
           <div class="ion-padding">
-            <ion-button expand="block" type="submit" class="ion-margin-top">
-              <ion-icon name="checkmark-circle" style="margin-right: 8px;"></ion-icon>
+            <ion-button expand="block" type="submit" class="ion-margin-top" id="btn-submit">
+              <ion-icon name="checkmark-circle" class="radio-icon"></ion-icon>
               Abrir Comanda
             </ion-button>
             <ion-button expand="block" color="danger" id="btn-cancelar">
-              <ion-icon name="close-circle" style="margin-right: 8px;"></ion-icon>
+              <ion-icon name="close-circle" class="radio-icon"></ion-icon>
               Cancelar
             </ion-button>
           </div>
@@ -38,9 +41,10 @@ class RegComandaPage extends HTMLElement {
     `;
 
     this.querySelector('#form-comanda').addEventListener('submit', (e) => this.handleSubmit(e));
-    this.querySelector('#btn-cancelar').addEventListener('click', () => this.navigateBack());
+    this.querySelector('#btn-cancelar').addEventListener('click', () => this.confirmCancel());
 
     await this.loadMesas();
+    focusFirstElement(this);
   }
 
   async loadMesas() {
@@ -57,35 +61,58 @@ class RegComandaPage extends HTMLElement {
       });
     } catch (error) {
       console.error('Erro ao carregar mesas:', error);
-      const toast = document.createElement('ion-toast');
-      toast.message = 'Erro ao carregar lista de mesas.';
-      toast.duration = 3000;
-      toast.color = 'danger';
-      document.body.appendChild(toast);
-      await toast.present();
+      await showToast('Erro ao carregar lista de mesas.', 'error', 3000);
     }
   }
 
   async handleSubmit(event) {
     event.preventDefault();
-    const formData = new FormData(event.target);
-    
+    const form = event.target;
+    const formData = new FormData(form);
+
+    const id_mesa = formData.get('id_mesa');
+    if (!id_mesa) {
+      await showToast('O campo Mesa é obrigatório.', 'warning', 3000);
+      focusFirstElement(form);
+      return;
+    }
+
     const comandaData = {
-      id_mesa: parseInt(formData.get('id_mesa')),
+      id_mesa: parseInt(id_mesa),
       obs_comanda: formData.get('obs_comanda') || undefined,
     };
 
+    const submitBtn = this.querySelector('#btn-submit');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'Salvando...';
+
     try {
-      await api.addComanda(comandaData);
+      await withLoading(api.addComanda(comandaData));
+      await showToast('Registro salvo com sucesso!', 'success', 3000);
       this.navigateBack();
     } catch (error) {
       console.error('Erro ao abrir comanda:', error);
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+      await showToast(error.message, 'error', 5000);
+    }
+  }
+
+  async confirmCancel() {
+    const form = this.querySelector('#form-comanda');
+    if (hasFormChanges(form)) {
       const alert = document.createElement('ion-alert');
-      alert.header = 'Erro';
-      alert.message = 'Não foi possível abrir a comanda. Tente novamente mais tarde.';
-      alert.buttons = ['OK'];
+      alert.header = 'Descartar alterações?';
+      alert.message = 'Há alterações não salvas. Deseja realmente cancelar?';
+      alert.buttons = [
+        { text: 'Continuar Editando', role: 'cancel' },
+        { text: 'Descartar', handler: () => this.navigateBack() },
+      ];
       document.body.appendChild(alert);
       await alert.present();
+    } else {
+      this.navigateBack();
     }
   }
 

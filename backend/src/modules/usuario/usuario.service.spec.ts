@@ -7,9 +7,6 @@ import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { ListUsuarioDto } from './dto/list-usuario.dto';
 
-
-
-
 describe('UsuarioService', () => {
   let service: UsuarioService;
   let mockRepository: jest.Mocked<Repository<Usuario>>;

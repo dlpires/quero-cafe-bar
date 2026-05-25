@@ -7,7 +7,7 @@ npm install              # Note: uses npm, not yarn
 npm run dev              # dev server
 npm run build            # web build (outputs to dist/)
 npm run build:prod       # production build
-npm test                 # Jest unit tests (64 tests)
+npm test                 # Jest unit tests (105 tests — 8 suites)
 npm run test:watch       # Jest in watch mode
 npm run test:coverage    # Jest with coverage report
 
@@ -45,3 +45,5 @@ npx cap build android    # build APK directly
 - **Header**: `src/shared/Header.js` dynamically injects the `ion-menu` and `ion-header`.
 - **Forms**: Uses `FormData` to extract values from Ionic inputs (`ion-input`, `ion-select`).
 - **Feedback**: Uses `ion-toast`, `ion-alert`, and `ion-loading` for UX.
+- **Shared Utilities**: `src/shared/util.js` exports `showToast`, `withLoading`, `createEmptyState`, `validateRequired`, `validatePositiveNumber`, `focusFirstElement`, `logout`.
+- **API Header**: `ngrok-skip-browser-warning` header sent only in dev (`!environment.production`), gated in `api.js`.

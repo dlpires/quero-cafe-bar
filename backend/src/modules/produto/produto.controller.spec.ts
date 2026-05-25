@@ -93,7 +93,7 @@ describe('ProdutoController', () => {
 
   describe('update', () => {
     it('should update a produto', async () => {
-      const updateProdutoDto = { id: 1, dsc_produto: 'Café Alterado' };
+      const updateProdutoDto = { dsc_produto: 'Café Alterado' };
       const result = {
         id: 1,
         dsc_produto: 'Café Alterado',

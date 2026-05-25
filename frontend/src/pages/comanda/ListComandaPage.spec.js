@@ -10,6 +10,10 @@ jest.mock('../../services/api.js', () => ({
   },
 }));
 
+jest.mock('../../services/auth.js', () => ({
+  requireAuth: jest.fn(() => true),
+}));
+
 jest.mock('../../shared/Header.js', () => ({
   createHeader: jest.fn(() => '<ion-header></ion-header>'),
 }));

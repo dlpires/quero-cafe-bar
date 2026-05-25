@@ -42,7 +42,7 @@ O projeto visa simular um cenário real de desenvolvimento de software, abrangen
 - [x] Integração com Banco de Dados (TypeORM + MySQL)
 - [x] Autenticação JWT implementada
 - [x] Relacionamentos entre entidades configurados
-- [x] Testes unitários completos (136 testes, 18 suítes)
+- [x] Testes unitários completos (163 testes, 24 suítes)
 - [x] Tratamento global de exceções
 - [x] Validação global (whitelist + transform)
 - [x] Criptografia de senhas via ORM transformer
@@ -60,8 +60,9 @@ O projeto visa simular um cenário real de desenvolvimento de software, abrangen
 - [x] Integração com a API (Serviço singleton)
 - [x] Feedback visual (toast, alert, loading)
 - [x] Build para Android configurado (Capacitor)
+- [x] Utilitários compartilhados (toast, loading, validação, foco, empty state)
 - [ ] Temas personalizados
-- [x] Testes unitários (64 testes, 6 suítes)
+- [x] Testes unitários (105 testes, 8 suítes)
 
 ## 📂 Estrutura de Pastas
 
@@ -162,18 +163,31 @@ A aplicação web estará disponível em `http://localhost:5173` (ou porta indic
    npx cap build android
    ```
 
-## 🤖 Agentes Disponíveis
+## 🤖 Agentes de IA
 
-Este projeto possui configurações para agentes de IA no arquivo [AGENTS.md](./AGENTS.md).
+Este projeto possui dois tipos de agentes de IA configurados em [AGENTS.md](./AGENTS.md):
 
-| Agente | Função | Modelo |
-|--------|--------|--------|
-| `explore` | Exploração rápida de código, busca de arquivos e padrões | opencode/big-pickle |
-| `general` | Pesquisa geral e tarefas multi-step | opencode/big-pickle |
-| `exception-treatment-agent` | Auditoria de tratamento de exceções e resiliência | opencode/big-pickle |
-| `qa-agent` | Geração e análise de testes unitários (NestJS + Ionic) | opencode/big-pickle |
-| `security-audit-agent` | Análise de segurança SAST (SQLi, segredos, CORS) | opencode/big-pickle |
-| `ux-agent` | Auditoria de UX/UI e acessibilidade (WCAG/W3C) | opencode/big-pickle |
+### Subagents (Automação Especializada)
+
+| Agente | Função | Papel | Modelo |
+|--------|--------|-------|--------|
+| `exception-treatment-agent` | Auditoria de tratamento de exceções (try-catch, status HTTP) | plan | opencode/big-pickle |
+| `qa-agent` | Geração e análise de testes unitários (NestJS + Ionic) | build | opencode/big-pickle |
+| `security-audit-agent` | Análise SAST (SQL injection, segredos, CORS, dependências) | plan | opencode/big-pickle |
+| `ux-agent` | Auditoria de UX/UI e acessibilidade (WCAG) | plan | opencode/big-pickle |
+
+### Comandos Customizados (Slash Commands)
+
+Fluxo completo de desenvolvimento via **Speckit Pipeline**: `constitution → spec → plan → tasks → implement`.
+
+| Comando | Função |
+|---------|--------|
+| `speckit.specify` | Cria especificação a partir de descrição em linguagem natural |
+| `speckit.plan` | Gera artefatos de design (plan, data-model, contracts) |
+| `speckit.tasks` | Gera lista de tarefas com dependências |
+| `speckit.implement` | Executa tarefas em fases com verificação de testes |
+
+Consulte [AGENTS.md](./AGENTS.md) para a lista completa de agentes e comandos.
 
 ## 🔧 Pré-requisitos
 
@@ -189,10 +203,11 @@ Este projeto possui configurações para agentes de IA no arquivo [AGENTS.md](./
 ### Backend (yarn)
 | Comando | Descrição |
 |---------|-----------|
-| `yarn start:dev` | Servidor com hot-reload |
+| `yarn start:dev` | Servidor com hot-reload (porta 3001) |
 | `yarn build` | Build de produção |
-| `yarn lint` | ESLint + Prettier |
-| `yarn test` | Jest unit tests (136 testes) |
+| `yarn lint` | ESLint + Prettier (--fix) |
+| `yarn test` | Jest unit tests (163 testes, 24 suítes) |
+| `yarn test:cov` | Testes com relatório de cobertura |
 | `yarn make:migration <nome>` | Gerar migration |
 | `yarn migrate` | Executar migrations |
 | `yarn migrate:rollback` | Reverter última migration |
@@ -200,12 +215,16 @@ Este projeto possui configurações para agentes de IA no arquivo [AGENTS.md](./
 ### Frontend (npm)
 | Comando | Descrição |
 |---------|-----------|
-| `npm run dev` | Servidor Vite (desenvolvimento) |
-| `npm run build` | Build web |
-| `npm run build:prod` | Build de produção |
-| `npm test` | Jest unit tests (64 testes) |
+| `npm run dev` | Servidor Vite (desenvolvimento, porta 5173) |
+| `npm run build` | Build web (saída em dist/) |
+| `npm run build:prod` | Build de produção (--mode production) |
+| `npm test` | Jest unit tests (105 testes, 8 suítes) |
+| `npm run test:watch` | Jest em modo watch |
 | `npm run test:coverage` | Testes com relatório de cobertura |
-| `npx cap sync` | Sincronizar com Capacitor |
+| `npx cap copy` | Sincronizar build web com Android |
+| `npx cap open android` | Abrir Android Studio |
+| `npx cap run android` | Executar em dispositivo/emulador |
+| `npx cap build android` | Gerar APK diretamente |
 
 ## 🎨 Funcionalidades da Cozinha
 

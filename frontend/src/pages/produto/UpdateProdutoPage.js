@@ -1,11 +1,14 @@
 import './UpdateProdutoPage.css';
 import { createHeader } from '../../shared/Header.js';
 import { api } from '../../services/api.js';
+import { requireAuth } from '../../services/auth.js';
+import { showToast, withLoading, validateRequired, validatePositiveNumber, focusFirstElement, hasFormChanges } from '../../shared/util.js';
 
 const pageName = 'Editar Produto';
 
 class UpdateProdutoPage extends HTMLElement {
   async connectedCallback() {
+    if (!requireAuth()) return;
     const urlParams = new URLSearchParams(window.location.search);
     this.produtoId = urlParams.get('id');
 
@@ -30,12 +33,12 @@ class UpdateProdutoPage extends HTMLElement {
           </ion-list>
 
           <div class="ion-padding">
-            <ion-button expand="block" type="submit" class="ion-margin-top">
-              <ion-icon name="checkmark-circle" style="margin-right: 8px;"></ion-icon>
+            <ion-button expand="block" type="submit" class="ion-margin-top" id="btn-submit">
+              <ion-icon name="checkmark-circle" class="radio-icon"></ion-icon>
               Salvar Produto
             </ion-button>
             <ion-button expand="block" color="danger" id="btn-cancelar">
-              <ion-icon name="close-circle" style="margin-right: 8px;"></ion-icon>
+              <ion-icon name="close-circle" class="radio-icon"></ion-icon>
               Cancelar
             </ion-button>
           </div>
@@ -44,11 +47,13 @@ class UpdateProdutoPage extends HTMLElement {
     `;
 
     this.querySelector('#form-produto').addEventListener('submit', (e) => this.handleSubmit(e));
-    this.querySelector('#btn-cancelar').addEventListener('click', () => this.navigateBack());
+    this.querySelector('#btn-cancelar').addEventListener('click', () => this.confirmCancel());
 
     if (this.produtoId) {
       await this.loadProdutoData();
     }
+
+    focusFirstElement(this);
   }
 
   async loadProdutoData() {
@@ -59,41 +64,66 @@ class UpdateProdutoPage extends HTMLElement {
       this.querySelector('#status').checked = produto.status;
     } catch (error) {
       console.error('Erro ao carregar produto:', error);
-      const alert = document.createElement('ion-alert');
-      alert.header = 'Erro';
-      alert.message = 'Não foi possível carregar os dados do produto.';
-      alert.buttons = ['OK'];
-      document.body.appendChild(alert);
-      await alert.present();
+      await showToast('Não foi possível carregar os dados do produto.', 'error', 5000);
       this.navigateBack();
     }
   }
 
   async handleSubmit(event) {
     event.preventDefault();
-    const formData = new FormData(event.target);
-    
+    const form = event.target;
+    const formData = new FormData(form);
+
+    const dscError = validateRequired(formData.get('dsc_produto'), 'Descrição do Produto');
+    const valorError = validatePositiveNumber(formData.get('valor_unit'), 'Valor Unitário');
+
+    if (dscError || valorError) {
+      await showToast(dscError || valorError, 'warning', 3000);
+      focusFirstElement(form);
+      return;
+    }
+
     const produtoData = {
       dsc_produto: formData.get('dsc_produto'),
       valor_unit: parseFloat(formData.get('valor_unit')),
       status: formData.get('status') === 'on',
     };
 
+    const submitBtn = this.querySelector('#btn-submit');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'Salvando...';
+
     try {
       if (this.produtoId) {
-        await api.updateProduto(this.produtoId, produtoData);
+        await withLoading(api.updateProduto(this.produtoId, produtoData));
       } else {
-        await api.addProduto(produtoData);
+        await withLoading(api.addProduto(produtoData));
       }
+      await showToast('Registro atualizado com sucesso!', 'success', 3000);
       this.navigateBack();
     } catch (error) {
       console.error('Erro ao salvar produto:', error);
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+      await showToast(error.message, 'error', 5000);
+    }
+  }
+
+  async confirmCancel() {
+    const form = this.querySelector('#form-produto');
+    if (hasFormChanges(form)) {
       const alert = document.createElement('ion-alert');
-      alert.header = 'Erro';
-      alert.message = 'Não foi possível salvar o produto. Tente novamente mais tarde.';
-      alert.buttons = ['OK'];
+      alert.header = 'Descartar alterações?';
+      alert.message = 'Há alterações não salvas. Deseja realmente cancelar?';
+      alert.buttons = [
+        { text: 'Continuar Editando', role: 'cancel' },
+        { text: 'Descartar', handler: () => this.navigateBack() },
+      ];
       document.body.appendChild(alert);
       await alert.present();
+    } else {
+      this.navigateBack();
     }
   }
 
