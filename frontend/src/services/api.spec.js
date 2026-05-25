@@ -161,7 +161,7 @@ describe('Api Service', () => {
       };
       fetch.mockResolvedValue(mockResponse);
 
-      await expect(api.request('/produto')).rejects.toThrow('Erro na requisição');
+      await expect(api.request('/produto')).rejects.toThrow('Erro interno. Tente novamente em alguns instantes.');
     });
 
     it('deve retornar null para status 204 No Content (Edge Case)', async () => {
@@ -256,15 +256,20 @@ describe('Api Service', () => {
         status: 401,
         json: jest.fn().mockResolvedValue({}),
       };
+      const mockRouter = { push: jest.fn() };
+      const originalQS = document.querySelector;
+      document.querySelector = jest.fn((selector) => {
+        if (selector === 'ion-router') return mockRouter;
+        return originalQS.call(document, selector);
+      });
       fetch.mockResolvedValue(mockResponse);
-      delete window.location;
-      window.location = { href: 'http://localhost' };
 
       await expect(api.request('/produto')).rejects.toThrow(
         'Sessão expirada. Faça login novamente.',
       );
       expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
-      expect(window.location.href).toContain('#/login');
+      expect(mockRouter.push).toHaveBeenCalledWith('/login', 'root');
+      document.querySelector = originalQS;
     });
 
     it('deve lançar erro de timeout quando requisição é abortada (AbortError)', async () => {

@@ -1,6 +1,6 @@
 import './ListMesaPage.css'
 import { createHeader } from '../../shared/Header.js';
-import { logout, createEmptyState } from '../../shared/util.js';
+import { logout, createEmptyState, focusFirstElement, showToast } from '../../shared/util.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
 
@@ -18,6 +18,7 @@ class ListMesaPage extends HTMLElement {
     `;
 
     this.querySelector('#logout-btn').addEventListener('click', logout);
+    focusFirstElement(this);
     this.renderFabButton();
     await this.fetchMesas();
 
@@ -32,9 +33,10 @@ class ListMesaPage extends HTMLElement {
     }
   }
 
-  onRouteChange() {
+  async onRouteChange() {
     if (window.location.pathname === '/mesas') {
-      this.fetchMesas();
+      await this.fetchMesas();
+      focusFirstElement(this);
     }
   }
 
@@ -78,7 +80,7 @@ class ListMesaPage extends HTMLElement {
     fab.vertical = 'bottom';
     fab.horizontal = 'end';
     fab.slot = 'fixed';
-    fab.innerHTML = `<ion-fab-button><ion-icon name="add"></ion-icon></ion-fab-button>`;
+    fab.innerHTML = `<ion-fab-button aria-label="Adicionar Mesa"><ion-icon name="add"></ion-icon></ion-fab-button>`;
     fab.addEventListener('click', () => {
       const router = document.querySelector('ion-router');
       router.push('/mesa/register');
@@ -105,20 +107,21 @@ class ListMesaPage extends HTMLElement {
       <ion-item>
         <ion-label>
           <h2 class="item-title">
-            <ion-icon
-              name="${mesa.status ? 'checkmark-circle' : 'close-circle'}"
-              color="${mesa.status ? 'success' : 'danger'}"
-              class="item-icon"
-            ></ion-icon>
+              <ion-icon
+                name="${mesa.status ? 'checkmark-circle' : 'close-circle'}"
+                color="${mesa.status ? 'success' : 'danger'}"
+                class="item-icon"
+                aria-hidden="true"
+              ></ion-icon>
             <span>Mesa #${mesa.id}</span>
           </h2>
           <p>Cadeiras: ${mesa.qtd_cadeiras}</p>
         </ion-label>
         <ion-buttons slot="end">
-          <ion-button fill="clear" class="btn-edit" data-id="${mesa.id}">
+          <ion-button fill="clear" class="btn-edit" data-id="${mesa.id}" aria-label="Editar Mesa ${mesa.id}">
             <ion-icon slot="icon-only" name="create-outline"></ion-icon>
           </ion-button>
-          <ion-button fill="clear" color="danger" class="btn-delete" data-id="${mesa.id}">
+          <ion-button fill="clear" color="danger" class="btn-delete" data-id="${mesa.id}" aria-label="Excluir Mesa ${mesa.id}">
             <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
           </ion-button>
         </ion-buttons>
@@ -147,21 +150,11 @@ class ListMesaPage extends HTMLElement {
               handler: async () => {
                 try {
                   await api.deleteMesa(id);
-                  const toast = document.createElement('ion-toast');
-                  toast.message = 'Mesa excluída com sucesso!';
-                  toast.duration = 2000;
-                  toast.color = 'success';
-                  document.body.appendChild(toast);
-                  await toast.present();
+                  await showToast('Mesa excluída com sucesso!', 'success', 2000);
                   await this.fetchMesas();
                 } catch (error) {
                   console.error('Erro ao excluir:', error);
-                  const toast = document.createElement('ion-toast');
-                  toast.message = 'Erro ao excluir mesa. Tente novamente.';
-                  toast.duration = 3000;
-                  toast.color = 'danger';
-                  document.body.appendChild(toast);
-                  await toast.present();
+                  await showToast(error.message, 'error', 5000);
                 }
             }
           }

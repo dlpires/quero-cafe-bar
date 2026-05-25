@@ -4,5 +4,4 @@ import { IUpdateProdutoInput } from '../interfaces/produto.interface';
 
 export class UpdateProdutoDto
   extends PartialType(CreateProdutoDto)
-  implements IUpdateProdutoInput
-{}
+  implements IUpdateProdutoInput {}

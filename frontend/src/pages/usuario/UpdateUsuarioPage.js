@@ -2,7 +2,7 @@ import './UpdateUsuarioPage.css'
 import { createHeader } from '../../shared/Header.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
-import { showToast, withLoading, validateRequired, focusFirstElement } from '../../shared/util.js';
+import { showToast, withLoading, validateRequired, focusFirstElement, hasFormChanges } from '../../shared/util.js';
 
 const pageName = 'Editar Usuário';
 
@@ -53,11 +53,13 @@ class UpdateUsuarioPage extends HTMLElement {
     `;
 
     this.querySelector('#form-usuario').addEventListener('submit', (e) => this.handleSubmit(e));
-    this.querySelector('#btn-cancelar').addEventListener('click', () => this.navigateBack());
+    this.querySelector('#btn-cancelar').addEventListener('click', () => this.confirmCancel());
 
     if (this.usuarioId) {
       await this.loadUsuarioData();
     }
+
+    focusFirstElement(this);
   }
 
   async loadUsuarioData() {
@@ -112,7 +114,24 @@ class UpdateUsuarioPage extends HTMLElement {
       console.error('Erro ao salvar usuario:', error);
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalText;
-      await showToast('Não foi possível salvar as alterações. Tente novamente mais tarde.', 'error', 5000);
+      await showToast(error.message, 'error', 5000);
+    }
+  }
+
+  async confirmCancel() {
+    const form = this.querySelector('#form-usuario');
+    if (hasFormChanges(form)) {
+      const alert = document.createElement('ion-alert');
+      alert.header = 'Descartar alterações?';
+      alert.message = 'Há alterações não salvas. Deseja realmente cancelar?';
+      alert.buttons = [
+        { text: 'Continuar Editando', role: 'cancel' },
+        { text: 'Descartar', handler: () => this.navigateBack() },
+      ];
+      document.body.appendChild(alert);
+      await alert.present();
+    } else {
+      this.navigateBack();
     }
   }
 

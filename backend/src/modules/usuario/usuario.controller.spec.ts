@@ -219,7 +219,10 @@ describe('UsuarioController', () => {
       });
 
       expect(result).toHaveProperty('token');
-      const decoded = jwt.verify(result.token, 'dev-secret-change-in-production') as any;
+      const decoded = jwt.verify(
+        result.token,
+        'dev-secret-change-in-production',
+      ) as any;
       expect(decoded.id).toBe(2);
       expect(decoded.perfil).toBe(1);
 
@@ -262,7 +265,8 @@ describe('UsuarioController', () => {
       service.remove.mockResolvedValue(deleteResult);
 
       // Act
-      const result = await controller.remove(1);
+      const mockRequest = { headers: { authorization: 'Bearer token' } } as any;
+      const result = await controller.remove(1, mockRequest);
 
       // Assert
       expect(service.remove).toHaveBeenCalledWith(1);

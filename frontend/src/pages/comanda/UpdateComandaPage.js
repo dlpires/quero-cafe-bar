@@ -2,7 +2,7 @@ import './UpdateComandaPage.css';
 import { createHeader } from '../../shared/Header.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
-import { showToast, withLoading, focusFirstElement } from '../../shared/util.js';
+import { showToast, withLoading, focusFirstElement, hasFormChanges } from '../../shared/util.js';
 
 const pageName = 'Editar Comanda';
 
@@ -54,13 +54,15 @@ class UpdateComandaPage extends HTMLElement {
     `;
 
     this.querySelector('#form-comanda').addEventListener('submit', (e) => this.handleSubmit(e));
-    this.querySelector('#btn-cancelar').addEventListener('click', () => this.navigateBack());
+    this.querySelector('#btn-cancelar').addEventListener('click', () => this.confirmCancel());
     this.querySelector('#btn-add-item').addEventListener('click', () => this.showAddItemModal());
 
     if (this.comandaId) {
       await this.loadComandaData();
       await this.loadItens();
     }
+
+    focusFirstElement(this);
   }
 
   async loadMesas() {
@@ -75,12 +77,7 @@ class UpdateComandaPage extends HTMLElement {
       });
     } catch (error) {
       console.error('Erro ao carregar mesas:', error);
-      const toast = document.createElement('ion-toast');
-      toast.message = 'Erro ao carregar lista de mesas.';
-      toast.duration = 3000;
-      toast.color = 'danger';
-      document.body.appendChild(toast);
-      await toast.present();
+      await showToast(error.message, 'error', 5000);
     }
   }
 
@@ -108,12 +105,7 @@ class UpdateComandaPage extends HTMLElement {
       this.renderItens(itens);
     } catch (error) {
       console.error('Erro ao carregar itens:', error);
-      const toast = document.createElement('ion-toast');
-      toast.message = 'Erro ao carregar itens da comanda.';
-      toast.duration = 3000;
-      toast.color = 'danger';
-      document.body.appendChild(toast);
-      await toast.present();
+      await showToast(error.message, 'error', 5000);
     }
   }
 
@@ -139,7 +131,7 @@ class UpdateComandaPage extends HTMLElement {
           <div slot="end" class="item-status">
             <ion-checkbox id="statusPg-${item.id_produto}" ${item.statusPg ? 'checked' : ''} data-produto="${item.id_produto}">Pago</ion-checkbox>
             <ion-checkbox id="statusEntrega-${item.id_produto}" ${item.statusEntrega ? 'checked' : ''} data-produto="${item.id_produto}">Entregue</ion-checkbox>
-            <ion-button fill="clear" color="danger" class="btn-remove-item" data-produto="${item.id_produto}">
+            <ion-button fill="clear" color="danger" class="btn-remove-item" data-produto="${item.id_produto}" aria-label="Excluir item ${item.produto?.dsc_produto || item.id_produto}">
               <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
             </ion-button>
           </div>
@@ -177,12 +169,7 @@ class UpdateComandaPage extends HTMLElement {
       await this.loadItens();
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
-      const toast = document.createElement('ion-toast');
-      toast.message = 'Erro ao atualizar status do item.';
-      toast.duration = 3000;
-      toast.color = 'danger';
-      document.body.appendChild(toast);
-      await toast.present();
+      await showToast(error.message, 'error', 5000);
     }
   }
 
@@ -200,12 +187,7 @@ class UpdateComandaPage extends HTMLElement {
             await this.loadItens();
           } catch (error) {
             console.error('Erro ao remover item:', error);
-            const toast = document.createElement('ion-toast');
-            toast.message = 'Erro ao remover item. Tente novamente.';
-            toast.duration = 3000;
-            toast.color = 'danger';
-            document.body.appendChild(toast);
-            await toast.present();
+            await showToast(error.message, 'error', 5000);
           }
         }
       }
@@ -356,7 +338,24 @@ class UpdateComandaPage extends HTMLElement {
       console.error('Erro ao salvar comanda:', error);
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalText;
-      await showToast('Não foi possível salvar a comanda.', 'error', 5000);
+      await showToast(error.message, 'error', 5000);
+    }
+  }
+
+  async confirmCancel() {
+    const form = this.querySelector('#form-comanda');
+    if (hasFormChanges(form)) {
+      const alert = document.createElement('ion-alert');
+      alert.header = 'Descartar alterações?';
+      alert.message = 'Há alterações não salvas. Deseja realmente cancelar?';
+      alert.buttons = [
+        { text: 'Continuar Editando', role: 'cancel' },
+        { text: 'Descartar', handler: () => this.navigateBack() },
+      ];
+      document.body.appendChild(alert);
+      await alert.present();
+    } else {
+      this.navigateBack();
     }
   }
 

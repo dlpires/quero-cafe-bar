@@ -2,6 +2,7 @@ import './LoginPage.css'
 import { createHeader } from '../../shared/Header.js';
 import { api } from '../../services/api.js';
 import { isAuthenticated, redirectToHome } from '../../services/auth.js';
+import { focusFirstElement } from '../../shared/util.js';
 
 const pageName = 'Login';
 
@@ -82,6 +83,8 @@ class LoginPage extends HTMLElement {
         await loading.dismiss();
       }
     });
+
+    focusFirstElement(this);
 
     // Função para exibir alertas (Toast)
     async function presentToast(message, color = 'danger') {

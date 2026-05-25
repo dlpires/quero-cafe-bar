@@ -1,6 +1,6 @@
 import './ListProdutoPage.css'
 import { createHeader } from '../../shared/Header.js';
-import { logout, createEmptyState } from '../../shared/util.js';
+import { logout, createEmptyState, focusFirstElement, showToast } from '../../shared/util.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
 
@@ -18,6 +18,7 @@ class ListProdutoPage extends HTMLElement {
     `;
 
     this.querySelector('#logout-btn').addEventListener('click', logout);
+    focusFirstElement(this);
     this.renderFabButton();
     await this.fetchProdutos();
 
@@ -32,9 +33,10 @@ class ListProdutoPage extends HTMLElement {
     }
   }
 
-  onRouteChange() {
+  async onRouteChange() {
     if (window.location.pathname === '/produtos') {
-      this.fetchProdutos();
+      await this.fetchProdutos();
+      focusFirstElement(this);
     }
   }
 
@@ -80,7 +82,7 @@ class ListProdutoPage extends HTMLElement {
     fab.slot = 'fixed';
 
     fab.innerHTML = `
-      <ion-fab-button>
+      <ion-fab-button aria-label="Adicionar Produto">
         <ion-icon name="add"></ion-icon>
       </ion-fab-button>
     `;
@@ -121,6 +123,7 @@ class ListProdutoPage extends HTMLElement {
               name="${produto.status ? 'checkmark-circle' : 'close-circle'}"
               color="${produto.status ? 'success' : 'danger'}"
               class="item-icon"
+              aria-hidden="true"
             ></ion-icon>
             <span>${produto.dsc_produto}</span>
           </h2>
@@ -128,10 +131,10 @@ class ListProdutoPage extends HTMLElement {
         </ion-label>
 
         <ion-buttons slot="end">
-          <ion-button fill="clear" class="btn-edit" data-id="${produto.id}">
+          <ion-button fill="clear" class="btn-edit" data-id="${produto.id}" aria-label="Editar ${produto.dsc_produto}">
             <ion-icon slot="icon-only" name="create-outline"></ion-icon>
           </ion-button>
-          <ion-button fill="clear" color="danger" class="btn-delete" data-id="${produto.id}">
+          <ion-button fill="clear" color="danger" class="btn-delete" data-id="${produto.id}" aria-label="Excluir ${produto.dsc_produto}">
             <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
           </ion-button>
         </ion-buttons>
@@ -164,21 +167,11 @@ class ListProdutoPage extends HTMLElement {
               handler: async () => {
                 try {
                   await api.deleteProduto(id);
-                  const toast = document.createElement('ion-toast');
-                  toast.message = 'Produto excluído com sucesso!';
-                  toast.duration = 2000;
-                  toast.color = 'success';
-                  document.body.appendChild(toast);
-                  await toast.present();
+                  await showToast('Produto excluído com sucesso!', 'success', 2000);
                   await this.fetchProdutos();
                 } catch (error) {
                   console.error('Erro ao excluir:', error);
-                  const toast = document.createElement('ion-toast');
-                  toast.message = 'Erro ao excluir produto. Tente novamente.';
-                  toast.duration = 3000;
-                  toast.color = 'danger';
-                  document.body.appendChild(toast);
-                  await toast.present();
+                  await showToast(error.message, 'error', 5000);
                 }
             }
           }

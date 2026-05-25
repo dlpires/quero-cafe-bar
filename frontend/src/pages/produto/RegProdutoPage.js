@@ -2,7 +2,7 @@ import './RegProdutoPage.css';
 import { createHeader } from '../../shared/Header.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
-import { showToast, withLoading, validateRequired, validatePositiveNumber, focusFirstElement } from '../../shared/util.js';
+import { showToast, withLoading, validateRequired, validatePositiveNumber, focusFirstElement, hasFormChanges } from '../../shared/util.js';
 
 const pageName = 'Cadastrar Produto';
 
@@ -44,7 +44,8 @@ class RegProdutoPage extends HTMLElement {
     `;
 
     this.querySelector('#form-produto').addEventListener('submit', (e) => this.handleSubmit(e));
-    this.querySelector('#btn-cancelar').addEventListener('click', () => this.navigateBack());
+    this.querySelector('#btn-cancelar').addEventListener('click', () => this.confirmCancel());
+    focusFirstElement(this);
   }
 
   async handleSubmit(event) {
@@ -80,7 +81,24 @@ class RegProdutoPage extends HTMLElement {
       console.error('Erro ao cadastrar produto:', error);
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalText;
-      await showToast('Não foi possível cadastrar o produto. Tente novamente mais tarde.', 'error', 5000);
+      await showToast(error.message, 'error', 5000);
+    }
+  }
+
+  async confirmCancel() {
+    const form = this.querySelector('#form-produto');
+    if (hasFormChanges(form)) {
+      const alert = document.createElement('ion-alert');
+      alert.header = 'Descartar alterações?';
+      alert.message = 'Há alterações não salvas. Deseja realmente cancelar?';
+      alert.buttons = [
+        { text: 'Continuar Editando', role: 'cancel' },
+        { text: 'Descartar', handler: () => this.navigateBack() },
+      ];
+      document.body.appendChild(alert);
+      await alert.present();
+    } else {
+      this.navigateBack();
     }
   }
 

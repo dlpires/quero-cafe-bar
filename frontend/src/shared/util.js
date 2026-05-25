@@ -87,6 +87,49 @@ export function validatePositiveNumber(value, fieldName) {
     return null;
 }
 
+export function getLoggedUserId() {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.id || null;
+    } catch {
+        return null;
+    }
+}
+
+export function getLoggedUserProfile() {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.perfil ?? null;
+    } catch {
+        return null;
+    }
+}
+
+export function hasFormChanges(container, initialData) {
+    if (!container || !initialData) return false;
+    const inputs = container.querySelectorAll('ion-input, ion-select, input, select, textarea');
+    for (const input of inputs) {
+        const name = input.getAttribute('name');
+        if (!name || !(name in initialData)) continue;
+        let currentValue;
+        if (input.tagName === 'ION-INPUT') {
+            currentValue = input.value;
+        } else if (input.tagName === 'ION-SELECT') {
+            currentValue = input.value;
+        } else {
+            currentValue = input.value;
+        }
+        if (String(currentValue) !== String(initialData[name])) {
+            return true;
+        }
+    }
+    return false;
+}
+
 export function focusFirstElement(container) {
     if (!container) return;
     const selectors = 'ion-input, ion-button, a, button, input, select, textarea';
@@ -103,6 +146,10 @@ export function focusFirstElement(container) {
 export function logout() {
     localStorage.removeItem('token');
 
-    const useHash = document.querySelector('ion-router')?.useHash ?? true;
-    window.location.href = useHash ? '#/login' : '/login';
+    const router = document.querySelector('ion-router');
+    if (router) {
+        router.push('/login', 'root');
+    } else {
+        window.location.href = '#/login';
+    }
 }

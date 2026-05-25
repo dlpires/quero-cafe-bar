@@ -1,6 +1,6 @@
 import './ListUsuarioPage.css'
 import { createHeader } from '../../shared/Header.js';
-import { logout, createEmptyState } from '../../shared/util.js';
+import { logout, createEmptyState, focusFirstElement, showToast, getLoggedUserId } from '../../shared/util.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
 
@@ -18,6 +18,7 @@ class ListUsuarioPage extends HTMLElement {
     `;
 
     this.querySelector('#logout-btn').addEventListener('click', logout);
+    focusFirstElement(this);
     this.renderFabButton();
     await this.fetchUsuarios();
 
@@ -32,9 +33,10 @@ class ListUsuarioPage extends HTMLElement {
     }
   }
 
-  onRouteChange() {
+  async onRouteChange() {
     if (window.location.pathname === '/usuarios') {
-      this.fetchUsuarios();
+      await this.fetchUsuarios();
+      focusFirstElement(this);
     }
   }
 
@@ -80,7 +82,7 @@ class ListUsuarioPage extends HTMLElement {
     fab.slot = 'fixed';
 
     fab.innerHTML = `
-      <ion-fab-button>
+      <ion-fab-button aria-label="Adicionar Usuário">
         <ion-icon name="add"></ion-icon>
       </ion-fab-button>
     `;
@@ -109,14 +111,17 @@ class ListUsuarioPage extends HTMLElement {
       return;
     }
 
-    const userItems = usuarios.map(usuario => `
+    const loggedUserId = getLoggedUserId();
+    const userItems = usuarios.map(usuario => {
+      const isSelf = loggedUserId !== null && parseInt(loggedUserId) === usuario.id;
+      return `
       <ion-item>
         <ion-label>
           <h2 class="item-title">
             <ion-icon
-              name="${usuario.perfil == 0 ? 'restaurant' : 'person'}"
-              color="${usuario.perfil == 0 ? 'primary' : 'secondary'}"
-              class="item-icon"
+              name="${usuario.status ? 'checkmark-circle' : 'close-circle'}"
+              color="${usuario.status ? 'success' : 'danger'}"
+              aria-hidden="true"
             ></ion-icon>
             <span>${usuario.nome}</span>
           </h2>
@@ -124,15 +129,15 @@ class ListUsuarioPage extends HTMLElement {
         </ion-label>
 
         <ion-buttons slot="end">
-          <ion-button fill="clear" class="btn-edit" data-id="${usuario.id}">
+          <ion-button fill="clear" class="btn-edit" data-id="${usuario.id}" aria-label="Editar ${usuario.nome}">
             <ion-icon slot="icon-only" name="create-outline"></ion-icon>
           </ion-button>
-          <ion-button fill="clear" color="danger" class="btn-delete" data-id="${usuario.id}">
+          <ion-button fill="clear" color="danger" class="btn-delete" data-id="${usuario.id}" data-self="${isSelf}" aria-label="${isSelf ? 'Você não pode excluir seu próprio usuário' : 'Excluir ' + usuario.nome}">
             <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-item>
-    `).join('');
+    `}).join('');
 
     container.innerHTML = `
       <ion-list>${userItems}</ion-list>
@@ -149,6 +154,11 @@ class ListUsuarioPage extends HTMLElement {
     container.querySelectorAll('.btn-delete').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
+        const isSelf = btn.getAttribute('data-self') === 'true';
+        if (isSelf) {
+          await showToast('Você não pode excluir seu próprio usuário.', 'warning', 3000);
+          return;
+        }
         
         const alert = document.createElement('ion-alert');
         alert.header = 'Confirmar';
@@ -160,21 +170,11 @@ class ListUsuarioPage extends HTMLElement {
               handler: async () => {
                 try {
                   await api.deleteUsuario(id);
-                  const toast = document.createElement('ion-toast');
-                  toast.message = 'Usuário excluído com sucesso!';
-                  toast.duration = 2000;
-                  toast.color = 'success';
-                  document.body.appendChild(toast);
-                  await toast.present();
+                  await showToast('Usuário excluído com sucesso!', 'success', 2000);
                   await this.fetchUsuarios();
                 } catch (error) {
                   console.error('Erro ao excluir:', error);
-                  const toast = document.createElement('ion-toast');
-                  toast.message = 'Erro ao excluir usuário. Tente novamente.';
-                  toast.duration = 3000;
-                  toast.color = 'danger';
-                  document.body.appendChild(toast);
-                  await toast.present();
+                  await showToast(error.message, 'error', 5000);
                 }
             }
           }
