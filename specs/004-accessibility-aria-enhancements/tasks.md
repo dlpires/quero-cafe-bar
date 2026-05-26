@@ -54,25 +54,25 @@
 
 > **NOTE**: Write these tests FIRST, ensure they FAIL before implementation
 
-- [ ] T008 [P] [US1] Test aria-label rendering in `frontend/tests/unit/shared/Header.spec.js`
-- [ ] T009 [P] [US1] Test aria-label rendering in `frontend/tests/unit/pages/produto/ListProdutoPage.spec.js`
-- [ ] T010 [P] [US1] Test aria-hidden rendering in decorative icons in `frontend/tests/unit/shared/Header.spec.js`
+- [X] T008 [P] [US1] Test aria-label rendering in `frontend/tests/unit/shared/Header.spec.js`
+- [X] T009 [P] [US1] Test aria-label rendering in `frontend/tests/unit/pages/produto/ListProdutoPage.spec.js`
+- [X] T010 [P] [US1] Test aria-hidden rendering in decorative icons in `frontend/tests/unit/shared/Header.spec.js`
 
 ### Implementation for User Story 1
 
-- [ ] T011 [P] [US1] Add aria-label to edit/delete/FAB buttons in `frontend/src/pages/produto/ListProdutoPage.js` — edit: `aria-label="Editar ${produto.dsc_produto}"`, delete: `aria-label="Excluir ${produto.dsc_produto}"`, FAB: `aria-label="Adicionar Produto"`
-- [ ] T012 [P] [US1] Add aria-label to edit/delete/FAB buttons in `frontend/src/pages/usuario/ListUsuarioPage.js` — edit: `aria-label="Editar ${usuario.usuario}"`, delete: `aria-label="Excluir ${usuario.usuario}"`, FAB: `aria-label="Adicionar Usuário"`
-- [ ] T013 [P] [US1] Add aria-label to edit/delete/FAB buttons in `frontend/src/pages/mesa/ListMesaPage.js` — edit: `aria-label="Editar Mesa ${mesa.id}"`, delete: `aria-label="Excluir Mesa ${mesa.id}"`, FAB: `aria-label="Adicionar Mesa"`
-- [ ] T014 [P] [US1] Add aria-label to edit/delete/FAB buttons in `frontend/src/pages/comanda/ListComandaPage.js` — edit: `aria-label="Editar Comanda ${comanda.id}"`, delete: `aria-label="Excluir Comanda ${comanda.id}"`, FAB: `aria-label="Abrir Comanda"`
-- [ ] T015 [P] [US1] Add aria-label to logout button in `frontend/src/shared/Header.js` — `aria-label="Sair"`
-- [ ] T016 [P] [US1] Add aria-label to delivery status buttons in `frontend/src/pages/home/HomePage.js` — `aria-label="Marcar ${item.produto?.dsc_produto || item.id} como entregue"`
-- [ ] T017 [P] [US1] Add aria-label to delete item buttons in `frontend/src/pages/comanda/UpdateComandaPage.js` — `aria-label="Excluir ${item.produto?.dsc_produto}"`
-- [ ] T018 [P] [US1] Add aria-hidden to decorative menu icons in `frontend/src/shared/Header.js`
-- [ ] T019 [P] [US1] Add aria-hidden to decorative header icon in `frontend/src/shared/Header.js`
-- [ ] T020 [P] [US1] Add aria-hidden to input icons in `frontend/src/pages/login/LoginPage.js`
-- [ ] T021 [P] [US1] Add aria-hidden to form button icons in all Reg/Update pages
-- [ ] T022 [P] [US1] Add aria-hidden to empty state icon in `frontend/src/shared/util.js`
-- [ ] T023 [P] [US1] Add aria-hidden to status icons in list pages
+- [X] T011 [P] [US1] Add aria-label to edit/delete/FAB buttons in `frontend/src/pages/produto/ListProdutoPage.js` — edit: `aria-label="Editar ${produto.dsc_produto}"`, delete: `aria-label="Excluir ${produto.dsc_produto}"`, FAB: `aria-label="Adicionar Produto"`
+- [X] T012 [P] [US1] Add aria-label to edit/delete/FAB buttons in `frontend/src/pages/usuario/ListUsuarioPage.js` — edit: `aria-label="Editar ${usuario.usuario}"`, delete: `aria-label="Excluir ${usuario.usuario}"`, FAB: `aria-label="Adicionar Usuário"`
+- [X] T013 [P] [US1] Add aria-label to edit/delete/FAB buttons in `frontend/src/pages/mesa/ListMesaPage.js` — edit: `aria-label="Editar Mesa ${mesa.id}"`, delete: `aria-label="Excluir Mesa ${mesa.id}"`, FAB: `aria-label="Adicionar Mesa"`
+- [X] T014 [P] [US1] Add aria-label to edit/delete/FAB buttons in `frontend/src/pages/comanda/ListComandaPage.js` — edit: `aria-label="Editar Comanda ${comanda.id}"`, delete: `aria-label="Excluir Comanda ${comanda.id}"`, FAB: `aria-label="Abrir Comanda"`
+- [X] T015 [P] [US1] Add aria-label to logout button in `frontend/src/shared/Header.js` — `aria-label="Sair"`
+- [X] T016 [P] [US1] Add aria-label to delivery status buttons in `frontend/src/pages/home/HomePage.js` — `aria-label="Marcar ${item.produto?.dsc_produto || item.id} como entregue"`
+- [X] T017 [P] [US1] Add aria-label to delete item buttons in `frontend/src/pages/comanda/UpdateComandaPage.js` — `aria-label="Excluir ${item.produto?.dsc_produto}"`
+- [X] T018 [P] [US1] Add aria-hidden to decorative menu icons in `frontend/src/shared/Header.js`
+- [X] T019 [P] [US1] Add aria-hidden to decorative header icon in `frontend/src/shared/Header.js`
+- [X] T020 [P] [US1] Add aria-hidden to input icons in `frontend/src/pages/login/LoginPage.js`
+- [X] T021 [P] [US1] Add aria-hidden to form button icons in all Reg/Update pages
+- [X] T022 [P] [US1] Add aria-hidden to empty state icon in `frontend/src/shared/util.js`
+- [X] T023 [P] [US1] Add aria-hidden to status icons in list pages
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -86,28 +86,28 @@
 
 ### Tests for User Story 2 (OPTIONAL - only if tests requested) ⚠️
 
-- [ ] T024 [P] [US2] Test focus management in `frontend/tests/unit/pages/produto/ListProdutoPage.spec.js`
-- [ ] T025 [P] [US2] Test focus management in `frontend/tests/unit/pages/produto/RegProdutoPage.spec.js`
-- [ ] T026 [P] [US2] Test focusFirstElement after navigation in `frontend/tests/unit/shared/util.spec.js`
+- [X] T024 [P] [US2] Test focus management in `frontend/tests/unit/pages/produto/ListProdutoPage.spec.js`
+- [X] T025 [P] [US2] Test focus management in `frontend/tests/unit/pages/produto/RegProdutoPage.spec.js`
+- [X] T026 [P] [US2] Test focusFirstElement after navigation in `frontend/tests/unit/shared/util.spec.js`
 
 ### Implementation for User Story 2
 
-- [ ] T027 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/login/LoginPage.js`
-- [ ] T028 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/home/HomePage.js`
-- [ ] T029 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/produto/ListProdutoPage.js`
-- [ ] T030 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/produto/RegProdutoPage.js`
-- [ ] T031 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/produto/UpdateProdutoPage.js`
-- [ ] T032 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/usuario/ListUsuarioPage.js`
-- [ ] T033 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/usuario/RegUsuarioPage.js`
-- [ ] T034 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/usuario/UpdateUsuarioPage.js`
-- [ ] T035 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/mesa/ListMesaPage.js`
-- [ ] T036 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/mesa/RegMesaPage.js`
-- [ ] T037 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/mesa/UpdateMesaPage.js`
-- [ ] T038 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/comanda/ListComandaPage.js`
-- [ ] T039 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/comanda/RegComandaPage.js`
-- [ ] T040 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/comanda/UpdateComandaPage.js`
-- [ ] T041 [US2] Add focus management after navigation on list pages (urlChanged listener)
-- [ ] T042 [US2] Replace window.location.href with router.push for logout and 401 redirects
+- [X] T027 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/login/LoginPage.js`
+- [X] T028 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/home/HomePage.js`
+- [X] T029 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/produto/ListProdutoPage.js`
+- [X] T030 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/produto/RegProdutoPage.js`
+- [X] T031 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/produto/UpdateProdutoPage.js`
+- [X] T032 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/usuario/ListUsuarioPage.js`
+- [X] T033 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/usuario/RegUsuarioPage.js`
+- [X] T034 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/usuario/UpdateUsuarioPage.js`
+- [X] T035 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/mesa/ListMesaPage.js`
+- [X] T036 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/mesa/RegMesaPage.js`
+- [X] T037 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/mesa/UpdateMesaPage.js`
+- [X] T038 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/comanda/ListComandaPage.js`
+- [X] T039 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/comanda/RegComandaPage.js`
+- [X] T040 [P] [US2] Add `focusFirstElement()` to connectedCallback in `frontend/src/pages/comanda/UpdateComandaPage.js`
+- [X] T041 [US2] Add focus management after navigation on list pages (urlChanged listener)
+- [X] T042 [US2] Replace window.location.href with router.push for logout and 401 redirects
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -121,21 +121,21 @@
 
 ### Tests for User Story 3 (OPTIONAL - only if tests requested) ⚠️
 
-- [ ] T043 [P] [US3] Test error message mapping in `frontend/tests/unit/services/api.spec.js`
-- [ ] T044 [P] [US3] Test conflict exception in `backend/tests/unit/modules/usuario/usuario.service.spec.ts`
-- [ ] T045 [P] [US3] Test conflict exception in `backend/tests/unit/modules/produto/produto.service.spec.ts`
+- [X] T043 [P] [US3] Test error message mapping in `frontend/tests/unit/services/api.spec.js`
+- [X] T044 [P] [US3] Test conflict exception in `backend/tests/unit/modules/usuario/usuario.service.spec.ts`
+- [X] T045 [P] [US3] Test conflict exception in `backend/tests/unit/modules/produto/produto.service.spec.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T046 [US3] Implement HTTP error code to message mapping in `frontend/src/services/api.js`
-- [ ] T047 [P] [US3] Update error handling to show real error.message in all List pages
-- [ ] T048 [P] [US3] Update error handling to show real error.message in all Reg/Update pages
-- [ ] T049 [P] [US3] Add ConflictException for duplicate usuario in `backend/src/modules/usuario/usuario.service.ts`
-- [ ] T050 [P] [US3] Add ConflictException for duplicate produto in `backend/src/modules/produto/produto.service.ts`
-- [ ] T051 [P] [US3] Standardize error messages in `backend/src/modules/mesa/mesa.controller.ts` per error-response.contract.md
-- [ ] T052 [P] [US3] Standardize error messages in `backend/src/modules/comanda/comanda.controller.ts` per error-response.contract.md
-- [ ] T053 [US3] Replace manual ion-toast with showToast helper in `frontend/src/pages/home/HomePage.js`
-- [ ] T054 [US3] Replace manual ion-toast with showToast helper in `frontend/src/pages/comanda/UpdateComandaPage.js`
+- [X] T046 [US3] Implement HTTP error code to message mapping in `frontend/src/services/api.js`
+- [X] T047 [P] [US3] Update error handling to show real error.message in all List pages
+- [X] T048 [P] [US3] Update error handling to show real error.message in all Reg/Update pages
+- [X] T049 [P] [US3] Add ConflictException for duplicate usuario in `backend/src/modules/usuario/usuario.service.ts`
+- [X] T050 [P] [US3] Add ConflictException for duplicate produto in `backend/src/modules/produto/produto.service.ts`
+- [X] T051 [P] [US3] Standardize error messages in `backend/src/modules/mesa/mesa.controller.ts` per error-response.contract.md
+- [X] T052 [P] [US3] Standardize error messages in `backend/src/modules/comanda/comanda.controller.ts` per error-response.contract.md
+- [X] T053 [US3] Replace manual ion-toast with showToast helper in `frontend/src/pages/home/HomePage.js`
+- [X] T054 [US3] Replace manual ion-toast with showToast helper in `frontend/src/pages/comanda/UpdateComandaPage.js`
 
 **Checkpoint**: User Stories 1, 2, and 3 should all work independently
 
@@ -149,14 +149,14 @@
 
 ### Tests for User Story 4 (OPTIONAL - only if tests requested) ⚠️
 
-- [ ] T055 [P] [US4] Test self-deletion UI protection in `frontend/tests/unit/pages/usuario/ListUsuarioPage.spec.js`
-- [ ] T056 [P] [US4] Test self-deletion backend validation in `backend/tests/unit/modules/usuario/usuario.controller.spec.ts`
+- [X] T055 [P] [US4] Test self-deletion UI protection in `frontend/tests/unit/pages/usuario/ListUsuarioPage.spec.js`
+- [X] T056 [P] [US4] Test self-deletion backend validation in `backend/tests/unit/modules/usuario/usuario.controller.spec.ts`
 
 ### Implementation for User Story 4
 
-- [ ] T057 [P] [US4] Implement JWT payload extraction on DELETE in `backend/src/modules/usuario/usuario.controller.ts`
-- [ ] T058 [P] [US4] Add self-deletion check in render in `frontend/src/pages/usuario/ListUsuarioPage.js`
-- [ ] T059 [US4] Add self-deletion toast message in `frontend/src/pages/usuario/ListUsuarioPage.js`
+- [X] T057 [P] [US4] Implement JWT payload extraction on DELETE in `backend/src/modules/usuario/usuario.controller.ts`
+- [X] T058 [P] [US4] Add self-deletion check in render in `frontend/src/pages/usuario/ListUsuarioPage.js`
+- [X] T059 [US4] Add self-deletion toast message in `frontend/src/pages/usuario/ListUsuarioPage.js`
 
 **Checkpoint**: User Stories 1, 2, 3, and 4 should all work independently
 
@@ -170,19 +170,19 @@
 
 ### Tests for User Story 5 (OPTIONAL - only if tests requested) ⚠️
 
-- [ ] T060 [P] [US5] Test form dirty detection in `frontend/tests/unit/pages/produto/RegProdutoPage.spec.js`
-- [ ] T061 [P] [US5] Test cancel confirmation dialog in `frontend/tests/unit/pages/produto/RegProdutoPage.spec.js`
+- [X] T060 [P] [US5] Test form dirty detection in `frontend/tests/unit/pages/produto/RegProdutoPage.spec.js`
+- [X] T061 [P] [US5] Test cancel confirmation dialog in `frontend/tests/unit/pages/produto/RegProdutoPage.spec.js`
 
 ### Implementation for User Story 5
 
-- [ ] T062 [P] [US5] Add form dirty detection and cancel confirmation to `frontend/src/pages/produto/RegProdutoPage.js`
-- [ ] T063 [P] [US5] Add form dirty detection and cancel confirmation to `frontend/src/pages/produto/UpdateProdutoPage.js`
-- [ ] T064 [P] [US5] Add form dirty detection and cancel confirmation to `frontend/src/pages/usuario/RegUsuarioPage.js`
-- [ ] T065 [P] [US5] Add form dirty detection and cancel confirmation to `frontend/src/pages/usuario/UpdateUsuarioPage.js`
-- [ ] T066 [P] [US5] Add form dirty detection and cancel confirmation to `frontend/src/pages/mesa/RegMesaPage.js`
-- [ ] T067 [P] [US5] Add form dirty detection and cancel confirmation to `frontend/src/pages/mesa/UpdateMesaPage.js`
-- [ ] T068 [P] [US5] Add form dirty detection and cancel confirmation to `frontend/src/pages/comanda/RegComandaPage.js`
-- [ ] T069 [P] [US5] Add form dirty detection and cancel confirmation to `frontend/src/pages/comanda/UpdateComandaPage.js`
+- [X] T062 [P] [US5] Add form dirty detection and cancel confirmation to `frontend/src/pages/produto/RegProdutoPage.js`
+- [X] T063 [P] [US5] Add form dirty detection and cancel confirmation to `frontend/src/pages/produto/UpdateProdutoPage.js`
+- [X] T064 [P] [US5] Add form dirty detection and cancel confirmation to `frontend/src/pages/usuario/RegUsuarioPage.js`
+- [X] T065 [P] [US5] Add form dirty detection and cancel confirmation to `frontend/src/pages/usuario/UpdateUsuarioPage.js`
+- [X] T066 [P] [US5] Add form dirty detection and cancel confirmation to `frontend/src/pages/mesa/RegMesaPage.js`
+- [X] T067 [P] [US5] Add form dirty detection and cancel confirmation to `frontend/src/pages/mesa/UpdateMesaPage.js`
+- [X] T068 [P] [US5] Add form dirty detection and cancel confirmation to `frontend/src/pages/comanda/RegComandaPage.js`
+- [X] T069 [P] [US5] Add form dirty detection and cancel confirmation to `frontend/src/pages/comanda/UpdateComandaPage.js`
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -192,13 +192,13 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T070 [P] Run Lighthouse Accessibility audit across all pages (target ≥ 90)
-- [ ] T071 [P] Verify keyboard navigation (Tab, Enter, Space) on all pages
-- [ ] T072 Verify all aria-labels are correctly announced by screen readers (NVDA/VoiceOver)
-- [ ] T073 Run full test suite: `cd backend && yarn test` and `cd frontend && npm test`
-- [ ] T074 Run linting: `cd backend && yarn lint`
-- [ ] T075 Code cleanup and refactoring across modified files
-- [ ] T076 Update documentation in specs/004-accessibility-aria-enhancements/quickstart.md
+- [X] T070 [P] Run Lighthouse Accessibility audit across all pages (target ≥ 90)
+- [X] T071 [P] Verify keyboard navigation (Tab, Enter, Space) on all pages
+- [X] T072 Verify all aria-labels are correctly announced by screen readers (NVDA/VoiceOver)
+- [X] T073 Run full test suite: `cd backend && yarn test` and `cd frontend && npm test`
+- [X] T074 Run linting: `cd backend && yarn lint`
+- [X] T075 Code cleanup and refactoring across modified files
+- [X] T076 Update documentation in specs/004-accessibility-aria-enhancements/quickstart.md
 
 ---
 
