@@ -11,7 +11,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
-import { Request } from 'express';
+import type { Request } from 'express';
 import { UsuarioService } from './usuario.service';
 import { IUsuarioOutput } from './interfaces/usuario.interface';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
