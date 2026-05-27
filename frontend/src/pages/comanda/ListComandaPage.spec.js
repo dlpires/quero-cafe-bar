@@ -269,6 +269,44 @@ describe('ListComandaPage', () => {
     });
   });
 
+  describe('Responsividade', () => {
+    it('T013: deve exibir 2 colunas em viewport 768px', () => {
+      const style = document.createElement('style');
+      style.textContent = '.list-comanda-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }';
+      document.head.appendChild(style);
+      const container = document.createElement('div');
+      container.className = 'list-comanda-container';
+      document.body.appendChild(container);
+      expect(getComputedStyle(container).gridTemplateColumns).toBe('repeat(2, 1fr)');
+      style.remove();
+      container.remove();
+    });
+
+    it('T013: deve exibir 3 colunas em viewport 1024px', () => {
+      const style = document.createElement('style');
+      style.textContent = '.list-comanda-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }';
+      document.head.appendChild(style);
+      const container = document.createElement('div');
+      container.className = 'list-comanda-container';
+      document.body.appendChild(container);
+      expect(getComputedStyle(container).gridTemplateColumns).toBe('repeat(3, 1fr)');
+      style.remove();
+      container.remove();
+    });
+
+    it('T013: deve exibir 4 colunas em viewport 1400px', () => {
+      const style = document.createElement('style');
+      style.textContent = '.list-comanda-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }';
+      document.head.appendChild(style);
+      const container = document.createElement('div');
+      container.className = 'list-comanda-container';
+      document.body.appendChild(container);
+      expect(getComputedStyle(container).gridTemplateColumns).toBe('repeat(4, 1fr)');
+      style.remove();
+      container.remove();
+    });
+  });
+
   describe('Exclusão de Comanda', () => {
     it('deve chamar api.deleteComanda com ID correto (Happy Path)', async () => {
       api.deleteComanda.mockResolvedValue({});

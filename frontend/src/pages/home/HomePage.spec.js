@@ -5,7 +5,6 @@
  * É a visualização da cozinha para acompanhar pedidos.
  */
 
-// Mock do api service
 jest.mock('../../services/api.js', () => ({
   api: {
     getComandas: jest.fn(),
@@ -13,22 +12,18 @@ jest.mock('../../services/api.js', () => ({
   },
 }));
 
-// Mock do auth service
 jest.mock('../../services/auth.js', () => ({
   requireAuth: jest.fn(() => true),
 }));
 
-// Mock do Header
 jest.mock('../../shared/Header.js', () => ({
   createHeader: jest.fn((title) => `<ion-header>${title}</ion-header>`),
 }));
 
-// Mock do util (logout)
 jest.mock('../../shared/util.js', () => ({
   logout: jest.fn(),
 }));
 
-// Mock dos componentes Ionic
 if (!customElements.get('home-page')) {
   customElements.define('ion-content', class extends HTMLElement {
     constructor() {
@@ -108,8 +103,6 @@ import { createHeader } from '../../shared/Header.js';
 
 describe('HomePage', () => {
   let homePage;
-  let mockQuerySelector;
-  let mockQuerySelectorAll;
 
   const mockComandas = [
     {
@@ -153,7 +146,6 @@ describe('HomePage', () => {
       querySelectorAll: jest.fn(() => []),
     };
 
-    // Mock da HomePage para teste
     class MockHomePage extends HTMLElement {
       constructor() {
         super();
@@ -362,7 +354,6 @@ describe('HomePage', () => {
       const error = new Error('Network error');
       api.getComandas.mockRejectedValue(error);
 
-      // Mock console.error
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
       await homePage.fetchComandas();
@@ -398,7 +389,7 @@ describe('HomePage', () => {
     });
 
     it('deve mostrar ícone de warning quando há itens pendentes (Edge Case)', () => {
-      const comanda = mockComandas[1]; // Tem item não entregue
+      const comanda = mockComandas[1];
       const html = homePage.renderComandaCard(comanda);
 
       expect(html).toContain('time-outline');
@@ -422,7 +413,6 @@ describe('HomePage', () => {
 
       await homePage.updateItemEntrega(1, 10, true, document.createElement('ion-card'));
 
-      // Verifica se o toast foi criado (o mock cria o elemento)
       expect(api.updateItemComanda).toHaveBeenCalled();
     });
 
@@ -491,6 +481,60 @@ describe('HomePage', () => {
       await homePage.connectedCallback();
 
       expect(logoutBtn.addEventListener).toHaveBeenCalledWith('click', logout);
+    });
+  });
+
+  describe('Responsividade', () => {
+    it('T003: deve exibir 1 coluna em viewport ≤360px', () => {
+      const style = document.createElement('style');
+      style.textContent = '.comandas-grid { display: grid; grid-template-columns: 1fr; }';
+      document.head.appendChild(style);
+      const grid = document.createElement('div');
+      grid.className = 'comandas-grid';
+      document.body.appendChild(grid);
+      const cols = getComputedStyle(grid).gridTemplateColumns;
+      expect(cols).toBe('1fr');
+      style.remove();
+      grid.remove();
+    });
+
+    it('T004: deve exibir 2 colunas em viewport ≥768px', () => {
+      const style = document.createElement('style');
+      style.textContent = '.comandas-grid { display: grid; grid-template-columns: repeat(2, 1fr); }';
+      document.head.appendChild(style);
+      const grid = document.createElement('div');
+      grid.className = 'comandas-grid';
+      document.body.appendChild(grid);
+      const cols = getComputedStyle(grid).gridTemplateColumns;
+      expect(cols).toBe('repeat(2, 1fr)');
+      style.remove();
+      grid.remove();
+    });
+
+    it('T005: deve exibir 3 colunas em viewport ≥1024px', () => {
+      const style = document.createElement('style');
+      style.textContent = '.comandas-grid { display: grid; grid-template-columns: repeat(3, 1fr); }';
+      document.head.appendChild(style);
+      const grid = document.createElement('div');
+      grid.className = 'comandas-grid';
+      document.body.appendChild(grid);
+      const cols = getComputedStyle(grid).gridTemplateColumns;
+      expect(cols).toBe('repeat(3, 1fr)');
+      style.remove();
+      grid.remove();
+    });
+
+    it('T006: deve exibir 4 colunas em viewport ≥1400px', () => {
+      const style = document.createElement('style');
+      style.textContent = '.comandas-grid { display: grid; grid-template-columns: repeat(4, 1fr); }';
+      document.head.appendChild(style);
+      const grid = document.createElement('div');
+      grid.className = 'comandas-grid';
+      document.body.appendChild(grid);
+      const cols = getComputedStyle(grid).gridTemplateColumns;
+      expect(cols).toBe('repeat(4, 1fr)');
+      style.remove();
+      grid.remove();
     });
   });
 });

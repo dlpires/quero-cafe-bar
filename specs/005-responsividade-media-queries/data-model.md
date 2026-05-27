@@ -26,12 +26,14 @@
 | `grid-template-columns` | — | `repeat(2, 1fr)` | `repeat(3, 1fr)` | `repeat(4, 1fr)` |
 | `gap` | — | `16px` | `16px` | `16px` |
 
-### `.form-container` (Reg/Update pages)
+### `ion-content.ion-padding form` (Reg/Update pages)
 
 | Propriedade | Padrão (<768px) | ≥768px |
 |-------------|------------------|--------|
 | `max-width` | `100%` | `600px` |
 | `margin` | `0` | `0 auto` |
+
+> **Nota**: O selector `form` (filho direto de `ion-content.ion-padding`) é o mesmo em todas as 8 páginas de formulário: `form#form-produto`, `form#form-usuario`, `form#form-mesa`, `form#form-comanda`. Não usar `ion-content.ion-padding` diretamente como selector — isso restringiria a largura do componente inteiro, não apenas do formulário.
 
 ## Breakpoint Constants
 

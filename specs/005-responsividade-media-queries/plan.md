@@ -65,28 +65,30 @@ specs/005-responsividade-media-queries/
 frontend/src/
 ├── pages/
 │   ├── home/
-│   │   └── HomePage.css              # Grid da cozinha (RF-R01)
+│   │   └── HomePage.css              # Grid da cozinha (RF-R01) — selector: `.comandas-grid`
 │   ├── login/
-│   │   └── LoginPage.css             # Login responsivo (RF-R02)
+│   │   └── LoginPage.css             # Login responsivo (RF-R02) — selector: `.login-container`
 │   ├── produto/
-│   │   ├── ListProdutoPage.css       # Listagem produtos (RF-R03)
-│   │   ├── RegProdutoPage.css        # Form produto (RF-R04)
-│   │   └── UpdateProdutoPage.css     # Form produto (RF-R04)
+│   │   ├── ListProdutoPage.css       # Listagem produtos (RF-R03) — selector: `.list-produto-container`
+│   │   ├── RegProdutoPage.css        # Form produto (RF-R04) — selector: `ion-content.ion-padding form`
+│   │   └── UpdateProdutoPage.css     # Form produto (RF-R04) — selector: `ion-content.ion-padding form`
 │   ├── usuario/
-│   │   ├── ListUsuarioPage.css       # Listagem usuarios (RF-R03)
-│   │   ├── RegUsuarioPage.css        # Form usuario (RF-R04)
-│   │   └── UpdateUsuarioPage.css     # Form usuario (RF-R04)
+│   │   ├── ListUsuarioPage.css       # Listagem usuarios (RF-R03) — selector: `.list-usuario-container`
+│   │   ├── RegUsuarioPage.css        # Form usuario (RF-R04) — selector: `ion-content.ion-padding form`
+│   │   └── UpdateUsuarioPage.css     # Form usuario (RF-R04) — selector: `ion-content.ion-padding form`
 │   ├── mesa/
-│   │   ├── ListMesaPage.css          # Listagem mesas (RF-R03)
-│   │   ├── RegMesaPage.css           # Form mesa (RF-R04)
-│   │   └── UpdateMesaPage.css        # Form mesa (RF-R04)
+│   │   ├── ListMesaPage.css          # Listagem mesas (RF-R03) — selector: `.list-mesa-container`
+│   │   ├── RegMesaPage.css           # Form mesa (RF-R04) — selector: `ion-content.ion-padding form`
+│   │   └── UpdateMesaPage.css        # Form mesa (RF-R04) — selector: `ion-content.ion-padding form`
 │   └── comanda/
-│       ├── ListComandaPage.css       # Listagem comandas (RF-R03)
-│       ├── RegComandaPage.css        # Form comanda (RF-R04)
-│       └── UpdateComandaPage.css     # Form comanda (RF-R04)
+│       ├── ListComandaPage.css       # Listagem comandas (RF-R03) — selector: `.list-comanda-container`
+│       ├── RegComandaPage.css        # Form comanda (RF-R04) — selector: `ion-content.ion-padding form`
+│       └── UpdateComandaPage.css     # Form comanda (RF-R04) — selector: `ion-content.ion-padding form`
 ```
 
 **Structure Decision**: Option 2 — Web application. Apenas o diretório `frontend/src/pages/` é relevante (CSS exclusivo do frontend). Nenhuma alteração no backend.
+
+> **Important**: Para formulários (RF-R04), usar `ion-content.ion-padding form` — **não** aplicar `max-width` diretamente no `ion-content.ion-padding`, pois isso restringiria a largura de todo o componente`. O elemento `form` (`form#form-produto`, `form#form-usuario`, `form#form-mesa`, `form#form-comanda`) está presente em todas as 8 páginas e é o seletor correto.
 
 ## Complexity Tracking
 

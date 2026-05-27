@@ -119,8 +119,8 @@ class ListUsuarioPage extends HTMLElement {
         <ion-label>
           <h2 class="item-title">
             <ion-icon
-              name="${usuario.status ? 'checkmark-circle' : 'close-circle'}"
-              color="${usuario.status ? 'success' : 'danger'}"
+              name="${usuario.perfil === 0 ? 'shield-checkmark-outline' : 'person-outline'}"
+              color="medium"
               aria-hidden="true"
             ></ion-icon>
             <span>${usuario.nome}</span>

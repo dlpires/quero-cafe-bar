@@ -235,3 +235,32 @@ document.body.appendChild = jest.fn((node) => {
   if (node && node._isIonMock) return node;
   return originalBodyAppendChild(node);
 });
+
+window.resizeTo = function resizeTo(width, height) {
+  Object.defineProperty(window, 'innerWidth', {
+    configurable: true, writable: true, value: width,
+  });
+  Object.defineProperty(window, 'innerHeight', {
+    configurable: true, writable: true, value: height,
+  });
+  window.dispatchEvent(new Event('resize'));
+};
+
+window.matchMedia = window.matchMedia || function matchMedia(query) {
+  const width = window.innerWidth;
+  let matches = false;
+  const minMatch = query.match(/\(min-width:\s*(\d+)px\)/);
+  const maxMatch = query.match(/\(max-width:\s*(\d+)px\)/);
+  if (minMatch) matches = width >= parseInt(minMatch[1], 10);
+  else if (maxMatch) matches = width <= parseInt(maxMatch[1], 10);
+  return {
+    matches,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => {},
+  };
+};

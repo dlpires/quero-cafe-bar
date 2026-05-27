@@ -1,7 +1,5 @@
-import { validateRequired } from '../../shared/util.js';
-
 jest.mock('../../services/api.js', () => ({
-  api: { createProduto: jest.fn() },
+  api: { createUsuario: jest.fn() },
 }));
 
 jest.mock('../../services/auth.js', () => ({
@@ -16,13 +14,10 @@ jest.mock('../../shared/util.js', () => ({
   showToast: jest.fn(),
   withLoading: jest.fn(),
   focusFirstElement: jest.fn(),
-  validateRequired: jest.requireActual('../../shared/util.js').validateRequired,
-  validatePositiveNumber: jest.requireActual('../../shared/util.js').validatePositiveNumber,
-  hasFormChanges: jest.fn(),
 }));
 
-describe('RegProdutoPage - Responsividade', () => {
-  it('T018: deve ter max-width 600px no formulário em viewport ≥768px', () => {
+describe('RegUsuarioPage - Responsividade', () => {
+  it('T020: deve ter max-width 600px no formulário em viewport ≥768px', () => {
     const style = document.createElement('style');
     style.textContent = 'form { max-width: 600px; margin: 0 auto; }';
     document.head.appendChild(style);

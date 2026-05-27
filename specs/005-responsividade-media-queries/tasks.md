@@ -25,8 +25,8 @@
 
 **Purpose**: Verify baseline and confirm prerequisites are in place
 
-- [ ] T001 Run `npm test` inside `frontend/` to confirm all tests pass before any changes
-- [ ] T002 Confirm Fase 3 (Layout e Espaçamento Mobile) is complete: verify `HomePage.css` uses `minmax(280px, 1fr)` and `ListProdutoPage.css`/`ListUsuarioPage.css`/`ListMesaPage.css` have `padding: 16px`
+- [X] T001 Run `npm test` inside `frontend/` to confirm all tests pass before any changes
+- [X] T002 Confirm Fase 3 (Layout e Espaçamento Mobile) is complete: verify `HomePage.css` uses `minmax(280px, 1fr)` and `ListProdutoPage.css`/`ListUsuarioPage.css`/`ListMesaPage.css` have `padding: 16px` — padding OK, HomePage still uses `minmax(320px, 1fr)` — will correct in T007
 
 **Checkpoint**: Baseline confirmed — known-good state, Fase 3 prerequisites verified
 
@@ -114,14 +114,14 @@
 
 ### Implementation
 
-- [ ] T026 [P] [US4] Add media query `min-width: 768px` with `max-width: 600px; margin: 0 auto` to `frontend/src/pages/produto/RegProdutoPage.css`
-- [ ] T027 [P] [US4] Add same media query to `frontend/src/pages/produto/UpdateProdutoPage.css`
-- [ ] T028 [P] [US4] Add same media query to `frontend/src/pages/usuario/RegUsuarioPage.css`
-- [ ] T029 [P] [US4] Add same media query to `frontend/src/pages/usuario/UpdateUsuarioPage.css`
-- [ ] T030 [P] [US4] Add same media query to `frontend/src/pages/mesa/RegMesaPage.css`
-- [ ] T031 [P] [US4] Add same media query to `frontend/src/pages/mesa/UpdateMesaPage.css`
-- [ ] T032 [P] [US4] Add same media query to `frontend/src/pages/comanda/RegComandaPage.css`
-- [ ] T033 [P] [US4] Add same media query to `frontend/src/pages/comanda/UpdateComandaPage.css`
+- [ ] T026 [P] [US4] Add media query `min-width: 768px` with `max-width: 600px; margin: 0 auto` targeting `ion-content.ion-padding form` in `frontend/src/pages/produto/RegProdutoPage.css`
+- [ ] T027 [P] [US4] Add same media query targeting `ion-content.ion-padding form` to `frontend/src/pages/produto/UpdateProdutoPage.css`
+- [ ] T028 [P] [US4] Add same media query targeting `ion-content.ion-padding form` to `frontend/src/pages/usuario/RegUsuarioPage.css`
+- [ ] T029 [P] [US4] Add same media query targeting `ion-content.ion-padding form` to `frontend/src/pages/usuario/UpdateUsuarioPage.css`
+- [ ] T030 [P] [US4] Add same media query targeting `ion-content.ion-padding form` to `frontend/src/pages/mesa/RegMesaPage.css`
+- [ ] T031 [P] [US4] Add same media query targeting `ion-content.ion-padding form` to `frontend/src/pages/mesa/UpdateMesaPage.css`
+- [ ] T032 [P] [US4] Add same media query targeting `ion-content.ion-padding form` to `frontend/src/pages/comanda/RegComandaPage.css`
+- [ ] T033 [P] [US4] Add same media query targeting `ion-content.ion-padding form` to `frontend/src/pages/comanda/UpdateComandaPage.css`
 
 **Checkpoint**: US-R04 fully functional — all forms responsive
 
@@ -134,7 +134,8 @@
 - [ ] T034 Run `npm test` — confirm all tests pass (new + existing)
 - [ ] T035 Run `npm run build` — confirm production build succeeds
 - [ ] T036 [P] Write automated overflow test: verify `document.documentElement.scrollWidth <= window.innerWidth` at each breakpoint in a shared test helper
-- [ ] T037 Verify all 7 success criteria (CS-R01 through CS-R07) manually on viewports 320px, 375px, 414px, 768px, 1024px, 1400px
+- [ ] T037 [P] Write automated touch target test: verify all interactive elements (buttons, `ion-item`, inputs) have computed `min-height >= 44px` at breakpoints 320px, 768px, 1024px in a shared test helper
+- [ ] T038 Verify all 7 success criteria (CS-R01 through CS-R07) manually on viewports 320px, 375px, 414px, 768px, 1024px, 1400px
 
 ---
 
@@ -176,6 +177,16 @@ Task: T017 ListComandaPage.css
 ```
 
 ## Parallel Example: Phase 5 (Formulários — 8 CSS files)
+
+```css
+/* All 8 form CSS files use the same selector: ion-content.ion-padding form */
+@media (min-width: 768px) {
+  ion-content.ion-padding form {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+```
 
 ```bash
 # All 8 form CSS files can be implemented in parallel:

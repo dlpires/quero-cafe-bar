@@ -93,12 +93,14 @@ Adicionar a cada form page CSS (RegProdutoPage.css, RegUsuarioPage.css, RegMesaP
 
 ```css
 @media (min-width: 768px) {
-  .reg-produto-container { /* ajustar seletor por página */
+  ion-content.ion-padding form {
     max-width: 600px;
     margin: 0 auto;
   }
 }
 ```
+
+> **Nota**: Usar `ion-content.ion-padding form` — **não** aplicar `max-width` diretamente no `ion-content.ion-padding`, pois isso restringiria o componente inteiro. O selector `form` dentro do `ion-content` existe em todas as 8 páginas de formulário com os IDs `form-produto`, `form-usuario`, `form-mesa`, `form-comanda`.
 
 ## Testes
 
