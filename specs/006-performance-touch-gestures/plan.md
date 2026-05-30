@@ -6,7 +6,7 @@
 
 ## Summary
 
-Implementar infinite scroll com virtual scroll (produto/usuario) e append simples (mesa/comanda), swipe-to-delete via `ion-item-sliding`, pull-to-refresh via `ion-refresher`, lazy loading de páginas via importação dinâmica Vite, cache de assets via service worker, e instrumentação de performance com User Timing API. Requer adição de paginação (`skip`/`take`) nos endpoints findAll do backend (produto, usuario) e resposta com contagem total.
+Implementar infinite scroll com virtual scroll (produto/usuario) e append simples (mesa/comanda), swipe-to-delete via `ion-item-sliding`, pull-to-refresh via `ion-refresher`, lazy loading de páginas via importação dinâmica Vite, cache de assets via service worker, e instrumentação de performance com User Timing API. Requer adição de paginação (`skip`/`take`) nos endpoints findAll do backend (produto, usuario, mesa, comanda) e resposta com contagem total.
 
 ## Technical Context
 
@@ -36,7 +36,7 @@ Implementar infinite scroll com virtual scroll (produto/usuario) e append simple
 
 1. **API-First** — ✅ PASS. Backend endpoints existentes receberão parâmetros `skip`/`take` via DTOs. Contratos de paginação definidos antes da implementação.
 2. **Modular Architecture** — ✅ PASS. Frontend-only feature que se encaixa na estrutura existente de módulos/páginas. Nenhum novo módulo necessário.
-3. **Test-First (NON-NEGOTIABLE)** — ✅ PASS (com ressalva). Testes para infinite scroll, swipe, pull-to-refresh e lazy loading devem ser escritos e falhando antes da implementação. Cobertura existente deve ser mantida.
+3. **Test-First (NON-NEGOTIABLE)** — ✅ PASS. Tasks incluem etapa RED (teste falhando) antes de cada fase de user story: T019 (US4), T024 (US1), T035 (US2), T040 (US3), T045 (US5). Cobertura existente deve ser mantida.
 4. **Full-Stack Consistency** — ✅ PASS. DTOs de paginação no backend syncronizados com chamadas da API service no frontend. snake_case/camelCase mantido.
 5. **Security & Observability** — ✅ PASS. JWT já protege rotas. FR-013/014 adicionam User Timing API para observabilidade de performance.
 

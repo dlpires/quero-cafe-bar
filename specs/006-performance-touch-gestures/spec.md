@@ -112,7 +112,7 @@ Usuários que acessam o aplicativo repetidamente devem experimentar carregamento
 - **FR-001b**: Listagens de entidades com poucos registros esperados (mesa, comanda) PODEM usar append simples no DOM sem necessidade de virtual scroll
 - **FR-002**: Listagens DEVEM exibir um indicador visual de carregamento enquanto mais registros estão sendo buscados
 - **FR-003**: Ao atingir o final dos dados disponíveis, o indicador de infinite scroll DEVE ser desativado e não deve tentar carregar mais itens
-- **FR-004**: Cada item em listagens DEVE suportar gesto de swipe à esquerda para revelar ação de excluir
+- **FR-004**: Cada item em listagens (produto, usuário, mesa) DEVE suportar gesto de swipe à esquerda para revelar ação de excluir — comanda fica excluída pois a cozinha não realiza exclusão de pedidos na listagem
 - **FR-005**: Ao tocar no botão de excluir revelado por swipe, uma confirmação DEVE ser exibida antes da exclusão
 - **FR-006**: Todas as listagens DEVEM suportar gesto de pull-to-refresh para recarregar dados completos
 - **FR-007**: Durante o pull-to-refresh, um indicador visual DEVE ser exibido e a interação com a lista DEVE permanecer suave

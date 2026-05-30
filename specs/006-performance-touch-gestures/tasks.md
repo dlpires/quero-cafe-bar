@@ -59,12 +59,16 @@
 
 **Independent Test**: Bundle inicial não contém código de páginas CRUD. Verificar via DevTools Network tab — chunks separados aparecem apenas ao navegar para cada rota.
 
+### Test-First (RED phase — TDD mandatory per constitution)
+
+- [ ] T019 [US4] Write failing Jest test for lazy loading — mock `import()` and verify page chunks are NOT in initial bundle, using `frontend/src/main.js` and `frontend/src/pages/produto/ListProdutoPage.js` as target
+
 ### Implementation
 
-- [ ] T019 [P] [US4] Remove static imports of CRUD pages from `frontend/src/main.js` (keep only `LoginPage.js` and `HomePage.js`)
-- [ ] T020 [US4] Add dynamic `import()` in `ionRouteDidChange` handler in `frontend/src/main.js` for each route: `/produtos`, `/produto/register`, `/produto/edit`, `/usuarios`, `/usuario/register`, `/usuario/edit`, `/mesas`, `/mesa/register`, `/mesa/edit`, `/comandas`, `/comanda/register`, `/comanda/edit`
-- [ ] T021 [US4] Add adjacent route preloading after initial page render: after list page loads, preload register/edit for that entity via background `import()`
-- [ ] T022 [US4] Verify frontend build outputs separate chunks: `cd frontend && npm run build` — check `dist/` for multiple JS files
+- [ ] T020 [P] [US4] Remove static imports of CRUD pages from `frontend/src/main.js` (keep only `LoginPage.js` and `HomePage.js`)
+- [ ] T021 [US4] Add dynamic `import()` in `ionRouteDidChange` handler in `frontend/src/main.js` for each route: `/produtos`, `/produto/register`, `/produto/edit`, `/usuarios`, `/usuario/register`, `/usuario/edit`, `/mesas`, `/mesa/register`, `/mesa/edit`, `/comandas`, `/comanda/register`, `/comanda/edit`
+- [ ] T022 [US4] Add adjacent route preloading after initial page render: after list page loads, preload register/edit for that entity via background `import()`
+- [ ] T023 [US4] Verify frontend build outputs separate chunks: `cd frontend && npm run build` — check `dist/` for multiple JS files; confirm tests now pass (GREEN)
 
 **Checkpoint**: At this point, lazy loading should work. Navigate to each route — corresponding chunk should load dynamically.
 
@@ -76,20 +80,24 @@
 
 **Independent Test**: Abrir listagem com >20 registros, rolar até o fim — novos itens aparecem sem interrupção. Com <20 registros, sem indicador adicional.
 
+### Test-First (RED phase — TDD mandatory per constitution)
+
+- [ ] T024 [US1] Write failing Jest test for infinite scroll — verify `ionInfinite` event triggers API call and items are appended to DOM, using `frontend/src/pages/produto/ListProdutoPage.js`
+
 ### Frontend API Service
 
-- [ ] T023 [P] [US1] Add `getProdutos(skip = 0, take = 20)` with pagination params to `frontend/src/services/api.js` (keep existing `getProdutos()` for backward compat or deprecate)
-- [ ] T024 [P] [US1] Add `getUsuarios(skip = 0, take = 20)` with pagination params to `frontend/src/services/api.js`
-- [ ] T025 [P] [US1] Update `getMesas()` to accept `skip = 0, take = 20` params in `frontend/src/services/api.js`
-- [ ] T026 [P] [US1] Update `getComandas()` to accept `skip = 0, take = 20` params in `frontend/src/services/api.js`
+- [ ] T025 [P] [US1] Add `getProdutos(skip = 0, take = 20)` with pagination params to `frontend/src/services/api.js` (keep existing `getProdutos()` for backward compat or deprecate)
+- [ ] T026 [P] [US1] Add `getUsuarios(skip = 0, take = 20)` with pagination params to `frontend/src/services/api.js`
+- [ ] T027 [P] [US1] Update `getMesas()` to accept `skip = 0, take = 20` params in `frontend/src/services/api.js`
+- [ ] T028 [P] [US1] Update `getComandas()` to accept `skip = 0, take = 20` params in `frontend/src/services/api.js`
 
 ### Virtual Scroll Implementation (shared)
 
-- [ ] T027 [P] [US1] Create virtual scroll utility in `frontend/src/shared/virtual-scroll.js` — class/function that accepts container, itemHeight, items array, buffer (2 screens), and returns indices to render with offsetY
+- [ ] T029 [P] [US1] Create virtual scroll utility in `frontend/src/shared/virtual-scroll.js` — class/function that accepts container, itemHeight, items array, buffer (2 screens), and returns indices to render with offsetY
 
 ### Produto List Page (virtual scroll + infinite scroll)
 
-- [ ] T028 [US1] Modify `frontend/src/pages/produto/ListProdutoPage.js`:
+- [ ] T030 [US1] Modify `frontend/src/pages/produto/ListProdutoPage.js`:
   - Add `ion-infinite-scroll` at bottom of list
   - Load first 20 items on mount via `api.getProdutos(0, 20)`
   - On `ionInfinite` event: call `api.getProdutos(currentLength, 20)`, append to items, call `event.target.complete()`
@@ -101,11 +109,11 @@
 
 ### Usuario List Page (virtual scroll + infinite scroll)
 
-- [ ] T029 [US1] Modify `frontend/src/pages/usuario/ListUsuarioPage.js` — same pattern as T028 (virtual scroll, infinite scroll, error handling)
+- [ ] T031 [US1] Modify `frontend/src/pages/usuario/ListUsuarioPage.js` — same pattern as T030 (virtual scroll, infinite scroll, error handling)
 
 ### Mesa List Page (append simples + infinite scroll)
 
-- [ ] T030 [US1] Modify `frontend/src/pages/mesa/ListMesaPage.js`:
+- [ ] T032 [US1] Modify `frontend/src/pages/mesa/ListMesaPage.js`:
   - Add `ion-infinite-scroll` at bottom of list
   - Load first 20 items on mount via `api.getMesas(0, 20)`
   - On `ionInfinite`: append results to DOM (no virtual scroll — simple append)
@@ -115,11 +123,11 @@
 
 ### Comanda List Page (append simples + infinite scroll)
 
-- [ ] T031 [US1] Modify `frontend/src/pages/comanda/ListComandaPage.js` — same pattern as T030 (append simples, infinite scroll, error handling)
+- [ ] T033 [US1] Modify `frontend/src/pages/comanda/ListComandaPage.js` — same pattern as T032 (append simples, infinite scroll, error handling)
 
 ### Verify
 
-- [ ] T032 Verify frontend tests pass: `cd frontend && npm test`
+- [ ] T034 Verify frontend tests pass (including the new US1 test — now GREEN): `cd frontend && npm test`
 
 **Checkpoint**: Infinite scroll should work on all 4 list pages. Virtual scroll visible on produto/usuario (DOM nodes limited to ~buffer). Append simples on mesa/comanda.
 
@@ -131,12 +139,16 @@
 
 **Independent Test**: Em qualquer listagem (produto, usuário, mesa), deslizar item para esquerda — botão de excluir com ícone e cor danger aparece.
 
+### Test-First (RED phase — TDD mandatory per constitution)
+
+- [ ] T035 [US2] Write failing Jest test for swipe-to-delete — verify `ion-item-sliding` reveals delete button, confirmation dialog appears, and delete API is called, using `frontend/src/pages/produto/ListProdutoPage.js`
+
 ### Implementation
 
-- [ ] T033 [US2] Modify `frontend/src/pages/produto/ListProdutoPage.js` — wrap each `ion-item` in `ion-item-sliding`, add `ion-item-options side="end"` with `ion-item-option color="danger"` containing trash icon + "Excluir" label; on click: show `ion-alert` confirmation, call `api.deleteProduto(id)`, re-render on success
-- [ ] T034 [US2] Modify `frontend/src/pages/usuario/ListUsuarioPage.js` — same swipe-to-delete pattern
-- [ ] T035 [US2] Modify `frontend/src/pages/mesa/ListMesaPage.js` — same swipe-to-delete pattern
-- [ ] T036 [US2] Add `closeSlidingItems()` call on route change to close any open swipe menus when navigating away
+- [ ] T036 [US2] Modify `frontend/src/pages/produto/ListProdutoPage.js` — wrap each `ion-item` in `ion-item-sliding`, add `ion-item-options side="end"` with `ion-item-option color="danger"` containing trash icon + "Excluir" label; on click: show `ion-alert` confirmation, call `api.deleteProduto(id)`, re-render on success
+- [ ] T037 [US2] Modify `frontend/src/pages/usuario/ListUsuarioPage.js` — same swipe-to-delete pattern
+- [ ] T038 [US2] Modify `frontend/src/pages/mesa/ListMesaPage.js` — same swipe-to-delete pattern
+- [ ] T039 [US2] Add `closeSlidingItems()` call on route change to close any open swipe menus when navigating away; confirm tests now pass (GREEN)
 
 **Checkpoint**: Swipe-to-delete functional on produto, usuario, and mesa list pages. Confirmation dialog appears before deletion.
 
@@ -148,12 +160,16 @@
 
 **Independent Test**: Em qualquer listagem, puxar para baixo — indicador de refresh aparece, dados são recarregados.
 
+### Test-First (RED phase — TDD mandatory per constitution)
+
+- [ ] T040 [US3] Write failing Jest test for pull-to-refresh — verify `ionRefresh` event triggers API call with `skip=0`, data is reset, and refresher completes, using `frontend/src/pages/produto/ListProdutoPage.js`
+
 ### Implementation
 
-- [ ] T037 [US3] Modify `frontend/src/pages/produto/ListProdutoPage.js` — add `ion-refresher` with `slot="fixed"` inside `ion-content`, on `ionRefresh`: call `api.getProdutos(0, 20)`, reset items + virtual scroll state, call `event.target.complete()`; handle network errors (keep existing data, show toast)
-- [ ] T038 [US3] Modify `frontend/src/pages/usuario/ListUsuarioPage.js` — same pull-to-refresh pattern
-- [ ] T039 [US3] Modify `frontend/src/pages/mesa/ListMesaPage.js` — same pull-to-refresh pattern
-- [ ] T040 [US3] Modify `frontend/src/pages/comanda/ListComandaPage.js` — same pull-to-refresh pattern (note: comanda already had pull-to-refresh mentioned in spec — ensure it's added)
+- [ ] T041 [US3] Modify `frontend/src/pages/produto/ListProdutoPage.js` — add `ion-refresher` with `slot="fixed"` inside `ion-content`, on `ionRefresh`: call `api.getProdutos(0, 20)`, reset items + virtual scroll state, call `event.target.complete()`; handle network errors (keep existing data, show toast)
+- [ ] T042 [US3] Modify `frontend/src/pages/usuario/ListUsuarioPage.js` — same pull-to-refresh pattern
+- [ ] T043 [US3] Modify `frontend/src/pages/mesa/ListMesaPage.js` — same pull-to-refresh pattern
+- [ ] T044 [US3] Modify `frontend/src/pages/comanda/ListComandaPage.js` — same pull-to-refresh pattern (note: comanda already had pull-to-refresh mentioned in spec — ensure it's added); confirm tests now pass (GREEN)
 
 **Checkpoint**: Pull-to-refresh functional on all 4 list pages. Error state preserves existing data.
 
@@ -165,15 +181,19 @@
 
 **Independent Test**: Service worker registrado no painel Application > Service Workers. Assets servidos do cache em visitas subsequentes.
 
+### Test-First (RED phase — TDD mandatory per constitution)
+
+- [ ] T045 [US5] Write failing test for service worker registration — verify `navigator.serviceWorker.register` is called with `/sw.js` and that the SW file exists after build, targeting `frontend/src/main.js` and `frontend/src/sw.js`
+
 ### Implementation
 
-- [ ] T041 [P] [US5] Create `frontend/src/sw.js` — service worker with:
+- [ ] T046 [P] [US5] Create `frontend/src/sw.js` — service worker with:
   - `CACHE_VERSION` constant
   - `install` event: pre-cache critical assets (core CSS, Ionic JS)
   - `activate` event: delete old caches
   - `fetch` event: cache-first strategy for static assets (JS, CSS, fonts, icons), network-first for API calls
-- [ ] T042 [US5] Register service worker in `frontend/src/main.js` — check `navigator.serviceWorker`, call `navigator.serviceWorker.register('/sw.js')`, handle registration errors gracefully
-- [ ] T043 [US5] Verify: `cd frontend && npm run build` — check `dist/sw.js` exists; load app in browser, verify SW registered in Application panel
+- [ ] T047 [US5] Register service worker in `frontend/src/main.js` — check `navigator.serviceWorker`, call `navigator.serviceWorker.register('/sw.js')`, handle registration errors gracefully; confirm tests now pass (GREEN)
+- [ ] T048 [US5] Verify: `cd frontend && npm run build` — check `dist/sw.js` exists; load app in browser, verify SW registered in Application panel
 
 **Checkpoint**: Service worker registered and caching assets. Second load should show cached assets in Network tab.
 
@@ -185,26 +205,26 @@
 
 ### User Timing Instrumentation (FR-013, FR-014)
 
-- [ ] T044 [P] Add `performance.mark()` and `performance.measure()` to infinite scroll fetch handler in all 4 list pages — measure fetch duration per entity type
-- [ ] T045 [P] Add `performance.mark()` and `performance.measure()` to pull-to-refresh handler in all 4 list pages
-- [ ] T046 [P] Add `performance.mark()` and `performance.measure()` to swipe action handler
-- [ ] T047 [P] Add `console.warn()` in dev mode (check `environment.production`) when any measured operation exceeds 16ms threshold in all pages
-- [ ] T048 Add `beforeunload` cleanup — call `performance.clearMarks()` and `performance.clearMeasures()` to avoid memory leaks from accumulated entries
+- [ ] T049 [P] Add `performance.mark()` and `performance.measure()` to infinite scroll fetch handler in all 4 list pages — measure fetch duration per entity type
+- [ ] T050 [P] Add `performance.mark()` and `performance.measure()` to pull-to-refresh handler in all 4 list pages
+- [ ] T051 [P] Add `performance.mark()` and `performance.measure()` to swipe action handler
+- [ ] T052 [P] Add `console.warn()` in dev mode (check `environment.production`) when any measured operation exceeds 16ms threshold in all pages
+- [ ] T053 Add `beforeunload` cleanup — call `performance.clearMarks()` and `performance.clearMeasures()` to avoid memory leaks from accumulated entries
 
 ### Verification
 
-- [ ] T049 [P] Run `cd backend && yarn test` — all 163 tests (24 suites) passing
-- [ ] T050 [P] Run `cd frontend && npm test` — all 105 tests (8 suites) passing
-- [ ] T051 [P] Run `cd backend && yarn lint` — no lint errors
-- [ ] T052 Run Lighthouse performance audit on mobile emulation (3G slow, CPU 4x throttling) — score ≥ 80
-- [ ] T053 Verify `quickstart.md` checklist items are all satisfiable
+- [ ] T054 [P] Run `cd backend && yarn test` — all 163 tests (24 suites) passing
+- [ ] T055 [P] Run `cd frontend && npm test` — all 105 tests (8 suites) passing
+- [ ] T056 [P] Run `cd backend && yarn lint` — no lint errors
+- [ ] T057 Run Lighthouse performance audit on mobile emulation (3G slow, CPU 4x throttling) — score ≥ 80
+- [ ] T058 Verify `quickstart.md` checklist items are all satisfiable
 
 ### Edge Cases
 
-- [ ] T054 Verify rapid successive swipes (ion-item-sliding handles queue internally — ensure no visual glitches on mid-range device)
-- [ ] T055 Verify API returning fewer records than `take` (e.g., `take=20` but `total=5`) — infinite scroll should not fire again
-- [ ] T056 Verify pull-to-refresh on empty list — shows empty state after refresh, no error
-- [ ] T057 Verify service worker registration failure on unsupported browsers — app continues without caching, no console errors
+- [ ] T059 Verify rapid successive swipes (ion-item-sliding handles queue internally — ensure no visual glitches on mid-range device)
+- [ ] T060 Verify API returning fewer records than `take` (e.g., `take=20` but `total=5`) — infinite scroll should not fire again
+- [ ] T061 Verify pull-to-refresh on empty list — shows empty state after refresh, no error
+- [ ] T062 Verify service worker registration failure on unsupported browsers — app continues without caching, no console errors
 
 ---
 
@@ -214,11 +234,11 @@
 
 - **Setup (Phase 1)**: No dependencies — can start immediately
 - **Foundational (Phase 2)**: Depends on Setup — BLOCKS US1
-- **US4 - Lazy Loading (Phase 3)**: Depends on Phase 2 (code splitting config) — independent from other stories
-- **US1 - Infinite Scroll (Phase 4)**: Depends on Phase 2 (backend pagination + API service) — can run in parallel with US2, US3
-- **US2 - Swipe to Delete (Phase 5)**: Depends on Phase 2 only — independent from US1, US3, US4
-- **US3 - Pull-to-Refresh (Phase 6)**: Depends on Phase 2 only — independent from US1, US2, US4
-- **US5 - Service Worker (Phase 7)**: Depends on Phase 2 only — independent from all other stories
+- **US4 - Lazy Loading (Phase 3)**: Depends on Phase 2 (code splitting config) — independent from other stories. T019 (test) → T020-T023 (implementation)
+- **US1 - Infinite Scroll (Phase 4)**: Depends on Phase 2 (backend pagination + API service) — can run in parallel with US2, US3. T024 (test) → T025-T034 (implementation)
+- **US2 - Swipe to Delete (Phase 5)**: Depends on Phase 2 only — independent from US1, US3, US4. T035 (test) → T036-T039 (implementation)
+- **US3 - Pull-to-Refresh (Phase 6)**: Depends on Phase 2 only — independent from US1, US2, US4. T040 (test) → T041-T044 (implementation)
+- **US5 - Service Worker (Phase 7)**: Depends on Phase 2 only — independent from all other stories. T045 (test) → T046-T048 (implementation)
 - **Polish (Phase 8)**: Depends on all user stories being complete
 
 ### User Story Dependencies
@@ -239,10 +259,10 @@
 - All Phase 1 tasks marked [P] can run in parallel
 - Backend DTO changes (T008-T011) can run in parallel
 - Backend service changes (T013-T016) depend on their respective DTOs
-- US4 (Phase 3) can run in parallel with US2/US3
-- US1 (Phase 4) can run after backend pagination is done
-- US2 (Phase 5) and US3 (Phase 6) can run in parallel with each other and with US1
-- US5 (Phase 7) is fully independent
+- US4 (Phase 3 — T019 to T023) can run in parallel with US2/US3
+- US1 (Phase 4 — T024 to T034) can run after backend pagination is done
+- US2 (Phase 5 — T035 to T039) and US3 (Phase 6 — T040 to T044) can run in parallel with each other and with US1
+- US5 (Phase 7 — T045 to T048) is fully independent
 - All Phase 8 verification tasks marked [P] can run in parallel
 
 ---
@@ -250,34 +270,34 @@
 ## Parallel Example: User Story 1 (Infinite Scroll)
 
 ```bash
-# Launch all API service methods together:
+# Launch API service methods (T025-T028) together:
 Task: "Add getProdutos(skip, take) in api.js"
 Task: "Add getUsuarios(skip, take) in api.js"
 Task: "Update getMesas(skip, take) in api.js"
 Task: "Update getComandas(skip, take) in api.js"
 
 # Launch virtual scroll utility + first list page together:
-Task: "Create virtual-scroll.js utility"
-Task: "Modify ListProdutoPage.js with infinite scroll"
+Task: "Create virtual-scroll.js utility (T029)"
+Task: "Modify ListProdutoPage.js with infinite scroll (T030)"
 ```
 
 ## Parallel Example: User Story 2 (Swipe to Delete)
 
 ```bash
 # All list pages can be modified in parallel:
-Task: "Modify ListProdutoPage.js with ion-item-sliding"
-Task: "Modify ListUsuarioPage.js with ion-item-sliding"
-Task: "Modify ListMesaPage.js with ion-item-sliding"
+Task: "Modify ListProdutoPage.js with ion-item-sliding (T036)"
+Task: "Modify ListUsuarioPage.js with ion-item-sliding (T037)"
+Task: "Modify ListMesaPage.js with ion-item-sliding (T038)"
 ```
 
 ## Parallel Example: User Story 3 (Pull-to-Refresh)
 
 ```bash
 # All list pages can be modified in parallel:
-Task: "Modify ListProdutoPage.js with ion-refresher"
-Task: "Modify ListUsuarioPage.js with ion-refresher"
-Task: "Modify ListMesaPage.js with ion-refresher"
-Task: "Modify ListComandaPage.js with ion-refresher"
+Task: "Modify ListProdutoPage.js with ion-refresher (T041)"
+Task: "Modify ListUsuarioPage.js with ion-refresher (T042)"
+Task: "Modify ListMesaPage.js with ion-refresher (T043)"
+Task: "Modify ListComandaPage.js with ion-refresher (T044)"
 ```
 
 ---
@@ -288,7 +308,7 @@ Task: "Modify ListComandaPage.js with ion-refresher"
 
 1. Complete Phase 1: Setup
 2. Complete Phase 2: Foundational (backend pagination + code splitting)
-3. Complete Phase 4: US1 (infinite scroll) — skip virtual scroll initially, use simple append
+3. Complete Phase 4: US1 (infinite scroll) — T024 test (RED) → T025-T034 implementation (GREEN). Skip virtual scroll initially, use simple append
 4. **STOP and VALIDATE**: Infinite scroll working on all 4 list pages
 5. Deploy/demo if ready
 

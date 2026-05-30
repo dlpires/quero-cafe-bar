@@ -1,4 +1,12 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "instructions": ["backend/AGENTS.md", "frontend/AGENTS.md", "AGENTS.md"]
+  "instructions": ["backend/AGENTS.md", "frontend/AGENTS.md", "AGENTS.md"],
+  "agent": {
+    "plan": {
+      "model": "opencode/deepseek-v4-flash-free"
+    },
+    "build": {
+      "model": "opencode/big-pickle"
+    }
+  }
 }
