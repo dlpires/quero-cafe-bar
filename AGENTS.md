@@ -158,6 +158,6 @@ cd frontend && npm test
 - Java JDK 17+ + Android Studio (for mobile builds)
 
 <!-- SPECKIT START -->
-For additional context about the current feature (Responsividade com Media Queries), read
-specs/005-responsividade-media-queries/plan.md
+For additional context about the current feature (Performance Mobile e Gestos Touch Nativos), read
+specs/006-performance-touch-gestures/plan.md
 <!-- SPECKIT END -->
