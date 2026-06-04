@@ -13,6 +13,7 @@ import { CreateProdutoDto } from './dto/create-produto.dto';
 import { ListProdutoDto } from './dto/list-produto.dto';
 import { UpdateProdutoDto } from './dto/update-produto.dto';
 import { DeleteProdutoDto } from './dto/delete-produto.dto';
+import { PaginatedResponse } from './dto/paginated-response.dto';
 import { IProdutoOutput } from './interfaces/produto.interface';
 
 @Controller('produto')
@@ -29,7 +30,7 @@ export class ProdutoController {
   @Get()
   async findAll(
     @Query() listProdutoDto: ListProdutoDto,
-  ): Promise<IProdutoOutput[]> {
+  ): Promise<PaginatedResponse<IProdutoOutput>> {
     return await this.produtoService.findAll(listProdutoDto);
   }
 

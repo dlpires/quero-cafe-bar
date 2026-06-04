@@ -32,7 +32,7 @@ describe('ProdutoController', () => {
               status: true,
             }),
             remove: jest.fn().mockResolvedValue({ id: 1 }),
-            findAll: jest.fn().mockResolvedValue([]),
+            findAll: jest.fn().mockResolvedValue({ data: [], total: 0, skip: 0, take: 20 }),
           },
         },
       ],
@@ -63,10 +63,13 @@ describe('ProdutoController', () => {
   });
 
   describe('findAll', () => {
-    it('should return an array of produtos', async () => {
-      const result = [
-        { id: 1, dsc_produto: 'Café', valor_unit: 5.0, status: true },
-      ];
+    it('should return a paginated response of produtos', async () => {
+      const result = {
+        data: [{ id: 1, dsc_produto: 'Café', valor_unit: 5.0, status: true }],
+        total: 1,
+        skip: 0,
+        take: 20,
+      };
 
       jest.spyOn(service, 'findAll').mockResolvedValue(result);
 

@@ -61,16 +61,16 @@
 
 ### Test-First (RED phase — TDD mandatory per constitution)
 
-- [ ] T019 [US4] Write failing Jest test for lazy loading — mock `import()` and verify page chunks are NOT in initial bundle, using `frontend/src/main.js` and `frontend/src/pages/produto/ListProdutoPage.js` as target
+- [x] ~~T019 [US4] Write failing Jest test for lazy loading — mock `import()` and verify page chunks are NOT in initial bundle~~ → **CANCELLED** (ver B003 — lazy loading causou race condition com `ion-router`)
 
 ### Implementation
 
-- [ ] T020 [P] [US4] Remove static imports of CRUD pages from `frontend/src/main.js` (keep only `LoginPage.js` and `HomePage.js`)
-- [ ] T021 [US4] Add dynamic `import()` in `ionRouteDidChange` handler in `frontend/src/main.js` for each route: `/produtos`, `/produto/register`, `/produto/edit`, `/usuarios`, `/usuario/register`, `/usuario/edit`, `/mesas`, `/mesa/register`, `/mesa/edit`, `/comandas`, `/comanda/register`, `/comanda/edit`
-- [ ] T022 [US4] Add adjacent route preloading after initial page render: after list page loads, preload register/edit for that entity via background `import()`
-- [ ] T023 [US4] Verify frontend build outputs separate chunks: `cd frontend && npm run build` — check `dist/` for multiple JS files; confirm tests now pass (GREEN)
+- [x] ~~T020 [P] [US4] Remove static imports of CRUD pages~~ → **REVERTED** (ver B003 — voltamos a usar imports estáticos)
+- [x] ~~T021 [US4] Add dynamic `import()` in `ionRouteDidChange` handler~~ → **REVERTED** (ver B003)
+- [x] ~~T022 [US4] Add adjacent route preloading~~ → **REVERTED** (ver B003)
+- [x] ~~T023 [US4] Verify frontend build outputs separate chunks~~ → **CANCELLED** (ver B003)
 
-**Checkpoint**: At this point, lazy loading should work. Navigate to each route — corresponding chunk should load dynamically.
+**Checkpoint**: Lazy loading removido. Todas as páginas são importadas estaticamente para evitar race condition com `ion-router`. Ver detalhes em B003 no `plan.md`.
 
 ---
 

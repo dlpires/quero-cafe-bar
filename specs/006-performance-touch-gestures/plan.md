@@ -90,3 +90,35 @@ frontend/
 ## Complexity Tracking
 
 N/A — nenhuma violação constitucional identificada.
+
+---
+
+## Bug Fixes (Descobertos durante a implementação)
+
+### B001 — HomePage: `comandas.map is not a function`
+
+**Arquivo:** `frontend/src/pages/home/HomePage.js`
+**Sintoma:** Erro `TypeError: comandas.map is not a function` ao carregar `/home`.
+**Causa:** O método `getComandas()` retorna um objeto paginado `{ data: [...], total, skip, take }`, mas `renderComandas()` chamava `.map()` diretamente no objeto.
+**Correção:** Extrair `response.data || response` antes de passar para `renderComandas()`, seguindo o padrão já usado em `ListProdutoPage.js` e `ListMesaPage.js`.
+
+### B002 — Service Worker: `cache.put()` rejeita requisições não-GET
+
+**Arquivo:** `frontend/src/sw.js`
+**Sintoma:** Erro `TypeError: Failed to execute 'put' on 'Cache': Request method 'POST' is unsupported`.
+**Causa:** O fetch handler tentava cacheados todas as requisições via `cache.put()`, que só aceita método `GET`. Requisições `POST`, `PATCH`, `DELETE` para a API quebravam.
+**Correção:** Adicionar `if (request.method !== 'GET') return;` no início do fetch handler, deixando requisições não-GET passarem sem intervenção do SW. Versão do cache incrementada (`v1` → `v2`) para forçar re-cache dos assets.
+
+### B003 — Páginas CRUD em branco (race condition no lazy loading)
+
+**Arquivo:** `frontend/src/main.js`
+**Sintoma:** Home page funciona, mas ao navegar para `/produtos`, `/usuarios`, `/mesas` ou `/comandas` a página aparece em branco sem erros no console.
+**Causa:** O `import()` dinâmico no handler `ionRouteDidChange` não completava antes do `ion-router` tentar criar o componente. Com o cache vazio (após bump do SW), o fetch da rede adicionava latência suficiente para o router criar o componente antes do `customElements.define()` ser executado.
+**Correção:** Migrar todos os imports de página de dinâmicos (`import()` em `routeToPage`) para estáticos no topo de `main.js`. Removido `routeToPage`, `adjacentRoutes` e `preloadAdjacentRoutes` — desnecessários com imports estáticos.
+
+### B004 — UpdateMesaDto exige `id` no body da requisição
+
+**Arquivo:** `backend/src/modules/mesa/dto/update-mesa.dto.ts`
+**Sintoma:** Erro `Dados inválidos: id: id should not be empty, id must be an integer number` ao salvar edição de mesa.
+**Causa:** `UpdateMesaDto` tinha campo `id` com decoradores `@IsInt() @IsNotEmpty()`, exigindo `id` no body. O frontend envia apenas `qtd_cadeiras` e `status` — o `id` vem do parâmetro de URL. Os outros DTOs de update (`UpdateProdutoDto`, `UpdateUsuarioDto`) não têm este campo.
+**Correção:** Removido o campo `id` e a interface `IUpdateMesaInput` do DTO, alinhando com o padrão dos demais módulos.

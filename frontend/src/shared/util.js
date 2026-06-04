@@ -143,6 +143,35 @@ export function focusFirstElement(container) {
     }
 }
 
+export function perfMark(name) {
+  if (typeof performance === 'undefined') return;
+  const key = `quero-cafe:${name}`;
+  performance.mark(key);
+  return key;
+}
+
+export async function perfMeasureAsync(name, fn) {
+  const start = perfMark(`${name}:start`);
+  try {
+    return await fn();
+  } finally {
+    const end = perfMark(`${name}:end`);
+    if (start && end && typeof performance.measure === 'function') {
+      performance.measure(`quero-cafe:${name}`, start, end);
+      try {
+        const env = await import('@environment');
+        if (!env.environment?.production) {
+          const entries = performance.getEntriesByName(`quero-cafe:${name}`);
+          const dur = entries.length > 0 ? entries[entries.length - 1].duration : 0;
+          if (dur > 16) {
+            console.warn(`[Performance] ${name} levou ${dur.toFixed(1)}ms (limite: 16ms)`);
+          }
+        }
+      } catch {}
+    }
+  }
+}
+
 export function logout() {
     localStorage.removeItem('token');
 

@@ -10,6 +10,7 @@ import { CreateProdutoDto } from './dto/create-produto.dto';
 import { ListProdutoDto } from './dto/list-produto.dto';
 import { UpdateProdutoDto } from './dto/update-produto.dto';
 import { DeleteProdutoDto } from './dto/delete-produto.dto';
+import { PaginatedResponse } from './dto/paginated-response.dto';
 import { IProdutoOutput } from './interfaces/produto.interface';
 
 @Injectable()
@@ -30,10 +31,16 @@ export class ProdutoService {
     return await this.produtoRepository.save(produto);
   }
 
-  async findAll(listProdutoDto: ListProdutoDto): Promise<IProdutoOutput[]> {
-    return await this.produtoRepository.find({
-      where: listProdutoDto,
+  async findAll(
+    listProdutoDto: ListProdutoDto,
+  ): Promise<PaginatedResponse<IProdutoOutput>> {
+    const { skip, take, ...where } = listProdutoDto;
+    const [data, total] = await this.produtoRepository.findAndCount({
+      where,
+      skip,
+      take,
     });
+    return { data, total, skip: skip ?? 0, take: take ?? 20 };
   }
 
   async findOne(id: number): Promise<IProdutoOutput> {

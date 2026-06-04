@@ -18,6 +18,7 @@ describe('MesaService', () => {
     find: jest.fn(),
     findOne: jest.fn(),
     delete: jest.fn(),
+    findAndCount: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -60,7 +61,7 @@ describe('MesaService', () => {
   });
 
   describe('Listagem de Mesas', () => {
-    it('deve retornar todas as mesas (Happy Path)', async () => {
+    it('deve retornar todas as mesas paginadas (Happy Path)', async () => {
       // Arrange
       const mesasMock: Mesa[] = [
         { id: 1, qtd_cadeiras: 4, status: true } as unknown as Mesa,
@@ -69,17 +70,20 @@ describe('MesaService', () => {
       ];
 
       const listMesaDto: ListMesaDto = {};
-      mockMesaRepository.find.mockResolvedValue(mesasMock);
+      mockMesaRepository.findAndCount.mockResolvedValue([mesasMock, 3]);
 
       // Act
       const result = await service.findAll(listMesaDto);
 
       // Assert
-      expect(mockMesaRepository.find).toHaveBeenCalledWith({
-        where: listMesaDto,
+      expect(mockMesaRepository.findAndCount).toHaveBeenCalledWith({
+        where: {},
+        skip: undefined,
+        take: undefined,
       });
-      expect(result).toEqual(mesasMock);
-      expect(result).toHaveLength(3);
+      expect(result.data).toEqual(mesasMock);
+      expect(result.total).toBe(3);
+      expect(result.data).toHaveLength(3);
     });
 
     it('deve filtrar mesas por status (Edge Case)', async () => {
@@ -92,17 +96,19 @@ describe('MesaService', () => {
       const listMesaDto: ListMesaDto = {
         status: true,
       } as unknown as ListMesaDto;
-      mockMesaRepository.find.mockResolvedValue(mesasAtivas);
+      mockMesaRepository.findAndCount.mockResolvedValue([mesasAtivas, 2]);
 
       // Act
       const result = await service.findAll(listMesaDto);
 
       // Assert
-      expect(mockMesaRepository.find).toHaveBeenCalledWith({
+      expect(mockMesaRepository.findAndCount).toHaveBeenCalledWith({
         where: { status: true },
+        skip: undefined,
+        take: undefined,
       });
-      expect(result).toHaveLength(2);
-      expect(result[0].status).toBe(true);
+      expect(result.data).toHaveLength(2);
+      expect(result.data[0].status).toBe(true);
     });
   });
 

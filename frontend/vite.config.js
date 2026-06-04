@@ -16,9 +16,7 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       rollupOptions: {
-        output: {
-          manualChunks: undefined,
-        },
+        output: {},
         external: ['/ionic.esm.js'],
       },
     },
@@ -27,6 +25,10 @@ export default defineConfig(({ mode }) => {
         targets: [
           {
             src: 'node_modules/@ionic/core/dist/ionic/*',
+            dest: '',
+          },
+          {
+            src: 'src/sw.js',
             dest: '',
           },
         ],

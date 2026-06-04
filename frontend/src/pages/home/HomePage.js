@@ -44,7 +44,8 @@ class HomePage extends HTMLElement {
     this.renderSkeleton(container);
 
     try {
-      const comandas = await api.getComandas();
+      const response = await api.getComandas();
+      const comandas = response.data || response;
       this.renderComandas(comandas);
     } catch (error) {
       console.error('Erro ao buscar comandas:', error);
