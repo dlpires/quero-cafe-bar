@@ -4,6 +4,7 @@ import { CreateMesaDto } from './dto/create-mesa.dto';
 import { ListMesaDto } from './dto/list-mesa.dto';
 import { UpdateMesaDto } from './dto/update-mesa.dto';
 import { DeleteMesaDto } from './dto/delete-mesa.dto';
+import { PaginatedResponse } from '../produto/dto/paginated-response.dto';
 import { IMesaOutput } from './interfaces/mesa.interface';
 import { Body, Get, Param, Patch, Post, Query, Delete } from '@nestjs/common';
 
@@ -17,7 +18,9 @@ export class MesaController {
   }
 
   @Get()
-  async findAll(@Query() listMesaDto: ListMesaDto): Promise<IMesaOutput[]> {
+  async findAll(
+    @Query() listMesaDto: ListMesaDto,
+  ): Promise<PaginatedResponse<IMesaOutput>> {
     return await this.mesaService.findAll(listMesaDto);
   }
 

@@ -4,6 +4,7 @@ import { CreateComandaDto } from './dto/create-comanda.dto';
 import { ListComandaDto } from './dto/list-comanda.dto';
 import { UpdateComandaDto } from './dto/update-comanda.dto';
 import { DeleteComandaDto } from './dto/delete-comanda.dto';
+import { PaginatedResponse } from '../produto/dto/paginated-response.dto';
 import { IComandaOutput } from './interfaces/comanda.interface';
 import { Body, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 
@@ -21,7 +22,7 @@ export class ComandaController {
   @Get()
   async findAll(
     @Query() listComandaDto: ListComandaDto,
-  ): Promise<IComandaOutput[]> {
+  ): Promise<PaginatedResponse<IComandaOutput>> {
     return await this.comandaService.findAll(listComandaDto);
   }
 

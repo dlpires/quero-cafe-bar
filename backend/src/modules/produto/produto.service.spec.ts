@@ -18,6 +18,7 @@ describe('ProdutoService', () => {
     find: jest.fn(),
     findOne: jest.fn(),
     delete: jest.fn(),
+    findAndCount: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -67,7 +68,7 @@ describe('ProdutoService', () => {
   });
 
   describe('Listagem de Produtos', () => {
-    it('deve retornar todos os produtos (Happy Path)', async () => {
+    it('deve retornar todos os produtos paginados (Happy Path)', async () => {
       // Arrange
       const produtosMock = [
         { id: 1, dsc_produto: 'Café', valor_unit: 5.0, status: true },
@@ -75,17 +76,20 @@ describe('ProdutoService', () => {
       ];
 
       const listProdutoDto: ListProdutoDto = {};
-      mockProdutoRepository.find.mockResolvedValue(produtosMock);
+      mockProdutoRepository.findAndCount.mockResolvedValue([produtosMock, 2]);
 
       // Act
       const result = await service.findAll(listProdutoDto);
 
       // Assert
-      expect(mockProdutoRepository.find).toHaveBeenCalledWith({
-        where: listProdutoDto,
+      expect(mockProdutoRepository.findAndCount).toHaveBeenCalledWith({
+        where: {},
+        skip: undefined,
+        take: undefined,
       });
-      expect(result).toEqual(produtosMock);
-      expect(result).toHaveLength(2);
+      expect(result.data).toEqual(produtosMock);
+      expect(result.total).toBe(2);
+      expect(result.data).toHaveLength(2);
     });
 
     it('deve filtrar produtos por id (Edge Case)', async () => {
@@ -95,16 +99,18 @@ describe('ProdutoService', () => {
       ];
 
       const listProdutoDto: ListProdutoDto = { id: 1 };
-      mockProdutoRepository.find.mockResolvedValue(produtosFiltrados);
+      mockProdutoRepository.findAndCount.mockResolvedValue([produtosFiltrados, 1]);
 
       // Act
       const result = await service.findAll(listProdutoDto);
 
       // Assert
-      expect(mockProdutoRepository.find).toHaveBeenCalledWith({
+      expect(mockProdutoRepository.findAndCount).toHaveBeenCalledWith({
         where: { id: 1 },
+        skip: undefined,
+        take: undefined,
       });
-      expect(result).toHaveLength(1);
+      expect(result.data).toHaveLength(1);
     });
   });
 

@@ -150,8 +150,8 @@ class Api {
     }
 
     // --- Métodos de Produtos ---
-    async getProdutos() {
-        return this.request('/produto');
+    async getProdutos(skip = 0, take = 20) {
+        return this.request(`/produto?skip=${skip}&take=${take}`);
     }
 
     async addProduto(produtoData) {
@@ -180,8 +180,8 @@ class Api {
 
     // --- Métodos de Usuarios ---
 
-    async getUsuarios() {
-        return this.request('/usuario');
+    async getUsuarios(skip = 0, take = 20) {
+        return this.request(`/usuario?skip=${skip}&take=${take}`);
     }
 
     async addUsuario(usuarioData) {
@@ -209,8 +209,8 @@ class Api {
     }
 
     // --- Métodos de Mesas ---
-    async getMesas() {
-        return this.request('/mesa');
+    async getMesas(skip = 0, take = 20) {
+        return this.request(`/mesa?skip=${skip}&take=${take}`);
     }
 
     async addMesa(mesaData) {
@@ -238,8 +238,8 @@ class Api {
     }
 
     // --- Métodos de Comandas ---
-    async getComandas() {
-        return this.request('/comanda');
+    async getComandas(skip = 0, take = 20) {
+        return this.request(`/comanda?skip=${skip}&take=${take}`);
     }
 
     async addComanda(comandaData) {

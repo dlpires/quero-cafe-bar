@@ -53,8 +53,13 @@ describe('ComandaController', () => {
   });
 
   describe('findAll', () => {
-    it('should return an array of comandas', async () => {
-      const result = [{ id: 1, id_mesa: 1, obs_comanda: 'Teste' }];
+    it('should return a paginated response of comandas', async () => {
+      const result = {
+        data: [{ id: 1, id_mesa: 1, obs_comanda: 'Teste' }],
+        total: 1,
+        skip: 0,
+        take: 20,
+      };
       const query = { id_mesa: 1 };
       jest.spyOn(service, 'findAll').mockImplementation(async () => result);
 
