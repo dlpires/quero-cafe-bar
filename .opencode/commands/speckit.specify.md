@@ -8,6 +8,7 @@ handoffs:
     agent: speckit.clarify
     prompt: Clarify specification requirements
     send: true
+model: openrouter/deepseek/deepseek-r1
 ---
 
 ## User Input

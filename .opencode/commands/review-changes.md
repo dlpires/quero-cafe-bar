@@ -1,5 +1,6 @@
 ---
 description: Revise alterações recentes
+model: openrouter/deepseek/deepseek-r1
 ---
 
 Commits recentes do git:
