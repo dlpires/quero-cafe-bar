@@ -4,14 +4,38 @@
   padding-right: max(16px, env(safe-area-inset-right));
 }
 
-.item-produto-nome {
-  padding: 5px;
-}
-
 .comandas-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
+}
+
+@media (max-width: 480px) {
+  .comandas-grid {
+    grid-template-columns: 1fr;
+  }
+  .home-container {
+    padding: 12px;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+}
+
+@media (min-width: 481px) and (max-width: 900px) {
+  .comandas-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1200px) {
+  .comandas-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1201px) {
+  .comandas-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 .comanda-card {
@@ -21,18 +45,21 @@
 }
 
 .comanda-card ion-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   background: var(--ion-color-light);
   padding-bottom: 8px;
 }
 
-.card-header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.comanda-card ion-card-title {
+  font-size: 16px;
+  font-weight: 600;
 }
 
-.card-header-content ion-icon {
+.card-status-icon {
   font-size: 24px;
+  flex-shrink: 0;
 }
 
 .comanda-card ion-card-content {
@@ -42,18 +69,45 @@
 .comanda-card ion-item {
   --padding-start: 0;
   --inner-padding-end: 0;
+  --min-height: 48px;
 }
 
-.comanda-card h3 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 10px;
-  font-size: 16px;
+.comanda-item {
+  border-left: 4px solid transparent;
 }
 
-.comanda-card ion-badge {
-  font-size: 12px;
+.comanda-item.item-pending {
+  border-left-color: var(--ion-color-danger);
+}
+
+.comanda-item.item-delivered {
+  border-left-color: var(--ion-color-success);
+}
+
+.item-label {
+  overflow: hidden;
+}
+
+.item-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  font-size: 15px;
+  margin: 0;
+}
+
+.item-qty {
+  font-size: 13px;
+  color: var(--ion-color-medium);
+  margin: 2px 0 0 0;
+  flex-shrink: 0;
+}
+
+.item-status-select {
+  --min-height: 44px;
+  min-width: 100px;
+  flex-shrink: 0;
 }
 
 .skeleton-w-70 {
@@ -67,26 +121,4 @@
 .skeleton-end {
   width: 80px;
   height: 24px;
-}
-
-.item-entrega-select {
-  min-width: 120px;
-}
-
-.item-pending {
-  --background: rgba(255, 0, 0, 0.08);
-  border-left: 4px solid var(--ion-color-danger);
-}
-
-.item-delivered {
-  --background: rgba(0, 128, 0, 0.08);
-  border-left: 4px solid var(--ion-color-success);
-}
-
-.item-pending ion-label h3 {
-  color: var(--ion-color-danger-shade);
-}
-
-.item-delivered ion-label h3 {
-  color: var(--ion-color-success-shade);
 }

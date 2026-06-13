@@ -101,7 +101,7 @@ class HomePage extends HTMLElement {
       </div>
     `;
 
-    container.querySelectorAll('.item-entrega-select').forEach(select => {
+    container.querySelectorAll('.item-status-select').forEach(select => {
       select.addEventListener('ionChange', async (e) => {
         const id_comanda = select.dataset.idComanda;
         const id_produto = select.dataset.idProduto;
@@ -122,36 +122,35 @@ class HomePage extends HTMLElement {
     const statusIcon = todosEntregues ? 'checkmark-circle' : 'time-outline';
     const statusColor = todosEntregues ? 'success' : 'warning';
 
-    const itensHtml = comanda.itens.map(item => `
-      <ion-item lines="none" class="item-entrega ${item.statusEntrega ? 'item-delivered' : 'item-pending'}">
-        <ion-label>
-          <h3 class="item-produto-nome">${item.produto.dsc_produto} <ion-badge color="primary">x${item.qtd_item}</ion-badge></h3>
+    const itensHtml = comanda.itens.map(item => {
+      const statusText = item.statusEntrega ? 'Entregue' : 'Pendente';
+      return `
+      <ion-item lines="none" class="comanda-item ${item.statusEntrega ? 'item-delivered' : 'item-pending'}">
+        <ion-label class="item-label">
+          <h2 class="item-name">${item.produto.dsc_produto}</h2>
+          <p class="item-qty">Quantidade: ${item.qtd_item}</p>
         </ion-label>
         <ion-select
-          class="item-entrega-select"
+          class="item-status-select"
+          slot="end"
           data-id-comanda="${comanda.id}"
           data-id-produto="${item.id_produto}"
           value="${item.statusEntrega.toString()}"
           interface="action-sheet"
-          slot="end"
-          aria-label="Status de entrega do item ${item.produto.dsc_produto}"
+          aria-label="Status de ${item.produto.dsc_produto}: ${statusText}"
         >
           <ion-select-option value="false">Pendente</ion-select-option>
           <ion-select-option value="true">Entregue</ion-select-option>
         </ion-select>
       </ion-item>
-    `).join('');
+      `;
+    }).join('');
 
     return `
-      <ion-card class="comanda-card" data-comanda-id="${comanda.id}">
+      <ion-card class="comanda-card" data-comanda-id="${comanda.id}" role="region" aria-labelledby="comanda-title-${comanda.id}">
         <ion-card-header>
-          <ion-card-title>
-            <div class="card-header-content">
-              <span>Comanda #${comanda.id}</span>
-              <span>Mesa: ${comanda.mesa.id}</span>
-              <ion-icon name="${statusIcon}" color="${statusColor}" class="status-icon" aria-hidden="true"></ion-icon>
-            </div>
-          </ion-card-title>
+          <ion-card-title id="comanda-title-${comanda.id}">Comanda #${comanda.id} — Mesa: ${comanda.mesa.id}</ion-card-title>
+          <ion-icon name="${statusIcon}" color="${statusColor}" class="card-status-icon" aria-hidden="true"></ion-icon>
         </ion-card-header>
         <ion-card-content>
           ${itensHtml}
@@ -172,9 +171,9 @@ class HomePage extends HTMLElement {
   }
 
   updateCardStatusIcon(cardElement) {
-    const selects = cardElement.querySelectorAll('.item-entrega-select');
+    const selects = cardElement.querySelectorAll('.item-status-select');
     const allEntregues = Array.from(selects).every(select => select.value === 'true');
-    const icon = cardElement.querySelector('.status-icon');
+    const icon = cardElement.querySelector('.card-status-icon');
     if (allEntregues) {
       icon.name = 'checkmark-circle';
       icon.color = 'success';
