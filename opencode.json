@@ -3,7 +3,7 @@
   "instructions": ["backend/AGENTS.md", "frontend/AGENTS.md", "AGENTS.md"],
   "agent": {
     "plan": {
-      "model": "opencode/deepseek-v4-flash-free"
+      "model": "openrouter/deepseek/deepseek-v4-pro"
     },
     "build": {
       "model": "opencode/big-pickle"

@@ -1,5 +1,6 @@
 ---
 description: Generate a custom checklist for the current feature based on user requirements.
+model: opencode/big-pickle
 ---
 
 ## Checklist Purpose: "Unit Tests for English"

@@ -40,15 +40,6 @@ import './pages/comanda/UpdateComandaPage.js';
 
 import { setupSessionSync } from './services/auth.js';
 
-// Service worker registration
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((err) => {
-      console.warn('Service worker registration failed:', err);
-    });
-  });
-}
-
 // Global navigation guard
 (async function setupRouteGuard() {
   await customElements.whenDefined('ion-router');
