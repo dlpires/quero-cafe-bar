@@ -211,7 +211,7 @@ describe('HomePage', () => {
           </div>
         `;
 
-        container.querySelectorAll('.item-entrega-select').forEach((select) => {
+        container.querySelectorAll('.item-status-select').forEach((select) => {
           select.addEventListener('ionChange', async (e) => {
             const id_comanda = select.dataset.idComanda;
             const id_produto = select.dataset.idProduto;
@@ -238,17 +238,33 @@ describe('HomePage', () => {
         const statusIcon = todosEntregues ? 'checkmark-circle' : 'time-outline';
         const statusColor = todosEntregues ? 'success' : 'warning';
 
+        const itensHtml = comanda.itens.map((item) => `
+          <ion-item lines="none" class="comanda-item ${item.statusEntrega ? 'item-delivered' : 'item-pending'}">
+            <ion-label class="item-label">
+              <h2 class="item-name">${item.produto.dsc_produto}</h2>
+              <p class="item-qty">Quantidade: ${item.qtd_item}</p>
+            </ion-label>
+            <ion-select
+              class="item-status-select"
+              slot="end"
+              value="${item.statusEntrega.toString()}"
+              aria-label="Status de ${item.produto.dsc_produto}: ${item.statusEntrega ? 'Entregue' : 'Pendente'}"
+            >
+              <ion-select-option value="false">Pendente</ion-select-option>
+              <ion-select-option value="true">Entregue</ion-select-option>
+            </ion-select>
+          </ion-item>
+        `).join('');
+
         return `
-          <ion-card class="comanda-card" data-comanda-id="${comanda.id}">
+          <ion-card class="comanda-card" data-comanda-id="${comanda.id}" role="region" aria-labelledby="comanda-title-${comanda.id}">
             <ion-card-header>
-              <ion-card-title>
-                <div class="card-header-content">
-                  <span>Comanda #${comanda.id}</span>
-                  <span>Mesa: ${comanda.mesa.id}</span>
-                  <ion-icon name="${statusIcon}" color="${statusColor}" class="status-icon"></ion-icon>
-                </div>
-              </ion-card-title>
+              <ion-card-title id="comanda-title-${comanda.id}">Comanda #${comanda.id} — Mesa: ${comanda.mesa.id}</ion-card-title>
+              <ion-icon name="${statusIcon}" color="${statusColor}" class="card-status-icon" aria-hidden="true"></ion-icon>
             </ion-card-header>
+            <ion-card-content>
+              ${itensHtml}
+            </ion-card-content>
           </ion-card>
         `;
       }
@@ -275,9 +291,9 @@ describe('HomePage', () => {
       }
 
       updateCardStatusIcon(cardElement) {
-        const selects = cardElement.querySelectorAll('.item-entrega-select');
+        const selects = cardElement.querySelectorAll('.item-status-select');
         const allEntregues = Array.from(selects).every((select) => select.value === 'true');
-        const icon = cardElement.querySelector('.status-icon');
+        const icon = cardElement.querySelector('.card-status-icon');
         if (!icon) return;
         if (allEntregues) {
           icon.name = 'checkmark-circle';
@@ -395,6 +411,67 @@ describe('HomePage', () => {
       expect(html).toContain('time-outline');
       expect(html).toContain('warning');
     });
+
+    it('deve renderizar quantidade como texto separado do nome (T003)', () => {
+      const comanda = mockComandas[0];
+      const html = homePage.renderComandaCard(comanda);
+
+      expect(html).toContain('<h2 class="item-name">Café Expresso</h2>');
+      expect(html).toContain('<p class="item-qty">Quantidade: 2</p>');
+    });
+
+    it('deve ter classe item-name com text-overflow ellipsis (T004)', () => {
+      const style = document.createElement('style');
+      style.textContent = '.item-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }';
+      document.head.appendChild(style);
+      const el = document.createElement('h2');
+      el.className = 'item-name';
+      document.body.appendChild(el);
+      const cs = getComputedStyle(el);
+      expect(cs.textOverflow).toBe('ellipsis');
+      expect(cs.whiteSpace).toBe('nowrap');
+      expect(cs.overflow).toBe('hidden');
+      style.remove();
+      el.remove();
+    });
+
+    it('deve usar card-status-icon no cabeçalho sem card-header-content div (T009)', () => {
+      const comanda = mockComandas[0];
+      const html = homePage.renderComandaCard(comanda);
+
+      expect(html).not.toContain('card-header-content');
+      expect(html).toContain('card-status-icon');
+      expect(html).toContain('Comanda #1 — Mesa: 5');
+    });
+
+    it('deve usar border-left em vez de background colorido para status pendente (T008)', () => {
+      const style = document.createElement('style');
+      style.textContent = '.comanda-item.item-pending { border-left: 4px solid red; }';
+      document.head.appendChild(style);
+      const el = document.createElement('div');
+      el.className = 'comanda-item item-pending';
+      document.body.appendChild(el);
+      const cs = getComputedStyle(el);
+      expect(cs.borderLeftWidth).toBe('4px');
+      expect(cs.borderLeftStyle).toBe('solid');
+      style.remove();
+      el.remove();
+    });
+
+    it('T023 (US5): card deve ter role region e aria-labelledby (T023)', () => {
+      const comanda = mockComandas[0];
+      const html = homePage.renderComandaCard(comanda);
+
+      expect(html).toContain('role="region"');
+      expect(html).toContain('aria-labelledby="comanda-title-1"');
+      expect(html).toContain('id="comanda-title-1"');
+    });
+
+    it('T024 (US5): ícone de status no card deve ser aria-hidden (T024)', () => {
+      const html = homePage.renderComandaCard(mockComandas[0]);
+      expect(html).toContain('aria-hidden="true"');
+      expect(html).toContain('class="card-status-icon"');
+    });
   });
 
   describe('Atualização de Status de Entrega', () => {
@@ -485,7 +562,7 @@ describe('HomePage', () => {
   });
 
   describe('Responsividade', () => {
-    it('T003: deve exibir 1 coluna em viewport ≤360px', () => {
+    it('T003 (US4): deve exibir 1 coluna em viewport ≤480px', () => {
       const style = document.createElement('style');
       style.textContent = '.comandas-grid { display: grid; grid-template-columns: 1fr; }';
       document.head.appendChild(style);
@@ -498,7 +575,7 @@ describe('HomePage', () => {
       grid.remove();
     });
 
-    it('T004: deve exibir 2 colunas em viewport ≥768px', () => {
+    it('T004 (US4): deve exibir 2 colunas em viewport 481-900px', () => {
       const style = document.createElement('style');
       style.textContent = '.comandas-grid { display: grid; grid-template-columns: repeat(2, 1fr); }';
       document.head.appendChild(style);
@@ -511,7 +588,7 @@ describe('HomePage', () => {
       grid.remove();
     });
 
-    it('T005: deve exibir 3 colunas em viewport ≥1024px', () => {
+    it('T005 (US4): deve exibir 3 colunas em viewport 901-1200px', () => {
       const style = document.createElement('style');
       style.textContent = '.comandas-grid { display: grid; grid-template-columns: repeat(3, 1fr); }';
       document.head.appendChild(style);
@@ -524,7 +601,7 @@ describe('HomePage', () => {
       grid.remove();
     });
 
-    it('T006: deve exibir 4 colunas em viewport ≥1400px', () => {
+    it('T006 (US4): deve exibir 4 colunas em viewport ≥1201px', () => {
       const style = document.createElement('style');
       style.textContent = '.comandas-grid { display: grid; grid-template-columns: repeat(4, 1fr); }';
       document.head.appendChild(style);
@@ -535,6 +612,34 @@ describe('HomePage', () => {
       expect(cols).toBe('repeat(4, 1fr)');
       style.remove();
       grid.remove();
+    });
+
+    it('T017 (US4): não deve ter overflow horizontal em viewport 320px', () => {
+      const container = document.createElement('div');
+      container.className = 'home-container';
+      container.style.width = '320px';
+      document.body.appendChild(container);
+      const card = document.createElement('div');
+      card.className = 'comanda-card';
+      card.style.minWidth = '280px';
+      container.appendChild(card);
+      const cs = getComputedStyle(container);
+      expect(cs.overflow).not.toBe('hidden');
+      expect(container.scrollWidth).toBeLessThanOrEqual(container.offsetWidth + 1);
+      container.remove();
+    });
+
+    it('T015 (US3): seletor de status deve ter altura mínima de 44px', () => {
+      const style = document.createElement('style');
+      style.textContent = '.item-status-select { --min-height: 44px; min-width: 100px; }';
+      document.head.appendChild(style);
+      const select = document.createElement('div');
+      select.className = 'item-status-select';
+      document.body.appendChild(select);
+      const cs = getComputedStyle(select);
+      expect(cs.minWidth).toBe('100px');
+      style.remove();
+      select.remove();
     });
   });
 });

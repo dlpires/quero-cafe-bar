@@ -158,6 +158,6 @@ cd frontend && npm test
 - Java JDK 17+ + Android Studio (for mobile builds)
 
 <!-- SPECKIT START -->
-For additional context about the current feature (Polimento e Refatoração UX/UI), read
-specs/008-ux-polimento-refatoracao/plan.md
+For additional context about the current feature (Redesign dos Cartões da Visão Cozinha), read
+specs/009-home-card-redesign/plan.md
 <!-- SPECKIT END -->
