@@ -2,7 +2,7 @@ import './LoginPage.css'
 import { createHeader } from '../../shared/Header.js';
 import { api } from '../../services/api.js';
 import { isAuthenticated, redirectToHome } from '../../services/auth.js';
-import { focusFirstElement } from '../../shared/util.js';
+import { focusFirstElement, showToast } from '../../shared/util.js';
 
 const pageName = 'Login';
 
@@ -55,7 +55,7 @@ class LoginPage extends HTMLElement {
 
       // Validação no frontend antes de chamar a API
       if (!user || !password) {
-        await presentToast('Informe usuário e senha para acessar.', 'warning');
+        await showToast('Informe usuário e senha para acessar.', 'warning', 2000);
         return;
       }
 
@@ -70,14 +70,14 @@ class LoginPage extends HTMLElement {
         const response = await api.login(user, password);
         api.setToken(response.token);
 
-        await presentToast('Login realizado com sucesso!', 'success');        
+        await showToast('Login realizado com sucesso!', 'success', 2000);        
         document.querySelector('ion-router').push('/home', 'forward', 'replace');
       } catch (error) {
         const mensagem =
           error.message === 'Failed to fetch'
             ? 'Não foi possível conectar ao servidor. Verifique sua conexão.'
             : error.message || 'Usuário ou senha inválidos.';
-        await presentToast(mensagem);
+        await showToast(mensagem, 'error', 2000);
         passwordInput.value = '';
       } finally {
         await loading.dismiss();
@@ -85,18 +85,6 @@ class LoginPage extends HTMLElement {
     });
 
     focusFirstElement(this);
-
-    // Função para exibir alertas (Toast)
-    async function presentToast(message, color = 'danger') {
-        const toast = document.createElement('ion-toast');
-        toast.message = message;
-        toast.duration = 2000;
-        toast.color = color;
-        toast.position = 'bottom';
-
-        document.body.appendChild(toast);
-        return toast.present();
-    }
   }
 }
 

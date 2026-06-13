@@ -235,7 +235,7 @@ class UpdateComandaPage extends HTMLElement {
     }
 
     const modal = document.createElement('ion-modal');
-    modal.style.cssText = '--width: 90%; --height: 80%;';
+    modal.classList.add('add-item-modal');
     modal.innerHTML = `
       <ion-header>
         <ion-toolbar color="primary">

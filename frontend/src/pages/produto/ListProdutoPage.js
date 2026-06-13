@@ -164,13 +164,13 @@ class ListProdutoPage extends HTMLElement {
 
   renderSkeleton(container) {
     container.innerHTML = `
-      <div class="virtual-scroll-viewport" style="position:relative;overflow:hidden;">
+      <div class="virtual-scroll-viewport">
         <ion-list>
           ${[1,2,3,4,5].map(() => `
             <ion-item>
               <ion-label>
-                <h3><ion-skeleton-text animated style="width: 50%"></ion-skeleton-text></h3>
-                <p><ion-skeleton-text animated style="width: 80%"></ion-skeleton-text></p>
+                <h3><ion-skeleton-text animated class="skeleton-w-50"></ion-skeleton-text></h3>
+                <p><ion-skeleton-text animated class="skeleton-w-80"></ion-skeleton-text></p>
               </ion-label>
             </ion-item>
           `).join('')}
