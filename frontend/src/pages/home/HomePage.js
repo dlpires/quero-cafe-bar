@@ -65,15 +65,15 @@ class HomePage extends HTMLElement {
         ${[1,2,3].map(() => `
           <ion-card>
             <ion-card-header>
-              <ion-card-title><ion-skeleton-text animated style="width: 70%"></ion-skeleton-text></ion-card-title>
+              <ion-card-title><ion-skeleton-text animated class="skeleton-w-70"></ion-skeleton-text></ion-card-title>
             </ion-card-header>
             <ion-card-content>
               ${[1,2].map(() => `
                 <ion-item lines="none">
                   <ion-label>
-                    <h3><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></h3>
+                    <h3><ion-skeleton-text animated class="skeleton-w-60"></ion-skeleton-text></h3>
                   </ion-label>
-                  <ion-skeleton-text animated style="width: 80px; height: 24px" slot="end"></ion-skeleton-text>
+                  <ion-skeleton-text animated class="skeleton-end" slot="end"></ion-skeleton-text>
                 </ion-item>
               `).join('')}
             </ion-card-content>
@@ -132,7 +132,7 @@ class HomePage extends HTMLElement {
           data-id-comanda="${comanda.id}"
           data-id-produto="${item.id_produto}"
           value="${item.statusEntrega.toString()}"
-          interface="popover"
+          interface="action-sheet"
           slot="end"
           aria-label="Status de entrega do item ${item.produto.dsc_produto}"
         >

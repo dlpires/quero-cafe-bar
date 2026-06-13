@@ -158,6 +158,6 @@ cd frontend && npm test
 - Java JDK 17+ + Android Studio (for mobile builds)
 
 <!-- SPECKIT START -->
-For additional context about the current feature (App Shell e PWA), read
-specs/007-app-shell-pwa/plan.md
+For additional context about the current feature (Polimento e Refatoração UX/UI), read
+specs/008-ux-polimento-refatoracao/plan.md
 <!-- SPECKIT END -->

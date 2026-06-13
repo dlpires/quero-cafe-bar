@@ -19,8 +19,7 @@ export async function showToast(message, type = 'success', duration = 3000) {
     toast.position = 'bottom';
     document.body.appendChild(toast);
     await toast.present();
-    await toast.onWillDismiss();
-    toast.remove();
+    toast.addEventListener('ionToastDidDismiss', () => toast.remove());
 }
 
 export async function withLoading(promise, options = {}) {
@@ -36,7 +35,7 @@ export async function withLoading(promise, options = {}) {
         return result;
     } finally {
         await loading.dismiss();
-        loading.remove();
+        loading.addEventListener('ionLoadingDidDismiss', () => loading.remove());
     }
 }
 

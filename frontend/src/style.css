@@ -1,3 +1,23 @@
+:root {
+  --app-spacing: 16px;
+  --app-spacing-sm: 8px;
+  --app-spacing-lg: 24px;
+  --app-border-radius: 8px;
+  --app-font-family: 'Roboto', sans-serif;
+  --app-color-surface: var(--ion-color-light);
+  --app-color-text-muted: var(--ion-color-medium);
+  --app-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.radio-icon {
+  margin-right: 8px;
+}
+
+ion-input,
+ion-select {
+  font-size: 16px;
+}
+
 .login-container {
     display: flex;
     flex-direction: column;
