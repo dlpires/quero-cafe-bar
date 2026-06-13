@@ -1,6 +1,6 @@
 ---
 description: Generate a custom checklist for the current feature based on user requirements.
-model: opencode/big-pickle
+model: opencode/deepseek-v4-flash-free
 ---
 
 ## Checklist Purpose: "Unit Tests for English"

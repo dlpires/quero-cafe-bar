@@ -63,17 +63,17 @@ Custom subagents configured in `.opencode/agents/`:
 
 | Agent Type | Function | Role | Model |
 |------------|----------|------|-------|
-| `exception-treatment-agent` | Audits error handling (try-catch coverage, HTTP status consistency) | plan | opencode/big-pickle |
-| `qa-agent` | Generates and analyzes unit tests (NestJS services/controllers + Ionic pages) | build | opencode/big-pickle |
-| `security-audit-agent` | SAST analysis: SQL injection, hardcoded secrets, CORS, dependency vulnerabilities | plan | opencode/big-pickle |
-| `ux-agent` | UX/UI audit: WCAG/WCAG accessibility, mobile-first design, touch targets | plan | opencode/big-pickle |
+| `exception-treatment-agent` | Audits error handling (try-catch coverage, HTTP status consistency) | plan | opencode/deepseek-v4-flash-free |
+| `qa-agent` | Generates and analyzes unit tests (NestJS services/controllers + Ionic pages) | build | opencode/deepseek-v4-flash-free |
+| `security-audit-agent` | SAST analysis: SQL injection, hardcoded secrets, CORS, dependency vulnerabilities | plan | opencode/deepseek-v4-flash-free |
+| `ux-agent` | UX/UI audit: WCAG/WCAG accessibility, mobile-first design, touch targets | plan | opencode/deepseek-v4-flash-free |
 
 Built-in agent types also available:
 
 | Agent Type | Function | Model |
 |------------|----------|-------|
-| `explore` | Fast codebase exploration, file search, code patterns | opencode/big-pickle |
-| `general` | General-purpose research and multi-step tasks | opencode/big-pickle |
+| `explore` | Fast codebase exploration, file search, code patterns | opencode/deepseek-v4-flash-free |
+| `general` | General-purpose research and multi-step tasks | opencode/deepseek-v4-flash-free |
 
 ### Agent Details
 

@@ -6,7 +6,7 @@
       "model": "openrouter/deepseek/deepseek-v4-pro"
     },
     "build": {
-      "model": "opencode/big-pickle"
+      "model": "opencode/deepseek-v4-flash-free"
     }
   }
 }

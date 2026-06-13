@@ -1,6 +1,6 @@
 ---
 description: Execute the implementation plan by processing and executing all tasks defined in tasks.md
-model: opencode/big-pickle
+model: opencode/deepseek-v4-flash-free
 ---
 
 ## User Input

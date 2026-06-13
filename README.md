@@ -171,10 +171,10 @@ Este projeto possui dois tipos de agentes de IA configurados em [AGENTS.md](./AG
 
 | Agente | Função | Papel | Modelo |
 |--------|--------|-------|--------|
-| `exception-treatment-agent` | Auditoria de tratamento de exceções (try-catch, status HTTP) | plan | opencode/big-pickle |
-| `qa-agent` | Geração e análise de testes unitários (NestJS + Ionic) | build | opencode/big-pickle |
-| `security-audit-agent` | Análise SAST (SQL injection, segredos, CORS, dependências) | plan | opencode/big-pickle |
-| `ux-agent` | Auditoria de UX/UI e acessibilidade (WCAG) | plan | opencode/big-pickle |
+| `exception-treatment-agent` | Auditoria de tratamento de exceções (try-catch, status HTTP) | plan | opencode/deepseek-v4-flash-free |
+| `qa-agent` | Geração e análise de testes unitários (NestJS + Ionic) | build | opencode/deepseek-v4-flash-free |
+| `security-audit-agent` | Análise SAST (SQL injection, segredos, CORS, dependências) | plan | opencode/deepseek-v4-flash-free |
+| `ux-agent` | Auditoria de UX/UI e acessibilidade (WCAG) | plan | opencode/deepseek-v4-flash-free |
 
 ### Comandos Customizados (Slash Commands)
 

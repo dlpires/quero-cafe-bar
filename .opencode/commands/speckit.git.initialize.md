@@ -1,6 +1,6 @@
 ---
 description: Initialize a Git repository with an initial commit
-model: opencode/big-pickle
+model: opencode/deepseek-v4-flash-free
 ---
 
 
