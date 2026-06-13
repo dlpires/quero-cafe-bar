@@ -11,7 +11,7 @@ O projeto visa simular um cenário real de desenvolvimento de software, abrangen
 ### Banco de Dados
 - **Tipo:** Relacional
 - **Framework de ORM:** [TypeORM](https://typeorm.io/) (TypeScript)
-- **Banco de Dados:** [MySQL](https://www.mysql.com) 8.x
+- **Banco de Dados:** [MySQL](https://www.mysql.com) 8.x (compatível com MariaDB 10.x)
 
 ### Backend
 - **Framework:** [NestJS](https://nestjs.com/) 11.x (Node.js)
@@ -42,7 +42,7 @@ O projeto visa simular um cenário real de desenvolvimento de software, abrangen
 - [x] Integração com Banco de Dados (TypeORM + MySQL)
 - [x] Autenticação JWT implementada
 - [x] Relacionamentos entre entidades configurados
-- [x] Testes unitários completos (163 testes, 24 suítes)
+- [x] Testes unitários completos (163 testes, 24 suites)
 - [x] Tratamento global de exceções
 - [x] Validação global (whitelist + transform)
 - [x] Criptografia de senhas via ORM transformer
@@ -62,7 +62,7 @@ O projeto visa simular um cenário real de desenvolvimento de software, abrangen
 - [x] Build para Android configurado (Capacitor)
 - [x] Utilitários compartilhados (toast, loading, validação, foco, empty state)
 - [ ] Temas personalizados
-- [x] Testes unitários (105 testes, 8 suítes)
+- [x] Testes unitários (161 testes, 20 suites)
 
 ## 📂 Estrutura de Pastas
 
@@ -171,10 +171,10 @@ Este projeto possui dois tipos de agentes de IA configurados em [AGENTS.md](./AG
 
 | Agente | Função | Papel | Modelo |
 |--------|--------|-------|--------|
-| `exception-treatment-agent` | Auditoria de tratamento de exceções (try-catch, status HTTP) | plan | opencode/deepseek-v4-flash-free |
-| `qa-agent` | Geração e análise de testes unitários (NestJS + Ionic) | build | opencode/deepseek-v4-flash-free |
-| `security-audit-agent` | Análise SAST (SQL injection, segredos, CORS, dependências) | plan | opencode/deepseek-v4-flash-free |
-| `ux-agent` | Auditoria de UX/UI e acessibilidade (WCAG) | plan | opencode/deepseek-v4-flash-free |
+| `exception-treatment-agent` | Auditoria de tratamento de exceções (try-catch, status HTTP) | plan | google/gemma-4-31b-it |
+| `qa-agent` | Geração e análise de testes unitários (NestJS + Ionic) | build | google/gemma-4-31b-it |
+| `security-audit-agent` | Análise SAST (SQL injection, segredos, CORS, dependências) | plan | google/gemma-4-31b-it |
+| `ux-agent` | Auditoria de UX/UI e acessibilidade (WCAG) | plan | google/gemma-4-31b-it |
 
 ### Comandos Customizados (Slash Commands)
 
@@ -182,10 +182,15 @@ Fluxo completo de desenvolvimento via **Speckit Pipeline**: `constitution → sp
 
 | Comando | Função |
 |---------|--------|
+| `speckit.constitution` | Cria/atualiza a constituição do projeto |
 | `speckit.specify` | Cria especificação a partir de descrição em linguagem natural |
+| `speckit.clarify` | Identifica pontos subespecificados na spec |
 | `speckit.plan` | Gera artefatos de design (plan, data-model, contracts) |
 | `speckit.tasks` | Gera lista de tarefas com dependências |
+| `speckit.checklist` | Gera checklist de validação de requisitos |
+| `speckit.analyze` | Análise cruzada de consistência entre artefatos |
 | `speckit.implement` | Executa tarefas em fases com verificação de testes |
+| `speckit.taskstoissues` | Converte tarefas em issues do GitHub |
 
 Consulte [AGENTS.md](./AGENTS.md) para a lista completa de agentes e comandos.
 
@@ -206,7 +211,7 @@ Consulte [AGENTS.md](./AGENTS.md) para a lista completa de agentes e comandos.
 | `yarn start:dev` | Servidor com hot-reload (porta 3001) |
 | `yarn build` | Build de produção |
 | `yarn lint` | ESLint + Prettier (--fix) |
-| `yarn test` | Jest unit tests (163 testes, 24 suítes) |
+| `yarn test` | Jest unit tests (163 testes, 24 suites) |
 | `yarn test:cov` | Testes com relatório de cobertura |
 | `yarn make:migration <nome>` | Gerar migration |
 | `yarn migrate` | Executar migrations |
@@ -218,7 +223,7 @@ Consulte [AGENTS.md](./AGENTS.md) para a lista completa de agentes e comandos.
 | `npm run dev` | Servidor Vite (desenvolvimento, porta 5173) |
 | `npm run build` | Build web (saída em dist/) |
 | `npm run build:prod` | Build de produção (--mode production) |
-| `npm test` | Jest unit tests (105 testes, 8 suítes) |
+| `npm test` | Jest unit tests (161 testes, 20 suites) |
 | `npm run test:watch` | Jest em modo watch |
 | `npm run test:coverage` | Testes com relatório de cobertura |
 | `npx cap copy` | Sincronizar build web com Android |
