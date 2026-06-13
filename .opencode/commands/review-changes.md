@@ -1,6 +1,6 @@
 ---
 description: Revise alterações recentes
-model: openrouter/deepseek/deepseek-r1
+model: openrouter/deepseek/deepseek-v4-pro
 ---
 
 Commits recentes do git:

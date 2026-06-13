@@ -9,7 +9,7 @@ Implement PWA features to allow installation on home screen for Android and iOS.
 
 ## Technical Context
 
-**Language/Version**: JavaScript (ES6) + TypeScript 5.x
+**Language/Version**: JavaScript (ES6)
 
 **Primary Dependencies**: Ionic 8.x, Vite 7.x, Capacitor 8.x
 
@@ -21,7 +21,7 @@ Implement PWA features to allow installation on home screen for Android and iOS.
 
 **Project Type**: Web application (PWA)
 
-**Performance Goals**: Lighthouse PWA score ≥ 80
+**Performance Goals**: App instalável via meta tags + manifest (sem service worker)
 
 **Constraints**: Must work on iOS Safari without service worker
 

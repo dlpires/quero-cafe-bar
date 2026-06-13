@@ -4,7 +4,7 @@ handoffs:
   - label: Build Specification
     agent: speckit.specify
     prompt: Implement the feature specification based on the updated constitution. I want to build...
-model: openrouter/deepseek/deepseek-r1
+model: openrouter/deepseek/deepseek-v4-pro
 ---
 
 ## User Input

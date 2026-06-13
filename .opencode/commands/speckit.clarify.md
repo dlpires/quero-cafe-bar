@@ -4,7 +4,7 @@ handoffs:
   - label: Build Technical Plan
     agent: speckit.plan
     prompt: Create a plan for the spec. I am building with...
-model: openrouter/deepseek/deepseek-r1
+model: openrouter/deepseek/deepseek-v4-pro
 ---
 
 ## User Input
