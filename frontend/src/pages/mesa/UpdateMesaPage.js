@@ -1,4 +1,3 @@
-import './UpdateMesaPage.css'
 import { createHeader } from '../../shared/Header.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
@@ -64,7 +63,7 @@ class UpdateMesaPage extends HTMLElement {
 
     const mesaData = {
       qtd_cadeiras: parseInt(formData.get('qtd_cadeiras')),
-      status: formData.get('status') === 'on'
+      status: (formData.get('status') ?? 'on') === 'on'
     };
 
     const submitBtn = this.querySelector('#btn-submit');

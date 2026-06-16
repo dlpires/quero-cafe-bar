@@ -1,5 +1,6 @@
 ---
 description: Create a feature branch with sequential or timestamp numbering
+model: opencode/deepseek-v4-flash-free
 ---
 
 

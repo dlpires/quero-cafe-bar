@@ -294,7 +294,7 @@ describe('Api Service', () => {
       await api.getProdutos();
 
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:3001/produto',
+        'http://localhost:3001/produto?skip=0&take=20',
         expect.any(Object)
       );
     });
@@ -371,7 +371,7 @@ describe('Api Service', () => {
       await api.getUsuarios();
 
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:3001/usuario',
+        'http://localhost:3001/usuario?skip=0&take=20',
         expect.any(Object)
       );
     });
@@ -448,7 +448,7 @@ describe('Api Service', () => {
       await api.getMesas();
 
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:3001/mesa',
+        'http://localhost:3001/mesa?skip=0&take=20',
         expect.any(Object)
       );
     });
@@ -525,7 +525,7 @@ describe('Api Service', () => {
       await api.getComandas();
 
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:3001/comanda',
+        'http://localhost:3001/comanda?skip=0&take=20',
         expect.any(Object)
       );
     });

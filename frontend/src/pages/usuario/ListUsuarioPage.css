@@ -9,6 +9,14 @@
   border-radius: 8px;
 }
 
+.skeleton-w-50 {
+  width: 50%;
+}
+
+.skeleton-w-80 {
+  width: 80%;
+}
+
 h3 {
   display: flex;
   align-items: center;
@@ -16,4 +24,12 @@ h3 {
   font-size: 0.9rem;
   font-weight: 500;
   margin: 0;
+}
+
+ion-content.ion-content-no-scroll {
+  --overflow: hidden;
+}
+
+.pagination-bar-container {
+  background: var(--ion-background-color);
 }

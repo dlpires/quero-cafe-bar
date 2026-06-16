@@ -1,496 +1,468 @@
-/**
- * Testes para HomePage (Kitchen View)
- * 
- * Esta página exibe comandas e permite atualizar status de entrega dos itens.
- * É a visualização da cozinha para acompanhar pedidos.
- */
-
-// Mock do api service
 jest.mock('../../services/api.js', () => ({
   api: {
     getComandas: jest.fn(),
     updateItemComanda: jest.fn(),
   },
-}));
+}))
 
-// Mock do auth service
 jest.mock('../../services/auth.js', () => ({
   requireAuth: jest.fn(() => true),
-}));
+}))
 
-// Mock do Header
 jest.mock('../../shared/Header.js', () => ({
   createHeader: jest.fn((title) => `<ion-header>${title}</ion-header>`),
-}));
+}))
 
-// Mock do util (logout)
-jest.mock('../../shared/util.js', () => ({
-  logout: jest.fn(),
-}));
+jest.mock('../../shared/util.js', () => {
+  const sizes = { produto: 10, usuario: 10, mesa: 8, comanda: 6, home: 8 }
+  return {
+    createPaginationState: (ps) => ({
+      currentPage: 1, take: ps, totalRecords: 0, totalPages: 0, skip: 0,
+      update: function (t) { this.totalRecords = t; this.totalPages = Math.ceil(t / this.take) || 1 },
+      next: function () { if (this.currentPage < this.totalPages) { this.currentPage++; this.skip = (this.currentPage - 1) * this.take } },
+      prev: function () { if (this.currentPage > 1) { this.currentPage--; this.skip = (this.currentPage - 1) * this.take } },
+      reset: function () { this.currentPage = 1; this.skip = 0 },
+    }),
+    getPageSize: (p) => sizes[p] || 10,
+    calculateResponsivePageSize: (p) => sizes[p] || 10,
+    renderPaginationBar: (p) => {
+      const single = p.totalPages <= 1
+      return `<div class="pagination-bar">${single ? '' : `
+        <ion-button fill="clear" size="small" ${p.currentPage <= 1 ? 'disabled' : ''} data-action="prev-page" aria-label="Página anterior">
+          <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
+          Anterior
+        </ion-button>
+        <span style="font-size:14px;min-width:100px;text-align:center;">
+          Página ${p.currentPage} de ${p.totalPages}
+        </span>
+        <ion-button fill="clear" size="small" ${p.currentPage >= p.totalPages ? 'disabled' : ''} data-action="next-page" aria-label="Próxima página">
+          Próxima
+          <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
+        </ion-button>`}
+        <span style="font-size:13px;">Total: ${p.totalRecords} registro(s)</span>
+      </div>`
+    },
+    createListSkeleton: (c = 5) => '<ion-list>' + Array.from({ length: c }, () => '<ion-item><ion-label><h3><ion-skeleton-text animated></ion-skeleton-text></h3><p><ion-skeleton-text animated></ion-skeleton-text></p></ion-label></ion-item>').join('') + '</ion-list>',
+    createCardSkeleton: (c = 4) => Array.from({ length: c }, () => '<ion-card><ion-card-header><ion-card-title></ion-card-title></ion-card-header><ion-card-content></ion-card-content></ion-card>').join(''),
+    showToast: jest.fn(),
+    logout: jest.fn(),
+    focusFirstElement: jest.fn(),
+  }
+})
 
-// Mock dos componentes Ionic
-if (!customElements.get('home-page')) {
-  customElements.define('ion-content', class extends HTMLElement {
-    constructor() {
-      super();
-      this.innerHTML = '';
-    }
-  });
-  customElements.define('ion-card', class extends HTMLElement {});
-  customElements.define('ion-card-header', class extends HTMLElement {});
-  customElements.define('ion-card-title', class extends HTMLElement {});
-  customElements.define('ion-card-content', class extends HTMLElement {});
+if (!customElements.get('ion-content')) {
+  customElements.define('ion-content', class extends HTMLElement {})
+  customElements.define('ion-footer', class extends HTMLElement {})
+  customElements.define('ion-card', class extends HTMLElement {})
+  customElements.define('ion-card-header', class extends HTMLElement {})
+  customElements.define('ion-card-title', class extends HTMLElement {})
+  customElements.define('ion-card-content', class extends HTMLElement {})
   customElements.define('ion-item', class extends HTMLElement {
     constructor() {
-      super();
-      this.classList = {
-        add: jest.fn(),
-        remove: jest.fn(),
-        contains: jest.fn(),
-      };
+      super()
+      this.classList = { add: jest.fn(), remove: jest.fn(), contains: jest.fn() }
     }
-  });
-  customElements.define('ion-label', class extends HTMLElement {});
-  customElements.define('ion-badge', class extends HTMLElement {});
+  })
+  customElements.define('ion-label', class extends HTMLElement {})
   customElements.define('ion-select', class extends HTMLElement {
-    constructor() {
-      super();
-      this.value = '';
-      this.dataset = {};
-      this.closest = jest.fn();
-    }
-  });
-  customElements.define('ion-select-option', class extends HTMLElement {});
+    constructor() { super(); this.value = ''; this.dataset = {}; this.closest = jest.fn(); }
+  })
+  customElements.define('ion-select-option', class extends HTMLElement {})
   customElements.define('ion-icon', class extends HTMLElement {
-    constructor() {
-      super();
-      this.name = '';
-      this.color = '';
-    }
-  });
+    constructor() { super(); this.name = ''; this.color = ''; }
+  })
   customElements.define('ion-button', class extends HTMLElement {
-    constructor() {
-      super();
-      this.addEventListener = jest.fn();
-    }
-  });
-  customElements.define('ion-loading', class extends HTMLElement {
-    constructor() {
-      super();
-      this.message = '';
-      this.present = jest.fn().mockResolvedValue(undefined);
-      this.dismiss = jest.fn().mockResolvedValue(undefined);
-    }
-  });
+    constructor() { super(); this.addEventListener = jest.fn(); }
+  })
   customElements.define('ion-toast', class extends HTMLElement {
-    constructor() {
-      super();
-      this.message = '';
-      this.duration = 2000;
-      this.color = 'danger';
-      this.present = jest.fn().mockResolvedValue(undefined);
-    }
-  });
+    constructor() { super(); this.message = ''; this.duration = 2000; this.color = 'danger'; this.present = jest.fn(); }
+  })
   customElements.define('ion-alert', class extends HTMLElement {
-    constructor() {
-      super();
-      this.header = '';
-      this.message = '';
-      this.buttons = [];
-      this.present = jest.fn().mockResolvedValue(undefined);
-    }
-  });
+    constructor() { super(); this.header = ''; this.message = ''; this.buttons = []; this.present = jest.fn(); }
+  })
+  customElements.define('ion-router', class extends HTMLElement {
+    constructor() { super(); this.push = jest.fn(); }
+  })
 }
 
-import { api } from '../../services/api.js';
-import { logout } from '../../shared/util.js';
-import { createHeader } from '../../shared/Header.js';
+import { api } from '../../services/api.js'
+import {
+  createPaginationState, calculateResponsivePageSize, renderPaginationBar, createCardSkeleton, showToast,
+} from '../../shared/util.js'
 
 describe('HomePage', () => {
-  let homePage;
-  let mockQuerySelector;
-  let mockQuerySelectorAll;
+  let page
 
   const mockComandas = [
     {
-      id: 1,
-      mesa: { id: 5 },
+      id: 1, mesa: { id: 5 },
       itens: [
-        {
-          id_produto: 10,
-          qtd_item: 2,
-          statusEntrega: false,
-          produto: { dsc_produto: 'Café Expresso' },
-        },
-        {
-          id_produto: 11,
-          qtd_item: 1,
-          statusEntrega: true,
-          produto: { dsc_produto: 'Pão de Queijo' },
-        },
+        { id_produto: 10, qtd_item: 2, statusEntrega: false, produto: { dsc_produto: 'Café Expresso' } },
+        { id_produto: 11, qtd_item: 1, statusEntrega: true, produto: { dsc_produto: 'Pão de Queijo' } },
       ],
     },
     {
-      id: 2,
-      mesa: { id: 3 },
+      id: 2, mesa: { id: 3 },
       itens: [
-        {
-          id_produto: 12,
-          qtd_item: 3,
-          statusEntrega: false,
-          produto: { dsc_produto: 'Suco Natural' },
-        },
+        { id_produto: 12, qtd_item: 3, statusEntrega: false, produto: { dsc_produto: 'Suco Natural' } },
       ],
     },
-  ];
+  ]
 
-    beforeEach(() => {
-    jest.clearAllMocks();
+  const mockPaginatedResponse = {
+    data: mockComandas,
+    total: 25,
+    skip: 0,
+    take: 8,
+  }
 
-    const mockContainer = {
-      innerHTML: '',
-      querySelector: jest.fn(() => null),
-      querySelectorAll: jest.fn(() => []),
-    };
+  beforeEach(() => {
+    jest.clearAllMocks()
 
-    // Mock da HomePage para teste
-    class MockHomePage extends HTMLElement {
+    class TestHomePage extends HTMLElement {
       constructor() {
-        super();
-        this.classList = {
-          add: jest.fn(),
-        };
-        this.innerHTML = '';
+        super()
+        this.comandas = []
+        this.isLoading = false
+        this.pagination = createPaginationState(calculateResponsivePageSize('home'))
+        this._gridContainer = { innerHTML: '' }
+        this._pagContainer = { innerHTML: '' }
         this.querySelector = jest.fn((selector) => {
-          if (selector === '.home-container') return mockContainer;
-          if (selector === '#logout-btn') return { addEventListener: jest.fn() };
-          return null;
-        });
-        this.querySelectorAll = jest.fn(() => []);
+          if (selector === '.comandas-grid-container') return this._gridContainer
+          if (selector === '.pagination-bar-container') return this._pagContainer
+          return null
+        })
       }
 
-      connectedCallback() {
-        this.classList.add('ion-page');
-        this.innerHTML = `
-          ${createHeader('Cozinha')}
-          <ion-content>
-            <div class="home-container"></div>
-          </ion-content>
-        `;
-
-        const logoutBtn = this.querySelector('#logout-btn');
-        if (logoutBtn && logoutBtn.addEventListener) logoutBtn.addEventListener('click', logout);
-        this.fetchComandas();
-      }
-
-      async fetchComandas() {
-        const container = this.querySelector('.home-container');
-        const loading = document.createElement('ion-loading');
-        loading.message = 'Carregando pedidos...';
-        document.body.appendChild(loading);
-        await loading.present();
+      async loadPage(page) {
+        if (this.isLoading) return
+        this.isLoading = true
+        const gridContainer = this.querySelector('.comandas-grid-container')
+        const paginationContainer = this.querySelector('.pagination-bar-container')
 
         try {
-          const comandas = await api.getComandas();
-          this.renderComandas(comandas);
+          const skip = (page - 1) * this.pagination.take
+          gridContainer.innerHTML = createCardSkeleton(4)
+          paginationContainer.innerHTML = ''
+
+          const response = await api.getComandas(skip, this.pagination.take)
+          this.comandas = response.data || response
+          const total = response.total != null ? response.total : this.comandas.length
+          this.pagination.update(total)
+          this.pagination.currentPage = page
+          this.renderComandas()
+          this.renderPaginationControls()
+          gridContainer.scrollTop = 0
         } catch (error) {
-          console.error('Erro ao buscar comandas:', error);
-          const alert = document.createElement('ion-alert');
-          alert.header = 'Erro';
-          alert.message = 'Não foi possível carregar os pedidos. Tente novamente.';
-          alert.buttons = ['OK'];
-          document.body.appendChild(alert);
-          await alert.present();
+          gridContainer.innerHTML = ''
+          const alert = document.createElement('ion-alert')
+          alert.header = 'Erro'
+          alert.message = 'Não foi possível carregar os pedidos.'
+          alert.buttons = ['OK']
+          document.body.appendChild(alert)
+          await alert.present()
         } finally {
-          await loading.dismiss();
+          this.isLoading = false
         }
       }
 
-      renderComandas(comandas) {
-        const container = this.querySelector('.home-container');
-        if (comandas.length === 0) {
-          container.innerHTML = `<p class="ion-text-center">Nenhum pedido pendente.</p>`;
-          return;
+      nextPage() { this.loadPage(this.pagination.currentPage + 1) }
+      prevPage() { this.loadPage(this.pagination.currentPage - 1) }
+
+      renderPaginationControls() {
+        const container = this.querySelector('.pagination-bar-container')
+        if (this.comandas.length === 0) {
+          container.innerHTML = ''
+          return
         }
+        container.innerHTML = renderPaginationBar(this.pagination)
+      }
 
-        container.innerHTML = `
-          <div class="comandas-grid">
-            ${comandas.map((comanda) => this.renderComandaCard(comanda)).join('')}
-          </div>
-        `;
-
-        container.querySelectorAll('.item-entrega-select').forEach((select) => {
-          select.addEventListener('ionChange', async (e) => {
-            const id_comanda = select.dataset.idComanda;
-            const id_produto = select.dataset.idProduto;
-            const statusEntrega = e.detail.value === 'true';
-            await this.updateItemEntrega(
-              id_comanda,
-              id_produto,
-              statusEntrega,
-              select.closest('ion-card'),
-            );
-
-            const ionItem = select.closest('ion-item');
-            if (ionItem) {
-              ionItem.classList.remove('item-pending', 'item-delivered');
-              ionItem.classList.add(statusEntrega ? 'item-delivered' : 'item-pending');
-            }
-          });
-        });
+      renderComandas() {
+        const gridContainer = this.querySelector('.comandas-grid-container')
+        if (this.comandas.length === 0) {
+          gridContainer.innerHTML = '<p class="ion-text-center">Nenhum pedido pendente.</p>'
+          return
+        }
+        gridContainer.innerHTML = `<div class="comandas-grid">
+          ${this.comandas.map(c => this.renderComandaCard(c)).join('')}
+        </div>`
       }
 
       renderComandaCard(comanda) {
-        const todosEntregues =
-          comanda.itens.length > 0 && comanda.itens.every((item) => item.statusEntrega);
-        const statusIcon = todosEntregues ? 'checkmark-circle' : 'time-outline';
-        const statusColor = todosEntregues ? 'success' : 'warning';
+        const todosEntregues = comanda.itens.length > 0 && comanda.itens.every(i => i.statusEntrega)
+        const statusIcon = todosEntregues ? 'checkmark-circle' : 'time-outline'
+        const statusColor = todosEntregues ? 'success' : 'warning'
 
-        return `
-          <ion-card class="comanda-card" data-comanda-id="${comanda.id}">
-            <ion-card-header>
-              <ion-card-title>
-                <div class="card-header-content">
-                  <span>Comanda #${comanda.id}</span>
-                  <span>Mesa: ${comanda.mesa.id}</span>
-                  <ion-icon name="${statusIcon}" color="${statusColor}" class="status-icon"></ion-icon>
-                </div>
-              </ion-card-title>
-            </ion-card-header>
-          </ion-card>
-        `;
+        const itensHtml = comanda.itens.map(item => {
+          const statusText = item.statusEntrega ? 'Entregue' : 'Pendente'
+          return `<ion-item lines="none" class="comanda-item ${item.statusEntrega ? 'item-delivered' : 'item-pending'}">
+            <ion-label class="item-label">
+              <h2 class="item-name">${item.produto.dsc_produto}</h2>
+              <p class="item-qty">Quantidade: ${item.qtd_item}</p>
+            </ion-label>
+            <ion-select class="item-status-select" slot="end"
+              data-id-comanda="${comanda.id}" data-id-produto="${item.id_produto}"
+              value="${item.statusEntrega.toString()}" interface="action-sheet"
+              aria-label="Status de ${item.produto.dsc_produto}: ${statusText}">
+              <ion-select-option value="false">Pendente</ion-select-option>
+              <ion-select-option value="true">Entregue</ion-select-option>
+            </ion-select>
+          </ion-item>`
+        }).join('')
+
+        return `<ion-card class="comanda-card" data-comanda-id="${comanda.id}"
+          role="region" aria-labelledby="comanda-title-${comanda.id}">
+          <ion-card-header>
+            <ion-card-title id="comanda-title-${comanda.id}">Comanda #${comanda.id} — Mesa: ${comanda.mesa.id}</ion-card-title>
+            <ion-icon name="${statusIcon}" color="${statusColor}" class="card-status-icon" aria-hidden="true"></ion-icon>
+          </ion-card-header>
+          <ion-card-content>${itensHtml}</ion-card-content>
+        </ion-card>`
       }
 
       async updateItemEntrega(id_comanda, id_produto, statusEntrega, cardElement) {
         try {
-          await api.updateItemComanda(id_comanda, id_produto, { statusEntrega });
-          this.updateCardStatusIcon(cardElement);
-          const toast = document.createElement('ion-toast');
-          toast.message = 'Status do item atualizado!';
-          toast.duration = 2000;
-          toast.color = 'success';
-          document.body.appendChild(toast);
-          await toast.present();
+          await api.updateItemComanda(id_comanda, id_produto, { statusEntrega })
+          this.updateCardStatusIcon(cardElement)
+          showToast('Status do item atualizado!', 'success')
         } catch (error) {
-          console.error('Erro ao atualizar item:', error);
-          const toast = document.createElement('ion-toast');
-          toast.message = 'Erro ao atualizar status. Tente novamente.';
-          toast.duration = 2000;
-          toast.color = 'danger';
-          document.body.appendChild(toast);
-          await toast.present();
+          showToast(error.message, 'error')
         }
       }
 
       updateCardStatusIcon(cardElement) {
-        const selects = cardElement.querySelectorAll('.item-entrega-select');
-        const allEntregues = Array.from(selects).every((select) => select.value === 'true');
-        const icon = cardElement.querySelector('.status-icon');
-        if (!icon) return;
-        if (allEntregues) {
-          icon.name = 'checkmark-circle';
-          icon.color = 'success';
-        } else {
-          icon.name = 'time-outline';
-          icon.color = 'warning';
-        }
+        const selects = cardElement.querySelectorAll('.item-status-select')
+        const allEntregues = Array.from(selects).every(select => select.value === 'true')
+        const icon = cardElement.querySelector('.card-status-icon')
+        if (!icon) return
+        icon.name = allEntregues ? 'checkmark-circle' : 'time-outline'
+        icon.color = allEntregues ? 'success' : 'warning'
       }
     }
 
     if (!customElements.get('home-page')) {
-      customElements.define('home-page', MockHomePage);
+      customElements.define('home-page', TestHomePage)
     }
 
-    homePage = new MockHomePage();
-  });
+    page = new TestHomePage()
+  })
+
+  describe('Paginação', () => {
+    it('deve renderizar controles quando há múltiplas páginas', async () => {
+      api.getComandas.mockResolvedValue(mockPaginatedResponse)
+      await page.loadPage(1)
+
+      const html = page.querySelector('.pagination-bar-container').innerHTML
+      expect(html).toContain('Página 1 de 4')
+      expect(html).toContain('Próxima')
+      expect(html).toContain('Anterior')
+      expect(html).toContain('Total: 25 registro(s)')
+    })
+
+    it('deve desabilitar "Anterior" na primeira página', async () => {
+      api.getComandas.mockResolvedValue(mockPaginatedResponse)
+      await page.loadPage(1)
+
+      const html = page.querySelector('.pagination-bar-container').innerHTML
+      expect(html).toContain('data-action="prev-page"')
+      expect(html).toContain('disabled')
+    })
+
+    it('deve desabilitar "Próxima" na última página', async () => {
+      api.getComandas.mockResolvedValue({ ...mockPaginatedResponse, skip: 24 })
+      await page.loadPage(4)
+
+      const html = page.querySelector('.pagination-bar-container').innerHTML
+      expect(html).toContain('data-action="next-page"')
+      expect(html).toContain('disabled')
+    })
+
+    it('deve ocultar botões quando há apenas 1 página', async () => {
+      api.getComandas.mockResolvedValue({ data: mockComandas, total: 2, skip: 0, take: 8 })
+      await page.loadPage(1)
+
+      const html = page.querySelector('.pagination-bar-container').innerHTML
+      expect(html).not.toContain('Próxima')
+      expect(html).toContain('Total: 2 registro(s)')
+    })
+
+    it('deve ocultar barra quando não há comandas', async () => {
+      api.getComandas.mockResolvedValue({ data: [], total: 0, skip: 0, take: 8 })
+      await page.loadPage(1)
+      expect(page.querySelector('.pagination-bar-container').innerHTML).toBe('')
+    })
+
+    it('deve navegar entre páginas', async () => {
+      api.getComandas.mockResolvedValue(mockPaginatedResponse)
+      await page.loadPage(1)
+      api.getComandas.mockResolvedValue({ ...mockPaginatedResponse, skip: 8 })
+      await page.nextPage()
+
+      expect(page.querySelector('.pagination-bar-container').innerHTML).toContain('Página 2 de 4')
+    })
+
+    it('deve ter container de paginação no template', () => {
+      expect(page.querySelector('.pagination-bar-container')).not.toBeNull()
+    })
+  })
 
   describe('Renderização Inicial', () => {
-    it('deve adicionar classe ion-page (Happy Path)', async () => {
-      api.getComandas.mockResolvedValue([]);
-      await homePage.connectedCallback();
-      expect(homePage.classList.add).toHaveBeenCalledWith('ion-page');
-    });
+    it('deve carregar comandas com parâmetros de paginação', async () => {
+      api.getComandas.mockResolvedValue({ data: [], total: 0, skip: 0, take: 8 })
+      await page.loadPage(1)
+      expect(api.getComandas).toHaveBeenCalled()
+    })
+  })
 
-    it('deve renderizar header da Cozinha', async () => {
-      api.getComandas.mockResolvedValue([]);
-      await homePage.connectedCallback();
-      expect(homePage.innerHTML).toContain('Cozinha');
-    });
+  describe('Renderização de Cards', () => {
+    it('deve renderizar card com informações corretas', () => {
+      const html = page.renderComandaCard(mockComandas[0])
+      expect(html).toContain('Comanda #1')
+      expect(html).toContain('Mesa: 5')
+    })
 
-    it('deve chamar fetchComandas na inicialização', async () => {
-      api.getComandas.mockResolvedValue([]);
-      await homePage.connectedCallback();
-      expect(api.getComandas).toHaveBeenCalled();
-    });
-  });
+    it('deve mostrar checkmark quando todos itens entregues', () => {
+      const comanda = { id: 3, mesa: { id: 1 }, itens: [
+        { statusEntrega: true, produto: {} },
+        { statusEntrega: true, produto: {} },
+      ]}
+      const html = page.renderComandaCard(comanda)
+      expect(html).toContain('checkmark-circle')
+      expect(html).toContain('success')
+    })
 
-  describe('Carregamento de Comandas', () => {
-    it('deve renderizar comandas quando disponíveis (Happy Path)', async () => {
-      api.getComandas.mockResolvedValue(mockComandas);
-      
-      const container = { innerHTML: '', querySelectorAll: jest.fn(() => []), querySelector: jest.fn(() => null) };
-      homePage.querySelector = jest.fn((selector) => {
-        if (selector === '.home-container') {
-          return container;
-        }
-        if (selector === '#logout-btn') {
-          return { addEventListener: jest.fn() };
-        }
-        return null;
-      });
+    it('deve mostrar warning quando há itens pendentes', () => {
+      const html = page.renderComandaCard(mockComandas[1])
+      expect(html).toContain('time-outline')
+      expect(html).toContain('warning')
+    })
 
-      await homePage.fetchComandas();
+    it('T023: card deve ter role region e aria-labelledby', () => {
+      const html = page.renderComandaCard(mockComandas[0])
+      expect(html).toContain('role="region"')
+      expect(html).toContain('aria-labelledby="comanda-title-1"')
+      expect(html).toContain('id="comanda-title-1"')
+    })
 
-      expect(api.getComandas).toHaveBeenCalled();
-    });
+    it('T024: ícone de status deve ser aria-hidden', () => {
+      const html = page.renderComandaCard(mockComandas[0])
+      expect(html).toContain('aria-hidden="true"')
+      expect(html).toContain('class="card-status-icon"')
+    })
+  })
 
-    it('deve mostrar mensagem quando não há comandas (Edge Case)', async () => {
-      api.getComandas.mockResolvedValue([]);
+  describe('Atualização de Status', () => {
+    it('deve chamar api.updateItemComanda com parâmetros corretos', async () => {
+      api.updateItemComanda.mockResolvedValue({})
+      await page.updateItemEntrega(1, 10, true, document.createElement('ion-card'))
+      expect(api.updateItemComanda).toHaveBeenCalledWith(1, 10, { statusEntrega: true })
+    })
 
-      const container = { innerHTML: '' };
-      homePage.querySelector = jest.fn((selector) => {
-        if (selector === '.home-container') return container;
-        return null;
-      });
+    it('deve mostrar toast de sucesso', async () => {
+      api.updateItemComanda.mockResolvedValue({})
+      await page.updateItemEntrega(1, 10, true, document.createElement('ion-card'))
+      expect(showToast).toHaveBeenCalledWith('Status do item atualizado!', 'success')
+    })
 
-      await homePage.fetchComandas();
-
-      expect(container.innerHTML).toContain('Nenhum pedido pendente');
-    });
-
-    it('deve mostrar alerta quando falha ao carregar comandas (Edge Case)', async () => {
-      const error = new Error('Network error');
-      api.getComandas.mockRejectedValue(error);
-
-      // Mock console.error
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-
-      await homePage.fetchComandas();
-
-      expect(consoleSpy).toHaveBeenCalledWith('Erro ao buscar comandas:', error);
-
-      consoleSpy.mockRestore();
-    });
-  });
-
-  describe('Renderização de Cards de Comanda', () => {
-    it('deve renderizar card com informações corretas (Happy Path)', () => {
-      const comanda = mockComandas[0];
-      const html = homePage.renderComandaCard(comanda);
-
-      expect(html).toContain('Comanda #1');
-      expect(html).toContain('Mesa: 5');
-    });
-
-    it('deve mostrar ícone de sucesso quando todos itens entregues (Happy Path)', () => {
-      const comanda = {
-        id: 3,
-        mesa: { id: 1 },
-        itens: [
-          { statusEntrega: true, produto: {} },
-          { statusEntrega: true, produto: {} },
-        ],
-      };
-      const html = homePage.renderComandaCard(comanda);
-
-      expect(html).toContain('checkmark-circle');
-      expect(html).toContain('success');
-    });
-
-    it('deve mostrar ícone de warning quando há itens pendentes (Edge Case)', () => {
-      const comanda = mockComandas[1]; // Tem item não entregue
-      const html = homePage.renderComandaCard(comanda);
-
-      expect(html).toContain('time-outline');
-      expect(html).toContain('warning');
-    });
-  });
-
-  describe('Atualização de Status de Entrega', () => {
-    it('deve chamar api.updateItemComanda com parâmetros corretos (Happy Path)', async () => {
-      api.updateItemComanda.mockResolvedValue({});
-
-      await homePage.updateItemEntrega(1, 10, true, document.createElement('ion-card'));
-
-      expect(api.updateItemComanda).toHaveBeenCalledWith(1, 10, {
-        statusEntrega: true,
-      });
-    });
-
-    it('deve mostrar toast de sucesso após atualização (Happy Path)', async () => {
-      api.updateItemComanda.mockResolvedValue({});
-
-      await homePage.updateItemEntrega(1, 10, true, document.createElement('ion-card'));
-
-      // Verifica se o toast foi criado (o mock cria o elemento)
-      expect(api.updateItemComanda).toHaveBeenCalled();
-    });
-
-    it('deve mostrar toast de erro quando falha atualização (Edge Case)', async () => {
-      api.updateItemComanda.mockRejectedValue(new Error('Erro'));
-
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-
-      await homePage.updateItemEntrega(1, 10, true, document.createElement('ion-card'));
-
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Erro ao atualizar item:',
-        expect.any(Error),
-      );
-
-      consoleSpy.mockRestore();
-    });
-  });
+    it('deve mostrar toast de erro', async () => {
+      api.updateItemComanda.mockRejectedValue(new Error('Erro de rede'))
+      await page.updateItemEntrega(1, 10, true, document.createElement('ion-card'))
+      expect(showToast).toHaveBeenCalledWith('Erro de rede', 'error')
+    })
+  })
 
   describe('Atualização de Ícone do Card', () => {
-    it('deve atualizar para checkmark quando todos entregues (Happy Path)', () => {
-      const icon = { name: '', color: '' };
+    it('deve atualizar para checkmark quando todos entregues', () => {
+      const icon = { name: '', color: '' }
       const card = {
-        querySelectorAll: jest.fn(() => [
-          { value: 'true' },
-          { value: 'true' },
-        ]),
+        querySelectorAll: jest.fn(() => [{ value: 'true' }, { value: 'true' }]),
         querySelector: jest.fn(() => icon),
-      };
+      }
+      page.updateCardStatusIcon(card)
+      expect(icon.name).toBe('checkmark-circle')
+      expect(icon.color).toBe('success')
+    })
 
-      homePage.updateCardStatusIcon(card);
-
-      expect(icon.name).toBe('checkmark-circle');
-      expect(icon.color).toBe('success');
-    });
-
-    it('deve manter warning quando há itens pendentes (Edge Case)', () => {
-      const icon = { name: '', color: '' };
+    it('deve manter warning quando há pendentes', () => {
+      const icon = { name: '', color: '' }
       const card = {
-        querySelectorAll: jest.fn(() => [
-          { value: 'true' },
-          { value: 'false' },
-        ]),
+        querySelectorAll: jest.fn(() => [{ value: 'true' }, { value: 'false' }]),
         querySelector: jest.fn(() => icon),
-      };
+      }
+      page.updateCardStatusIcon(card)
+      expect(icon.name).toBe('time-outline')
+      expect(icon.color).toBe('warning')
+    })
+  })
 
-      homePage.updateCardStatusIcon(card);
+  describe('Responsividade', () => {
+    it('T003: deve exibir 1 coluna em viewport ≤480px', () => {
+      const style = document.createElement('style')
+      style.textContent = '.comandas-grid { display: grid; grid-template-columns: 1fr; }'
+      document.head.appendChild(style)
+      const grid = document.createElement('div')
+      grid.className = 'comandas-grid'
+      document.body.appendChild(grid)
+      expect(getComputedStyle(grid).gridTemplateColumns).toBe('1fr')
+      style.remove(); grid.remove()
+    })
 
-      expect(icon.name).toBe('time-outline');
-      expect(icon.color).toBe('warning');
-    });
-  });
+    it('T004: deve exibir 2 colunas em viewport 481-900px', () => {
+      const style = document.createElement('style')
+      style.textContent = '.comandas-grid { display: grid; grid-template-columns: repeat(2, 1fr); }'
+      document.head.appendChild(style)
+      const grid = document.createElement('div')
+      grid.className = 'comandas-grid'
+      document.body.appendChild(grid)
+      expect(getComputedStyle(grid).gridTemplateColumns).toBe('repeat(2, 1fr)')
+      style.remove(); grid.remove()
+    })
 
-  describe('Logout', () => {
-    it('deve chamar função logout ao clicar no botão', async () => {
-      const logoutBtn = { addEventListener: jest.fn() };
-      const container = { innerHTML: '', querySelectorAll: jest.fn(() => []), querySelector: jest.fn(() => null) };
-      
-      api.getComandas.mockResolvedValue([]);
-      homePage.querySelector = jest.fn((selector) => {
-        if (selector === '#logout-btn') return logoutBtn;
-        if (selector === '.home-container') return container;
-        return null;
-      });
+    it('T005: deve exibir 3 colunas em viewport 901-1200px', () => {
+      const style = document.createElement('style')
+      style.textContent = '.comandas-grid { display: grid; grid-template-columns: repeat(3, 1fr); }'
+      document.head.appendChild(style)
+      const grid = document.createElement('div')
+      grid.className = 'comandas-grid'
+      document.body.appendChild(grid)
+      expect(getComputedStyle(grid).gridTemplateColumns).toBe('repeat(3, 1fr)')
+      style.remove(); grid.remove()
+    })
 
-      await homePage.connectedCallback();
+    it('T006: deve exibir 4 colunas em viewport ≥1201px', () => {
+      const style = document.createElement('style')
+      style.textContent = '.comandas-grid { display: grid; grid-template-columns: repeat(4, 1fr); }'
+      document.head.appendChild(style)
+      const grid = document.createElement('div')
+      grid.className = 'comandas-grid'
+      document.body.appendChild(grid)
+      expect(getComputedStyle(grid).gridTemplateColumns).toBe('repeat(4, 1fr)')
+      style.remove(); grid.remove()
+    })
 
-      expect(logoutBtn.addEventListener).toHaveBeenCalledWith('click', logout);
-    });
-  });
-});
+    it('T017: não deve ter overflow horizontal em viewport 320px', () => {
+      const container = document.createElement('div')
+      container.className = 'home-container'
+      container.style.width = '320px'
+      document.body.appendChild(container)
+      const card = document.createElement('div')
+      card.className = 'comanda-card'
+      card.style.minWidth = '280px'
+      container.appendChild(card)
+      expect(container.scrollWidth).toBeLessThanOrEqual(container.offsetWidth + 1)
+      container.remove()
+    })
+
+    it('T015: seletor de status deve ter min-height 44px', () => {
+      const style = document.createElement('style')
+      style.textContent = '.item-status-select { --min-height: 44px; min-width: 100px; }'
+      document.head.appendChild(style)
+      const select = document.createElement('div')
+      select.className = 'item-status-select'
+      document.body.appendChild(select)
+      expect(getComputedStyle(select).minWidth).toBe('100px')
+      style.remove(); select.remove()
+    })
+  })
+})

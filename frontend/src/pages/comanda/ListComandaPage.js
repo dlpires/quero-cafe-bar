@@ -1,26 +1,46 @@
 import './ListComandaPage.css'
 import { createHeader } from '../../shared/Header.js';
-import { logout, createEmptyState, focusFirstElement, showToast } from '../../shared/util.js';
+import { logout, createEmptyState, focusFirstElement, showToast, perfMeasureAsync, createPaginationState, calculateResponsivePageSize, renderPaginationBar, createListSkeleton } from '../../shared/util.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
 
 const pageName = 'Comandas';
 
 class ListComandaPage extends HTMLElement {
+  constructor() {
+    super();
+    this.items = [];
+    this.isLoading = false;
+    this.pagination = createPaginationState(calculateResponsivePageSize('comanda'));
+    this.comandasWithDetails = [];
+  }
+
   async connectedCallback() {
     if (!requireAuth()) return;
     this.classList.add('ion-page');
     this.innerHTML = `
       ${createHeader(pageName)}
-      <ion-content>
+      <ion-content class="ion-content-no-scroll">
+        <ion-refresher slot="fixed">
+          <ion-refresher-content></ion-refresher-content>
+        </ion-refresher>
         <div class="list-comanda-container"></div>
       </ion-content>
+      <ion-footer>
+        <div class="pagination-bar-container"></div>
+      </ion-footer>
     `;
 
     this.querySelector('#logout-btn').addEventListener('click', logout);
     focusFirstElement(this);
     this.renderFabButton();
-    await this.fetchComandas();
+
+    const content = this.querySelector('ion-content');
+    content.addEventListener('ionRefresh', async (ev) => {
+      await this.refreshData(ev);
+    });
+
+    await this.loadPage(1);
 
     window.addEventListener('popstate', () => this.onRouteChange());
     this._routeListener = () => this.onRouteChange();
@@ -35,53 +55,77 @@ class ListComandaPage extends HTMLElement {
 
   async onRouteChange() {
     if (window.location.pathname === '/comandas') {
-      await this.fetchComandas();
+      this.pagination.reset();
+      await this.loadPage(1);
       focusFirstElement(this);
     }
   }
 
-  async fetchComandas() {
+  async loadPage(page) {
+    if (this.isLoading) return;
+    this.isLoading = true;
     const container = this.querySelector('.list-comanda-container');
-    this.renderSkeleton(container);
+    const paginationContainer = this.querySelector('.pagination-bar-container');
 
     try {
-      const comandas = await api.getComandas();
-      const comandasWithDetails = await Promise.all(
-        comandas.map(async (comanda) => {
+      const skip = (page - 1) * this.pagination.take;
+      container.innerHTML = createListSkeleton(4);
+      paginationContainer.innerHTML = '';
+
+      const response = await perfMeasureAsync('comanda:loadPage', () => api.getComandas(skip, this.pagination.take));
+      this.items = response.data || response;
+      const total = response.total != null ? response.total : this.items.length;
+      this.pagination.update(total);
+      this.pagination.currentPage = page;
+      await this.enrichComandas();
+      this.renderItems();
+      this.renderPaginationControls();
+    } catch (error) {
+      console.error('Erro ao carregar comandas:', error);
+      await showToast('Erro ao carregar página. Tente novamente.', 'error', 3000);
+      this.renderItems();
+      this.renderPaginationControls();
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  async enrichComandas() {
+    this.comandasWithDetails = await Promise.all(
+      this.items.map(async (comanda) => {
+        try {
           const itens = await api.getItensComanda(comanda.id);
           const qtdItens = itens.length;
           const valorTotal = itens.reduce((sum, item) => sum + (item.qtd_item * item.valor_venda), 0);
           const todosPagos = itens.length > 0 && itens.every(item => item.statusPg);
           const todosEntregues = itens.length > 0 && itens.every(item => item.statusEntrega);
           return { ...comanda, qtdItens, valorTotal, todosPagos, todosEntregues };
-        })
-      );
-      this.renderComandas(comandasWithDetails);
-    } catch (error) {
-      console.error('Erro ao buscar comandas:', error);
-      container.innerHTML = '';
-      const alert = document.createElement('ion-alert');
-      alert.header = 'Erro';
-      alert.message = 'Não foi possível carregar as comandas. Tente novamente mais tarde.';
-      alert.buttons = ['OK'];
-      document.body.appendChild(alert);
-      await alert.present();
-    }
+        } catch {
+          return { ...comanda, qtdItens: 0, valorTotal: 0, todosPagos: false, todosEntregues: false };
+        }
+      })
+    );
   }
 
-  renderSkeleton(container) {
-    container.innerHTML = `
-      <ion-list>
-        ${[1,2,3].map(() => `
-          <ion-item>
-            <ion-label>
-              <h3><ion-skeleton-text animated style="width: 50%"></ion-skeleton-text></h3>
-              <p><ion-skeleton-text animated style="width: 80%"></ion-skeleton-text></p>
-            </ion-label>
-          </ion-item>
-        `).join('')}
-      </ion-list>
-    `;
+  nextPage() { this.loadPage(this.pagination.currentPage + 1); }
+  prevPage() { this.loadPage(this.pagination.currentPage - 1); }
+
+  async refreshData(event) {
+    this.pagination.reset();
+    await this.loadPage(1);
+    if (event) event.target.complete();
+  }
+
+  renderPaginationControls() {
+    const container = this.querySelector('.pagination-bar-container');
+    if (this.comandasWithDetails.length === 0) {
+      container.innerHTML = '';
+      return;
+    }
+    container.innerHTML = renderPaginationBar(this.pagination);
+
+    container.querySelector('[data-action="prev-page"]')?.addEventListener('click', () => this.prevPage());
+    container.querySelector('[data-action="next-page"]')?.addEventListener('click', () => this.nextPage());
   }
 
   renderFabButton() {
@@ -90,24 +134,23 @@ class ListComandaPage extends HTMLElement {
     fab.vertical = 'bottom';
     fab.horizontal = 'end';
     fab.slot = 'fixed';
-
     fab.innerHTML = `
       <ion-fab-button aria-label="Nova Comanda">
         <ion-icon name="add"></ion-icon>
       </ion-fab-button>
     `;
-
     fab.addEventListener('click', () => {
       const router = document.querySelector('ion-router');
       router.push('/comanda/register');
     });
-
     content.appendChild(fab);
   }
 
-  renderComandas(comandas) {
+  renderItems() {
     const container = this.querySelector('.list-comanda-container');
-    if (comandas.length === 0) {
+    if (!container) return;
+
+    if (this.comandasWithDetails.length === 0) {
       createEmptyState(container, {
         icon: 'receipt-outline',
         message: 'Nenhuma comanda encontrada.',
@@ -122,9 +165,9 @@ class ListComandaPage extends HTMLElement {
 
     const formatCurrency = (value) => {
       return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    }
+    };
 
-    const comandaItems = comandas.map(comanda => `
+    const comandaItems = this.comandasWithDetails.map((comanda) => `
       <ion-item>
         <ion-label>
           <h2 class="item-title">
@@ -145,7 +188,6 @@ class ListComandaPage extends HTMLElement {
             <span class="status-text">${comanda.todosEntregues ? 'Entregue' : 'Não Entregue'}</span>
           </p>
         </ion-label>
-
         <ion-buttons slot="end">
           <ion-button fill="clear" class="btn-edit" data-id="${comanda.id}" aria-label="Editar Comanda ${comanda.id}">
             <ion-icon slot="icon-only" name="create-outline"></ion-icon>
@@ -157,11 +199,9 @@ class ListComandaPage extends HTMLElement {
       </ion-item>
     `).join('');
 
-    container.innerHTML = `
-      <ion-list>${comandaItems}</ion-list>
-    `;
+    container.innerHTML = `<ion-list>${comandaItems}</ion-list>`;
 
-    container.querySelectorAll('.btn-edit').forEach(btn => {
+    container.querySelectorAll('.btn-edit').forEach((btn) => {
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-id');
         const router = document.querySelector('ion-router');
@@ -169,10 +209,9 @@ class ListComandaPage extends HTMLElement {
       });
     });
 
-    container.querySelectorAll('.btn-delete').forEach(btn => {
+    container.querySelectorAll('.btn-delete').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
-        
         const alert = document.createElement('ion-alert');
         alert.header = 'Confirmar';
         alert.message = 'Deseja realmente excluir esta comanda?';
@@ -180,15 +219,16 @@ class ListComandaPage extends HTMLElement {
           { text: 'Cancelar', role: 'cancel' },
           {
             text: 'Excluir',
-              handler: async () => {
-                try {
-                  await api.deleteComanda(id);
-                  await showToast('Comanda excluída com sucesso!', 'success', 2000);
-                  await this.fetchComandas();
-                } catch (error) {
-                  console.error('Erro ao excluir:', error);
-                  await showToast(error.message, 'error', 5000);
-                }
+            handler: async () => {
+              try {
+                await api.deleteComanda(id);
+                await showToast('Comanda excluída com sucesso!', 'success', 2000);
+                this.pagination.reset();
+                await this.loadPage(1);
+              } catch (error) {
+                console.error('Erro ao excluir:', error);
+                await showToast(error.message, 'error', 5000);
+              }
             }
           }
         ];

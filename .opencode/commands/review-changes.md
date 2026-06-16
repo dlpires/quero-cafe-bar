@@ -1,5 +1,6 @@
 ---
 description: Revise alterações recentes
+model: opencode/big-pickle
 ---
 
 Commits recentes do git:

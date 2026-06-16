@@ -11,8 +11,9 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
-import { Request } from 'express';
+import type { Request } from 'express';
 import { UsuarioService } from './usuario.service';
+import { PaginatedResponse } from '../produto/dto/paginated-response.dto';
 import { IUsuarioOutput } from './interfaces/usuario.interface';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
@@ -34,7 +35,7 @@ export class UsuarioController {
   @Get()
   async findAll(
     @Query() listUsuarioDto: ListUsuarioDto,
-  ): Promise<IUsuarioOutput[]> {
+  ): Promise<PaginatedResponse<IUsuarioOutput>> {
     return await this.usuarioService.findAll(listUsuarioDto);
   }
 

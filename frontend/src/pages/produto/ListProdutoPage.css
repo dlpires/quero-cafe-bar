@@ -9,6 +9,14 @@
   border-radius: 8px;
 }
 
+.skeleton-w-50 {
+  width: 50%;
+}
+
+.skeleton-w-80 {
+  width: 80%;
+}
+
 h3 {
   display: flex;
   align-items: center;
@@ -21,4 +29,12 @@ h3 {
 ion-input,
 ion-select {
   font-size: 16px;
+}
+
+ion-content.ion-content-no-scroll {
+  --overflow: hidden;
+}
+
+.pagination-bar-container {
+  background: var(--ion-background-color);
 }

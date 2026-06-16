@@ -30,7 +30,7 @@ npm install               # Note: uses npm, not yarn
 npm run dev               # Vite dev server (port 5173)
 npm run build             # web build (outputs to dist/)
 npm run build:prod        # production build (--mode production)
-npm run test              # Jest unit tests (8 suites, 105 tests)
+npm run test              # Jest unit tests (20 suites, 161 tests)
 npm run test:watch        # Jest in watch mode
 npm run test:coverage     # Jest with coverage report
 npx cap copy              # sync web build to Android
@@ -63,17 +63,17 @@ Custom subagents configured in `.opencode/agents/`:
 
 | Agent Type | Function | Role | Model |
 |------------|----------|------|-------|
-| `exception-treatment-agent` | Audits error handling (try-catch coverage, HTTP status consistency) | plan | opencode/big-pickle |
-| `qa-agent` | Generates and analyzes unit tests (NestJS services/controllers + Ionic pages) | build | opencode/big-pickle |
-| `security-audit-agent` | SAST analysis: SQL injection, hardcoded secrets, CORS, dependency vulnerabilities | plan | opencode/big-pickle |
-| `ux-agent` | UX/UI audit: WCAG/WCAG accessibility, mobile-first design, touch targets | plan | opencode/big-pickle |
+| `exception-treatment-agent` | Audits error handling (try-catch coverage, HTTP status consistency) | plan | google/gemma-4-31b-it |
+| `qa-agent` | Generates and analyzes unit tests (NestJS services/controllers + Ionic pages) | build | google/gemma-4-31b-it |
+| `security-audit-agent` | SAST analysis: SQL injection, hardcoded secrets, CORS, dependency vulnerabilities | plan | google/gemma-4-31b-it |
+| `ux-agent` | UX/UI audit: WCAG/WCAG accessibility, mobile-first design, touch targets | plan | google/gemma-4-31b-it |
 
 Built-in agent types also available:
 
 | Agent Type | Function | Model |
 |------------|----------|-------|
-| `explore` | Fast codebase exploration, file search, code patterns | opencode/big-pickle |
-| `general` | General-purpose research and multi-step tasks | opencode/big-pickle |
+| `explore` | Fast codebase exploration, file search, code patterns | opencode/deepseek-v4-flash-free |
+| `general` | General-purpose research and multi-step tasks | opencode/deepseek-v4-flash-free |
 
 ### Agent Details
 
@@ -91,10 +91,10 @@ Commands configured in `.opencode/commands/`:
 
 | Command | Function | Agent | Model |
 |---------|----------|-------|-------|
-| `analyze-coverage` | Analisa relatório de cobertura e sugere novos testes | plan | ollama/qwen2.5-coder:14b |
-| `review-changes` | Revisa mudanças recentes do git e sugere melhorias | — | — |
-| `run-tests` | Executa testes, analisa falhas e fornece correções | build | ollama/qwen2.5-coder:14b |
-| `update-docs` | Sincroniza AGENTS.md e README.md com estado atual do projeto | build | ollama/qwen2.5-coder:7b |
+| `analyze-coverage` | Analisa relatório de cobertura e sugere novos testes | plan | google/gemma-4-31b-it |
+| `review-changes` | Revisa mudanças recentes do git e sugere melhorias | — | opencode/big-pickle |
+| `run-tests` | Executa testes, analisa falhas e fornece correções | build | opencode/deepseek-v4-flash-free |
+| `update-docs` | Sincroniza AGENTS.md e README.md com estado atual do projeto | build | opencode/deepseek-v4-flash-free |
 
 ### Speckit Pipeline Commands
 
@@ -145,7 +145,7 @@ These implement a structured feature development workflow (constitution → spec
 # Backend — 24 suites, 163 tests passing
 cd backend && yarn test
 
-# Frontend — 8 suites, 105 tests passing
+# Frontend — 20 suites, 161 tests passing
 cd frontend && npm test
 ```
 
@@ -158,6 +158,6 @@ cd frontend && npm test
 - Java JDK 17+ + Android Studio (for mobile builds)
 
 <!-- SPECKIT START -->
-For additional context about the current feature (Acessibilidade e ARIA — Fase 2), read
-specs/004-accessibility-aria-enhancements/plan.md
+For additional context about the current feature (Controle de Paginação para Listas), read
+specs/010-list-pagination/plan.md
 <!-- SPECKIT END -->

@@ -1,25 +1,37 @@
 import './HomePage.css'
 import { createHeader } from '../../shared/Header.js';
-import { logout, createEmptyState, focusFirstElement, showToast } from '../../shared/util.js';
+import { logout, createEmptyState, focusFirstElement, showToast, createPaginationState, calculateResponsivePageSize, renderPaginationBar, createCardSkeleton } from '../../shared/util.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
 
 const pageName = 'Cozinha';
 
 class HomePage extends HTMLElement {
+  constructor() {
+    super();
+    this.comandas = [];
+    this.isLoading = false;
+    this.pagination = createPaginationState(calculateResponsivePageSize('home'));
+  }
+
   async connectedCallback() {
     if (!requireAuth()) return;
     this.classList.add('ion-page');
     this.innerHTML = `
       ${createHeader(pageName)}
       <ion-content>
-        <div class="home-container"></div>
+        <div class="home-container">
+          <div class="comandas-grid-container"></div>
+        </div>
       </ion-content>
+      <ion-footer>
+        <div class="pagination-bar-container"></div>
+      </ion-footer>
     `;
 
     this.querySelector('#logout-btn').addEventListener('click', logout);
     focusFirstElement(this);
-    await this.fetchComandas();
+    await this.loadPage(1);
 
     window.addEventListener('popstate', () => this.onRouteChange());
     this._routeListener = () => this.onRouteChange();
@@ -34,58 +46,65 @@ class HomePage extends HTMLElement {
 
   async onRouteChange() {
     if (window.location.pathname === '/home') {
-      await this.fetchComandas();
+      this.pagination.reset();
+      await this.loadPage(1);
       focusFirstElement(this);
     }
   }
 
-  async fetchComandas() {
-    const container = this.querySelector('.home-container');
-    this.renderSkeleton(container);
+  async loadPage(page) {
+    if (this.isLoading) return;
+    this.isLoading = true;
+    const gridContainer = this.querySelector('.comandas-grid-container');
+    const paginationContainer = this.querySelector('.pagination-bar-container');
 
     try {
-      const comandas = await api.getComandas();
-      this.renderComandas(comandas);
+      const skip = (page - 1) * this.pagination.take;
+      gridContainer.innerHTML = createCardSkeleton(4);
+      paginationContainer.innerHTML = '';
+
+      const response = await api.getComandas(skip, this.pagination.take);
+      this.comandas = response.data || response;
+      const total = response.total != null ? response.total : this.comandas.length;
+      this.pagination.update(total);
+      this.pagination.currentPage = page;
+      this.renderComandas();
+      this.renderPaginationControls();
+      gridContainer.scrollTop = 0;
     } catch (error) {
       console.error('Erro ao buscar comandas:', error);
-      container.innerHTML = '';
+      gridContainer.innerHTML = '';
       const alert = document.createElement('ion-alert');
       alert.header = 'Erro';
       alert.message = 'Não foi possível carregar os pedidos. Tente novamente.';
       alert.buttons = ['OK'];
       document.body.appendChild(alert);
       await alert.present();
+    } finally {
+      this.isLoading = false;
     }
   }
 
-  renderSkeleton(container) {
-    container.innerHTML = `
-      <div class="comandas-grid">
-        ${[1,2,3].map(() => `
-          <ion-card>
-            <ion-card-header>
-              <ion-card-title><ion-skeleton-text animated style="width: 70%"></ion-skeleton-text></ion-card-title>
-            </ion-card-header>
-            <ion-card-content>
-              ${[1,2].map(() => `
-                <ion-item lines="none">
-                  <ion-label>
-                    <h3><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></h3>
-                  </ion-label>
-                  <ion-skeleton-text animated style="width: 80px; height: 24px" slot="end"></ion-skeleton-text>
-                </ion-item>
-              `).join('')}
-            </ion-card-content>
-          </ion-card>
-        `).join('')}
-      </div>
-    `;
+  nextPage() { this.loadPage(this.pagination.currentPage + 1); }
+  prevPage() { this.loadPage(this.pagination.currentPage - 1); }
+
+  renderPaginationControls() {
+    const container = this.querySelector('.pagination-bar-container');
+    if (this.comandas.length === 0) {
+      container.innerHTML = '';
+      return;
+    }
+    const barHtml = renderPaginationBar(this.pagination);
+    container.innerHTML = barHtml;
+
+    container.querySelector('[data-action="prev-page"]')?.addEventListener('click', () => this.prevPage());
+    container.querySelector('[data-action="next-page"]')?.addEventListener('click', () => this.nextPage());
   }
 
-  renderComandas(comandas) {
-    const container = this.querySelector('.home-container');
-    if (comandas.length === 0) {
-      createEmptyState(container, {
+  renderComandas() {
+    const gridContainer = this.querySelector('.comandas-grid-container');
+    if (this.comandas.length === 0) {
+      createEmptyState(gridContainer, {
         icon: 'restaurant-outline',
         message: 'Nenhum pedido pendente.',
         actionLabel: '',
@@ -94,13 +113,13 @@ class HomePage extends HTMLElement {
       return;
     }
 
-    container.innerHTML = `
+    gridContainer.innerHTML = `
       <div class="comandas-grid">
-        ${comandas.map(comanda => this.renderComandaCard(comanda)).join('')}
+        ${this.comandas.map(comanda => this.renderComandaCard(comanda)).join('')}
       </div>
     `;
 
-    container.querySelectorAll('.item-entrega-select').forEach(select => {
+    gridContainer.querySelectorAll('.item-status-select').forEach(select => {
       select.addEventListener('ionChange', async (e) => {
         const id_comanda = select.dataset.idComanda;
         const id_produto = select.dataset.idProduto;
@@ -121,36 +140,35 @@ class HomePage extends HTMLElement {
     const statusIcon = todosEntregues ? 'checkmark-circle' : 'time-outline';
     const statusColor = todosEntregues ? 'success' : 'warning';
 
-    const itensHtml = comanda.itens.map(item => `
-      <ion-item lines="none" class="item-entrega ${item.statusEntrega ? 'item-delivered' : 'item-pending'}">
-        <ion-label>
-          <h3 class="item-produto-nome">${item.produto.dsc_produto} <ion-badge color="primary">x${item.qtd_item}</ion-badge></h3>
+    const itensHtml = comanda.itens.map(item => {
+      const statusText = item.statusEntrega ? 'Entregue' : 'Pendente';
+      return `
+      <ion-item lines="none" class="comanda-item ${item.statusEntrega ? 'item-delivered' : 'item-pending'}">
+        <ion-label class="item-label">
+          <h2 class="item-name">${item.produto.dsc_produto}</h2>
+          <p class="item-qty">Quantidade: ${item.qtd_item}</p>
         </ion-label>
         <ion-select
-          class="item-entrega-select"
+          class="item-status-select"
+          slot="end"
           data-id-comanda="${comanda.id}"
           data-id-produto="${item.id_produto}"
           value="${item.statusEntrega.toString()}"
-          interface="popover"
-          slot="end"
-          aria-label="Status de entrega do item ${item.produto.dsc_produto}"
+          interface="action-sheet"
+          aria-label="Status de ${item.produto.dsc_produto}: ${statusText}"
         >
           <ion-select-option value="false">Pendente</ion-select-option>
           <ion-select-option value="true">Entregue</ion-select-option>
         </ion-select>
       </ion-item>
-    `).join('');
+      `;
+    }).join('');
 
     return `
-      <ion-card class="comanda-card" data-comanda-id="${comanda.id}">
+      <ion-card class="comanda-card" data-comanda-id="${comanda.id}" role="region" aria-labelledby="comanda-title-${comanda.id}">
         <ion-card-header>
-          <ion-card-title>
-            <div class="card-header-content">
-              <span>Comanda #${comanda.id}</span>
-              <span>Mesa: ${comanda.mesa.id}</span>
-              <ion-icon name="${statusIcon}" color="${statusColor}" class="status-icon" aria-hidden="true"></ion-icon>
-            </div>
-          </ion-card-title>
+          <ion-card-title id="comanda-title-${comanda.id}">Comanda #${comanda.id} — Mesa: ${comanda.mesa.id}</ion-card-title>
+          <ion-icon name="${statusIcon}" color="${statusColor}" class="card-status-icon" aria-hidden="true"></ion-icon>
         </ion-card-header>
         <ion-card-content>
           ${itensHtml}
@@ -171,9 +189,9 @@ class HomePage extends HTMLElement {
   }
 
   updateCardStatusIcon(cardElement) {
-    const selects = cardElement.querySelectorAll('.item-entrega-select');
+    const selects = cardElement.querySelectorAll('.item-status-select');
     const allEntregues = Array.from(selects).every(select => select.value === 'true');
-    const icon = cardElement.querySelector('.status-icon');
+    const icon = cardElement.querySelector('.card-status-icon');
     if (allEntregues) {
       icon.name = 'checkmark-circle';
       icon.color = 'success';

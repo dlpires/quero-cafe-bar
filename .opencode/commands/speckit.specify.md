@@ -8,6 +8,7 @@ handoffs:
     agent: speckit.clarify
     prompt: Clarify specification requirements
     send: true
+model: opencode/big-pickle
 ---
 
 ## User Input

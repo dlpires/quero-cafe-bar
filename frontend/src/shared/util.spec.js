@@ -262,6 +262,169 @@ describe('Util - shared utilities', () => {
         });
     });
 
+    describe('getPageSize', () => {
+        it('deve retornar 10 para produto', () => {
+            const { getPageSize } = require('./util.js');
+            expect(getPageSize('produto')).toBe(10);
+        });
+
+        it('deve retornar 10 para usuario', () => {
+            const { getPageSize } = require('./util.js');
+            expect(getPageSize('usuario')).toBe(10);
+        });
+
+        it('deve retornar 8 para mesa', () => {
+            const { getPageSize } = require('./util.js');
+            expect(getPageSize('mesa')).toBe(8);
+        });
+
+        it('deve retornar 6 para comanda', () => {
+            const { getPageSize } = require('./util.js');
+            expect(getPageSize('comanda')).toBe(6);
+        });
+
+        it('deve retornar 8 para home', () => {
+            const { getPageSize } = require('./util.js');
+            expect(getPageSize('home')).toBe(8);
+        });
+
+        it('deve retornar 10 para página desconhecida (default)', () => {
+            const { getPageSize } = require('./util.js');
+            expect(getPageSize('unknown')).toBe(10);
+        });
+    });
+
+    describe('createPaginationState', () => {
+        it('deve criar estado com valores iniciais corretos', () => {
+            const { createPaginationState } = require('./util.js');
+            const state = createPaginationState(10);
+            expect(state.currentPage).toBe(1);
+            expect(state.totalPages).toBe(0);
+            expect(state.totalRecords).toBe(0);
+            expect(state.skip).toBe(0);
+            expect(state.take).toBe(10);
+        });
+
+        it('deve avançar para próxima página com next()', () => {
+            const { createPaginationState } = require('./util.js');
+            const state = createPaginationState(10);
+            state.update(50);
+            expect(state.totalPages).toBe(5);
+            state.next();
+            expect(state.currentPage).toBe(2);
+            expect(state.skip).toBe(10);
+        });
+
+        it('deve voltar para página anterior com prev()', () => {
+            const { createPaginationState } = require('./util.js');
+            const state = createPaginationState(10);
+            state.update(50);
+            state.next();
+            state.next();
+            expect(state.currentPage).toBe(3);
+            state.prev();
+            expect(state.currentPage).toBe(2);
+            expect(state.skip).toBe(10);
+        });
+
+        it('não deve avançar além da última página', () => {
+            const { createPaginationState } = require('./util.js');
+            const state = createPaginationState(10);
+            state.update(10);
+            state.next();
+            expect(state.currentPage).toBe(1);
+        });
+
+        it('não deve voltar antes da primeira página', () => {
+            const { createPaginationState } = require('./util.js');
+            const state = createPaginationState(10);
+            state.update(30);
+            state.prev();
+            expect(state.currentPage).toBe(1);
+        });
+
+        it('deve resetar para página 1 com reset()', () => {
+            const { createPaginationState } = require('./util.js');
+            const state = createPaginationState(10);
+            state.update(50);
+            state.next();
+            state.next();
+            state.reset();
+            expect(state.currentPage).toBe(1);
+            expect(state.skip).toBe(0);
+        });
+
+        it('deve calcular totalPages corretamente com update()', () => {
+            const { createPaginationState } = require('./util.js');
+            const state = createPaginationState(10);
+            state.update(45);
+            expect(state.totalPages).toBe(5);
+            expect(state.totalRecords).toBe(45);
+        });
+
+        it('deve ter no mínimo 1 página mesmo com 0 registros', () => {
+            const { createPaginationState } = require('./util.js');
+            const state = createPaginationState(10);
+            state.update(0);
+            expect(state.totalPages).toBe(1);
+        });
+    });
+
+    describe('renderPaginationBar', () => {
+        it('deve renderizar controles de navegação quando múltiplas páginas', () => {
+            const { renderPaginationBar, createPaginationState } = require('./util.js');
+            const state = createPaginationState(10);
+            state.update(50);
+            const html = renderPaginationBar(state);
+            expect(html).toContain('Anterior');
+            expect(html).toContain('Próxima');
+            expect(html).toContain('Página 1 de 5');
+            expect(html).toContain('Total: 50 registro(s)');
+        });
+
+        it('deve ocultar botões de navegação quando apenas 1 página', () => {
+            const { renderPaginationBar, createPaginationState } = require('./util.js');
+            const state = createPaginationState(10);
+            state.update(5);
+            const html = renderPaginationBar(state);
+            expect(html).not.toContain('Anterior');
+            expect(html).not.toContain('Próxima');
+            expect(html).toContain('Total: 5 registro(s)');
+        });
+    });
+
+    describe('createListSkeleton', () => {
+        it('deve renderizar itens esqueleto com ion-skeleton-text', () => {
+            const { createListSkeleton } = require('./util.js');
+            const html = createListSkeleton(3);
+            expect(html).toContain('ion-skeleton-text');
+            expect(html).toContain('ion-list');
+        });
+
+        it('deve usar 5 itens como padrão', () => {
+            const { createListSkeleton } = require('./util.js');
+            const html = createListSkeleton();
+            expect(html).toContain('ion-skeleton-text');
+            expect(html).toContain('ion-list');
+        });
+    });
+
+    describe('createCardSkeleton', () => {
+        it('deve renderizar cards esqueleto com ion-card', () => {
+            const { createCardSkeleton } = require('./util.js');
+            const html = createCardSkeleton(2);
+            expect(html).toContain('ion-card');
+            expect(html).toContain('comandas-grid');
+        });
+
+        it('deve usar 4 cards como padrão', () => {
+            const { createCardSkeleton } = require('./util.js');
+            const html = createCardSkeleton();
+            expect(html).toContain('ion-card');
+            expect(html).toContain('comandas-grid');
+        });
+    });
+
     describe('focusFirstElement', () => {
         it('deve focar no primeiro ion-input do container', () => {
             const { focusFirstElement } = require('./util.js');

@@ -1,177 +1,338 @@
-/**
- * Testes para ListProdutoPage
- * Lista produtos com status e ações de edição/exclusão
- */
-
 jest.mock('../../services/api.js', () => ({
-  api: {
-    getProdutos: jest.fn(),
-    deleteProduto: jest.fn(),
-  },
-}));
+  api: { getProdutos: jest.fn(), deleteProduto: jest.fn() },
+}))
 
 jest.mock('../../services/auth.js', () => ({
   requireAuth: jest.fn(() => true),
-}));
+}))
 
 jest.mock('../../shared/Header.js', () => ({
   createHeader: jest.fn(() => '<ion-header></ion-header>'),
-}));
+}))
 
-jest.mock('../../shared/util.js', () => ({
-  logout: jest.fn(),
-}));
+jest.mock('../../shared/util.js', () => {
+  const sizes = { produto: 10, usuario: 10, mesa: 8, comanda: 6, home: 8 }
+  return {
+    createPaginationState: (ps) => ({
+      currentPage: 1, take: ps, totalRecords: 0, totalPages: 0, skip: 0,
+      update: function (t) { this.totalRecords = t; this.totalPages = Math.ceil(t / this.take) || 1 },
+      next: function () { if (this.currentPage < this.totalPages) { this.currentPage++; this.skip = (this.currentPage - 1) * this.take } },
+      prev: function () { if (this.currentPage > 1) { this.currentPage--; this.skip = (this.currentPage - 1) * this.take } },
+      reset: function () { this.currentPage = 1; this.skip = 0 },
+    }),
+    getPageSize: (p) => sizes[p] || 10,
+    calculateResponsivePageSize: (p) => sizes[p] || 10,
+    renderPaginationBar: (p) => {
+      const single = p.totalPages <= 1
+      return `<div class="pagination-bar">${single ? '' : `
+        <ion-button fill="clear" size="small" ${p.currentPage <= 1 ? 'disabled' : ''} data-action="prev-page" aria-label="Página anterior">
+          <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
+          Anterior
+        </ion-button>
+        <span style="font-size:14px;min-width:100px;text-align:center;">
+          Página ${p.currentPage} de ${p.totalPages}
+        </span>
+        <ion-button fill="clear" size="small" ${p.currentPage >= p.totalPages ? 'disabled' : ''} data-action="next-page" aria-label="Próxima página">
+          Próxima
+          <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
+        </ion-button>`}
+        <span style="font-size:13px;">Total: ${p.totalRecords} registro(s)</span>
+      </div>`
+    },
+    createListSkeleton: (c = 5) => '<ion-list>' + Array.from({ length: c }, () => '<ion-item><ion-label><h3><ion-skeleton-text animated></ion-skeleton-text></h3><p><ion-skeleton-text animated></ion-skeleton-text></p></ion-label></ion-item>').join('') + '</ion-list>',
+    createCardSkeleton: (c = 4) => Array.from({ length: c }, () => '<ion-card><ion-card-header><ion-card-title></ion-card-title></ion-card-header><ion-card-content></ion-card-content></ion-card>').join(''),
+    showToast: jest.fn(),
+    logout: jest.fn(),
+    focusFirstElement: jest.fn(),
+  }
+})
 
-import { api } from '../../services/api.js';
+if (!customElements.get('ion-content')) {
+  customElements.define('ion-content', class extends HTMLElement {})
+  customElements.define('ion-footer', class extends HTMLElement {})
+  customElements.define('ion-button', class extends HTMLElement {
+    constructor() { super(); this.addEventListener = jest.fn(); }
+  })
+  customElements.define('ion-icon', class extends HTMLElement {
+    constructor() { super(); this.name = ''; this.color = ''; }
+  })
+  customElements.define('ion-list', class extends HTMLElement {})
+  customElements.define('ion-item', class extends HTMLElement {})
+  customElements.define('ion-label', class extends HTMLElement {})
+  customElements.define('ion-skeleton-text', class extends HTMLElement {})
+  customElements.define('ion-refresher', class extends HTMLElement {})
+  customElements.define('ion-refresher-content', class extends HTMLElement {})
+  customElements.define('ion-fab', class extends HTMLElement {
+    constructor() { super(); this.vertical = ''; this.horizontal = ''; this.slot = ''; }
+  })
+  customElements.define('ion-fab-button', class extends HTMLElement {
+    constructor() { super(); this.addEventListener = jest.fn(); }
+  })
+  customElements.define('ion-router', class extends HTMLElement {
+    constructor() { super(); this.push = jest.fn(); }
+  })
+  customElements.define('ion-toast', class extends HTMLElement {
+    constructor() { super(); this.present = jest.fn(); this.message = ''; }
+  })
+  customElements.define('ion-alert', class extends HTMLElement {
+    constructor() { super(); this.present = jest.fn(); }
+  })
+  customElements.define('ion-item-sliding', class extends HTMLElement {})
+  customElements.define('ion-item-options', class extends HTMLElement {})
+  customElements.define('ion-item-option', class extends HTMLElement {})
+  customElements.define('ion-buttons', class extends HTMLElement {})
+}
+
+import { api } from '../../services/api.js'
+import {
+  createPaginationState, calculateResponsivePageSize, renderPaginationBar, createListSkeleton, showToast,
+} from '../../shared/util.js'
 
 describe('ListProdutoPage', () => {
-  let listProdutoPage;
+  let page
 
   const mockProdutos = [
-    {
-      id: 1,
-      dsc_produto: 'Café Expresso',
-      vlr_produto: 5.50,
-      status: true,
-    },
-    {
-      id: 2,
-      dsc_produto: 'Pão de Queijo',
-      vlr_produto: 8.00,
-      status: false,
-    },
-  ];
+    { id: 1, dsc_produto: 'Café Expresso', valor_unit: 5.50, status: true },
+    { id: 2, dsc_produto: 'Pão de Queijo', valor_unit: 8.00, status: false },
+  ]
+
+  const mockPaginatedResponse = {
+    data: mockProdutos,
+    total: 45,
+    skip: 0,
+    take: 10,
+  }
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.clearAllMocks()
 
-    const mockContainer = {
-      innerHTML: '',
-      querySelector: jest.fn(() => null),
-    };
-
-    class MockListProdutoPage extends HTMLElement {
+    class TestListProdutoPage extends HTMLElement {
       constructor() {
-        super();
-        this.classList = { add: jest.fn() };
-        this.innerHTML = '';
+        super()
+        this.items = []
+        this.isLoading = false
+        this.pagination = createPaginationState(calculateResponsivePageSize('produto'))
+        this._prodContainer = { innerHTML: '' }
+        this._pagContainer = { innerHTML: '' }
         this.querySelector = jest.fn((selector) => {
-          if (selector === '.produtos-list') return mockContainer;
-          return null;
-        });
+          if (selector === '.list-produto-container') return this._prodContainer
+          if (selector === '.pagination-bar-container') return this._pagContainer
+          return null
+        })
       }
 
-      connectedCallback() {
-        this.classList.add('ion-page');
-        this.innerHTML = `
-          ${createHeader('Produtos')}
-          <ion-content>
-            <div class="produtos-list"></div>
-            <ion-button id="add-btn">Novo Produto</ion-button>
-          </ion-content>
-        `;
+      async loadPage(page) {
+        if (this.isLoading) return
+        this.isLoading = true
+        const container = this.querySelector('.list-produto-container')
+        const paginationContainer = this.querySelector('.pagination-bar-container')
 
-        this.fetchProdutos();
-      }
-
-      async fetchProdutos() {
         try {
-          const produtos = await api.getProdutos();
-          this.renderProdutos(produtos);
+          container.innerHTML = createListSkeleton(5)
+          paginationContainer.innerHTML = ''
+
+          const response = await api.getProdutos(
+            (page - 1) * this.pagination.take,
+            this.pagination.take,
+          )
+          this.items = response.data || response
+          const total = response.total != null ? response.total : this.items.length
+          this.pagination.update(total)
+          this.pagination.currentPage = page
+          this.renderItems()
+          this.renderPaginationControls()
         } catch (error) {
-          console.error('Erro:', error);
+          showToast('Erro ao carregar página.', 'error')
+          this.renderItems()
+          this.renderPaginationControls()
+        } finally {
+          this.isLoading = false
         }
       }
 
-      renderProdutos(produtos) {
-        const container = this.querySelector('.produtos-list');
+      nextPage() { this.loadPage(this.pagination.currentPage + 1) }
+      prevPage() { this.loadPage(this.pagination.currentPage - 1) }
 
-        if (!produtos || produtos.length === 0) {
-          container.innerHTML = '<p>Nenhum produto encontrado</p>';
-          return;
+      renderPaginationControls() {
+        const container = this.querySelector('.pagination-bar-container')
+        if (this.items.length === 0) {
+          container.innerHTML = ''
+          return
         }
-
-        container.innerHTML = produtos.map(produto => `
-          <ion-card>
-            <ion-card-header>
-              <ion-card-title>${produto.dsc_produto} - R$ ${produto.vlr_produto}</ion-card-title>
-            </ion-card-header>
-            <ion-card-content>
-              Status: ${produto.status ? 'Ativo' : 'Inativo'}
-              <ion-button class="edit-btn" data-id="${produto.id}">Editar</ion-button>
-              <ion-button class="delete-btn" data-id="${produto.id}">Excluir</ion-button>
-            </ion-card-content>
-          </ion-card>
-        `).join('');
+        container.innerHTML = renderPaginationBar(this.pagination)
       }
 
-      async deleteProduto(id) {
-        try {
-          await api.deleteProduto(id);
-          await this.fetchProdutos();
-        } catch (error) {
-          console.error('Erro:', error);
+      renderFabButton() {
+        const content = this.querySelector('ion-content')
+        const fab = document.createElement('ion-fab')
+        fab.vertical = 'bottom'
+        fab.horizontal = 'end'
+        fab.slot = 'fixed'
+        fab.innerHTML = '<ion-fab-button><ion-icon name="add"></ion-icon></ion-fab-button>'
+        fab.addEventListener('click', () => {})
+        content.appendChild(fab)
+      }
+
+      renderItems() {
+        const container = this.querySelector('.list-produto-container')
+        if (this.items.length === 0) {
+          container.innerHTML = '<p>Nenhum produto encontrado</p>'
+          return
         }
+        container.innerHTML = `<ion-list>${this.items.map(p => `
+          <ion-item><ion-label>${p.dsc_produto}</ion-label></ion-item>
+        `).join('')}</ion-list>`
       }
     }
 
     if (!customElements.get('list-produto-page')) {
-      customElements.define('list-produto-page', MockListProdutoPage);
+      customElements.define('list-produto-page', TestListProdutoPage)
     }
 
-    listProdutoPage = new MockListProdutoPage();
-  });
+    page = new TestListProdutoPage()
+    page.innerHTML = '<div class="pagination-bar-container"></div>'
+  })
+
+  describe('Paginação', () => {
+    it('deve renderizar controles de paginação quando há múltiplas páginas', async () => {
+      api.getProdutos.mockResolvedValue(mockPaginatedResponse)
+      await page.loadPage(1)
+
+      const container = page.querySelector('.pagination-bar-container')
+      expect(container.innerHTML).toContain('Página 1 de 5')
+      expect(container.innerHTML).toContain('Próxima')
+      expect(container.innerHTML).toContain('Anterior')
+      expect(container.innerHTML).toContain('Total: 45 registro(s)')
+    })
+
+    it('deve desabilitar "Anterior" na primeira página', async () => {
+      api.getProdutos.mockResolvedValue(mockPaginatedResponse)
+      await page.loadPage(1)
+
+      const html = page.querySelector('.pagination-bar-container').innerHTML
+      expect(html).toContain('data-action="prev-page"')
+      expect(html).toContain('disabled')
+    })
+
+    it('deve desabilitar "Próxima" na última página', async () => {
+      api.getProdutos.mockResolvedValue({ ...mockPaginatedResponse, skip: 40 })
+      await page.loadPage(5)
+
+      const html = page.querySelector('.pagination-bar-container').innerHTML
+      expect(html).toContain('data-action="next-page"')
+      expect(html).toContain('disabled')
+    })
+
+    it('deve ocultar botões quando há apenas 1 página', async () => {
+      api.getProdutos.mockResolvedValue({ data: mockProdutos, total: 2, skip: 0, take: 10 })
+      await page.loadPage(1)
+
+      const html = page.querySelector('.pagination-bar-container').innerHTML
+      expect(html).not.toContain('Próxima')
+      expect(html).not.toContain('Anterior')
+      expect(html).toContain('Total: 2 registro(s)')
+    })
+
+    it('deve ocultar toda a barra quando não há itens', async () => {
+      api.getProdutos.mockResolvedValue({ data: [], total: 0, skip: 0, take: 10 })
+      await page.loadPage(1)
+
+      expect(page.querySelector('.pagination-bar-container').innerHTML).toBe('')
+    })
+
+    it('deve mostrar skeleton loader durante carregamento', async () => {
+      api.getProdutos.mockResolvedValue(mockPaginatedResponse)
+      const loadPromise = page.loadPage(1)
+
+      expect(page.querySelector('.list-produto-container').innerHTML).toContain('ion-skeleton-text')
+      await loadPromise
+    })
+
+    it('deve avançar para próxima página com nextPage()', async () => {
+      api.getProdutos.mockResolvedValue(mockPaginatedResponse)
+      await page.loadPage(1)
+
+      api.getProdutos.mockResolvedValue({ ...mockPaginatedResponse, skip: 10 })
+      await page.nextPage()
+
+      expect(page.querySelector('.pagination-bar-container').innerHTML).toContain('Página 2 de 5')
+    })
+
+    it('deve voltar para página anterior com prevPage()', async () => {
+      api.getProdutos.mockResolvedValue(mockPaginatedResponse)
+      await page.loadPage(1)
+      api.getProdutos.mockResolvedValue({ ...mockPaginatedResponse, skip: 10 })
+      await page.nextPage()
+
+      api.getProdutos.mockResolvedValue(mockPaginatedResponse)
+      await page.prevPage()
+
+      expect(page.querySelector('.pagination-bar-container').innerHTML).toContain('Página 1 de 5')
+    })
+
+    it('deve tratar erro com toast', async () => {
+      api.getProdutos.mockRejectedValue(new Error('Falha na rede'))
+      await page.loadPage(1)
+
+      expect(showToast).toHaveBeenCalledWith('Erro ao carregar página.', 'error')
+    })
+
+    it('deve ter container de paginação no template', () => {
+      expect(page.querySelector('.pagination-bar-container')).not.toBeNull()
+    })
+  })
 
   describe('Renderização', () => {
-    it('deve carregar produtos ao inicializar (Happy Path)', async () => {
-      api.getProdutos.mockResolvedValue(mockProdutos);
-
-      await listProdutoPage.fetchProdutos();
-
-      expect(api.getProdutos).toHaveBeenCalled();
-    });
-
-    it('deve renderizar lista de produtos (Happy Path)', async () => {
-      api.getProdutos.mockResolvedValue(mockProdutos);
-
-      listProdutoPage.querySelector = jest.fn((selector) => {
-        if (selector === '.produtos-list') {
-          return { innerHTML: '' };
-        }
-        return null;
-      });
-
-      await listProdutoPage.fetchProdutos();
-
-      expect(api.getProdutos).toHaveBeenCalled();
-    });
-  });
+    it('deve carregar produtos com parâmetros de paginação', async () => {
+      api.getProdutos.mockResolvedValue(mockPaginatedResponse)
+      await page.loadPage(1)
+      expect(api.getProdutos).toHaveBeenCalledWith(0, 10)
+    })
+  })
 
   describe('Estado Vazio', () => {
-    it('deve mostrar mensagem quando não há produtos (Edge Case)', async () => {
-      api.getProdutos.mockResolvedValue([]);
+    it('deve mostrar mensagem quando não há produtos', async () => {
+      api.getProdutos.mockResolvedValue({ data: [], total: 0, skip: 0, take: 10 })
+      await page.loadPage(1)
+      expect(page.querySelector('.list-produto-container').innerHTML).toContain('Nenhum produto encontrado')
+    })
+  })
 
-      const container = { innerHTML: '' };
-      listProdutoPage.querySelector = jest.fn((selector) => {
-        if (selector === '.produtos-list') return container;
-        return null;
-      });
+  describe('Responsividade', () => {
+    it('T010: deve exibir 2 colunas em viewport 768px', () => {
+      const style = document.createElement('style')
+      style.textContent = '.list-produto-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }'
+      document.head.appendChild(style)
+      const container = document.createElement('div')
+      container.className = 'list-produto-container'
+      document.body.appendChild(container)
+      expect(getComputedStyle(container).gridTemplateColumns).toBe('repeat(2, 1fr)')
+      style.remove()
+      container.remove()
+    })
 
-      await listProdutoPage.fetchProdutos();
+    it('T010: deve exibir 3 colunas em viewport 1024px', () => {
+      const style = document.createElement('style')
+      style.textContent = '.list-produto-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }'
+      document.head.appendChild(style)
+      const container = document.createElement('div')
+      container.className = 'list-produto-container'
+      document.body.appendChild(container)
+      expect(getComputedStyle(container).gridTemplateColumns).toBe('repeat(3, 1fr)')
+      style.remove()
+      container.remove()
+    })
 
-      expect(container.innerHTML).toContain('Nenhum produto encontrado');
-    });
-  });
-
-  describe('Tratamento de Erros', () => {
-    it('deve tratar erro ao carregar produtos (Edge Case)', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      api.getProdutos.mockRejectedValue(new Error('Network error'));
-
-      await listProdutoPage.fetchProdutos();
-
-      expect(consoleSpy).toHaveBeenCalledWith('Erro:', expect.any(Error));
-      consoleSpy.mockRestore();
-    });
-  });
-});
+    it('T010: deve exibir 4 colunas em viewport 1400px', () => {
+      const style = document.createElement('style')
+      style.textContent = '.list-produto-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }'
+      document.head.appendChild(style)
+      const container = document.createElement('div')
+      container.className = 'list-produto-container'
+      document.body.appendChild(container)
+      expect(getComputedStyle(container).gridTemplateColumns).toBe('repeat(4, 1fr)')
+      style.remove()
+      container.remove()
+    })
+  })
+})

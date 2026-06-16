@@ -10,6 +10,8 @@ import { Repository } from 'typeorm';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { ListUsuarioDto } from './dto/list-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
+import { PaginatedResponse } from '../produto/dto/paginated-response.dto';
+import { IUsuarioOutput } from './interfaces/usuario.interface';
 
 @Injectable()
 export class UsuarioService {
@@ -29,10 +31,16 @@ export class UsuarioService {
     return await this.usuarioRepository.save(usuario);
   }
 
-  async findAll(listUsuarioDto: ListUsuarioDto) {
-    return await this.usuarioRepository.find({
-      where: listUsuarioDto,
+  async findAll(
+    listUsuarioDto: ListUsuarioDto,
+  ): Promise<PaginatedResponse<IUsuarioOutput>> {
+    const { skip, take, ...where } = listUsuarioDto;
+    const [data, total] = await this.usuarioRepository.findAndCount({
+      where,
+      skip,
+      take,
     });
+    return { data, total, skip: skip ?? 0, take: take ?? 20 };
   }
 
   async findOne(id: number) {

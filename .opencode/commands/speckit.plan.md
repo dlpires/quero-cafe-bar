@@ -8,6 +8,7 @@ handoffs:
   - label: Create Checklist
     agent: speckit.checklist
     prompt: Create a checklist for the following domain...
+model: opencode/big-pickle
 ---
 
 ## User Input

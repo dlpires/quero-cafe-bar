@@ -1,4 +1,3 @@
-import './UpdateProdutoPage.css';
 import { createHeader } from '../../shared/Header.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
@@ -86,7 +85,7 @@ class UpdateProdutoPage extends HTMLElement {
     const produtoData = {
       dsc_produto: formData.get('dsc_produto'),
       valor_unit: parseFloat(formData.get('valor_unit')),
-      status: formData.get('status') === 'on',
+      status: (formData.get('status') ?? 'on') === 'on',
     };
 
     const submitBtn = this.querySelector('#btn-submit');

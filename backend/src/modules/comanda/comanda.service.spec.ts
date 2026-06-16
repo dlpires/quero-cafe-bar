@@ -18,6 +18,7 @@ describe('ComandaService', () => {
     find: jest.fn(),
     findOne: jest.fn(),
     delete: jest.fn(),
+    findAndCount: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -66,7 +67,7 @@ describe('ComandaService', () => {
   });
 
   describe('Listagem de Comandas', () => {
-    it('deve retornar todas as comandas com relacionamentos (Happy Path)', async () => {
+    it('deve retornar todas as comandas paginadas com relacionamentos (Happy Path)', async () => {
       // Arrange
       const comandasMock = [
         {
@@ -83,18 +84,21 @@ describe('ComandaService', () => {
         },
       ];
 
-      mockComandaRepository.find.mockResolvedValue(comandasMock);
+      mockComandaRepository.findAndCount.mockResolvedValue([comandasMock, 2]);
 
       // Act
       const result = await service.findAll({});
 
       // Assert
-      expect(mockComandaRepository.find).toHaveBeenCalledWith({
+      expect(mockComandaRepository.findAndCount).toHaveBeenCalledWith({
         where: {},
         relations: ['mesa', 'itens', 'itens.produto'],
+        skip: undefined,
+        take: undefined,
       });
-      expect(result).toEqual(comandasMock);
-      expect(result).toHaveLength(2);
+      expect(result.data).toEqual(comandasMock);
+      expect(result.total).toBe(2);
+      expect(result.data).toHaveLength(2);
     });
   });
 

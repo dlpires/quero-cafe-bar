@@ -1,5 +1,6 @@
 ---
 description: Auto-commit changes after a Spec Kit command completes
+model: opencode/deepseek-v4-flash-free
 ---
 
 

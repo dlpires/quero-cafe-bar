@@ -67,7 +67,8 @@ class UpdateComandaPage extends HTMLElement {
 
   async loadMesas() {
     try {
-      const mesas = await api.getMesas();
+      const response = await api.getMesas();
+      const mesas = response.data || response;
       const select = this.querySelector('#id_mesa');
       mesas.forEach(mesa => {
         const option = document.createElement('ion-select-option');
@@ -205,7 +206,8 @@ class UpdateComandaPage extends HTMLElement {
     let produtos;
     let itensAtuais;
     try {
-      produtos = await api.getProdutos();
+      const produtosResponse = await api.getProdutos();
+      produtos = produtosResponse.data || produtosResponse;
       itensAtuais = await api.getItensComanda(this.comandaId);
     } catch (error) {
       await loading.dismiss();
@@ -235,7 +237,7 @@ class UpdateComandaPage extends HTMLElement {
     }
 
     const modal = document.createElement('ion-modal');
-    modal.style.cssText = '--width: 90%; --height: 80%;';
+    modal.classList.add('add-item-modal');
     modal.innerHTML = `
       <ion-header>
         <ion-toolbar color="primary">

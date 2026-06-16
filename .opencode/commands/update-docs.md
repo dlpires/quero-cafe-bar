@@ -1,7 +1,7 @@
 ---
 description: Sincroniza e atualiza AGENTS.md e README.md
 agent: build
-# model: ollama/qwen2.5-coder:7b
+model: opencode/deepseek-v4-flash-free
 ---
 
 Você é um Especialista em Documentação Técnica. Sua tarefa é analisar o estado atual do projeto e atualizar os arquivos de documentação.

@@ -23,7 +23,7 @@ describe('MesaController', () => {
               .fn()
               .mockResolvedValue({ id: 1, qtd_cadeiras: 6, status: true }),
             remove: jest.fn().mockResolvedValue({ id: 1 }),
-            findAll: jest.fn().mockResolvedValue([]),
+            findAll: jest.fn().mockResolvedValue({ data: [], total: 0, skip: 0, take: 20 }),
           },
         },
       ],
@@ -53,8 +53,13 @@ describe('MesaController', () => {
   });
 
   describe('findAll', () => {
-    it('should return an array of mesas', async () => {
-      const result = [{ id: 1, qtd_cadeiras: 4, status: true }];
+    it('should return a paginated response of mesas', async () => {
+      const result = {
+        data: [{ id: 1, qtd_cadeiras: 4, status: true }],
+        total: 1,
+        skip: 0,
+        take: 20,
+      };
 
       jest.spyOn(service, 'findAll').mockResolvedValue(result);
 

@@ -1,5 +1,6 @@
 ---
 description: Detect Git remote URL for GitHub integration
+model: opencode/deepseek-v4-flash-free
 ---
 
 

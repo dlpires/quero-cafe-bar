@@ -9,6 +9,7 @@ handoffs:
     agent: speckit.implement
     prompt: Start the implementation in phases
     send: true
+model: opencode/big-pickle
 ---
 
 ## User Input

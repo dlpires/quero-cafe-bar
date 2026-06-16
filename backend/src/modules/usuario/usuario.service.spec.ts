@@ -18,6 +18,7 @@ describe('UsuarioService', () => {
     find: jest.fn(),
     findOne: jest.fn(),
     delete: jest.fn(),
+    findAndCount: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -93,7 +94,7 @@ describe('UsuarioService', () => {
   });
 
   describe('Listagem de Usuários', () => {
-    it('deve retornar todos os usuários quando não há filtros (Happy Path)', async () => {
+    it('deve retornar todos os usuários paginados quando não há filtros (Happy Path)', async () => {
       // Arrange
       const usuariosMock: Usuario[] = [
         {
@@ -113,16 +114,19 @@ describe('UsuarioService', () => {
       ];
 
       const listUsuarioDto: ListUsuarioDto = {};
-      mockUsuarioRepository.find.mockResolvedValue(usuariosMock);
+      mockUsuarioRepository.findAndCount.mockResolvedValue([usuariosMock, 2]);
 
       // Act
       const result = await service.findAll(listUsuarioDto);
 
       // Assert
-      expect(mockUsuarioRepository.find).toHaveBeenCalledWith({
-        where: listUsuarioDto,
+      expect(mockUsuarioRepository.findAndCount).toHaveBeenCalledWith({
+        where: {},
+        skip: undefined,
+        take: undefined,
       });
-      expect(result).toEqual(usuariosMock);
+      expect(result.data).toEqual(usuariosMock);
+      expect(result.total).toBe(2);
     });
 
     it('deve filtrar usuários por perfil', async () => {
@@ -138,17 +142,19 @@ describe('UsuarioService', () => {
       ];
 
       const listUsuarioDto: ListUsuarioDto = { perfil: 1 };
-      mockUsuarioRepository.find.mockResolvedValue(usuariosMock);
+      mockUsuarioRepository.findAndCount.mockResolvedValue([usuariosMock, 1]);
 
       // Act
       const result = await service.findAll(listUsuarioDto);
 
       // Assert
-      expect(mockUsuarioRepository.find).toHaveBeenCalledWith({
+      expect(mockUsuarioRepository.findAndCount).toHaveBeenCalledWith({
         where: { perfil: 1 },
+        skip: undefined,
+        take: undefined,
       });
-      expect(result).toHaveLength(1);
-      expect(result[0].perfil).toBe(1);
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].perfil).toBe(1);
     });
   });
 

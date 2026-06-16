@@ -69,12 +69,17 @@ describe('UsuarioController', () => {
   });
 
   describe('GET /usuario - Listar Usuários', () => {
-    it('deve listar todos os usuários (Happy Path)', async () => {
+    it('deve listar todos os usuários paginados (Happy Path)', async () => {
       // Arrange
-      const usuariosMock = [
-        { id: 1, nome: 'Admin', usuario: 'admin', senha: '123', perfil: 0 },
-        { id: 2, nome: 'Garçom', usuario: 'garcom', senha: '456', perfil: 1 },
-      ];
+      const usuariosMock = {
+        data: [
+          { id: 1, nome: 'Admin', usuario: 'admin', senha: '123', perfil: 0 },
+          { id: 2, nome: 'Garçom', usuario: 'garcom', senha: '456', perfil: 1 },
+        ],
+        total: 2,
+        skip: 0,
+        take: 20,
+      };
 
       const listUsuarioDto: ListUsuarioDto = {};
       service.findAll.mockResolvedValue(usuariosMock);
@@ -89,9 +94,14 @@ describe('UsuarioController', () => {
 
     it('deve filtrar usuários por perfil', async () => {
       // Arrange
-      const usuariosMock = [
-        { id: 2, nome: 'Garçom', usuario: 'garcom', senha: '456', perfil: 1 },
-      ];
+      const usuariosMock = {
+        data: [
+          { id: 2, nome: 'Garçom', usuario: 'garcom', senha: '456', perfil: 1 },
+        ],
+        total: 1,
+        skip: 0,
+        take: 20,
+      };
 
       const listUsuarioDto: ListUsuarioDto = { perfil: 1 };
       service.findAll.mockResolvedValue(usuariosMock);
@@ -101,7 +111,7 @@ describe('UsuarioController', () => {
 
       // Assert
       expect(service.findAll).toHaveBeenCalledWith({ perfil: 1 });
-      expect(result).toHaveLength(1);
+      expect(result.data).toHaveLength(1);
     });
   });
 

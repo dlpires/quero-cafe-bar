@@ -22,27 +22,23 @@ import '@ionic/core/css/text-transformation.css';
 import '@ionic/core/css/flex-utils.css';
 import '@ionic/core/css/display.css';
 
-// Import Pages
+// Static imports for all pages
 import './pages/login/LoginPage.js';
 import './pages/home/HomePage.js';
-
-import './pages/produto/RegProdutoPage.js';
 import './pages/produto/ListProdutoPage.js';
+import './pages/produto/RegProdutoPage.js';
 import './pages/produto/UpdateProdutoPage.js';
-
-import './pages/usuario/RegUsuarioPage.js';
 import './pages/usuario/ListUsuarioPage.js';
+import './pages/usuario/RegUsuarioPage.js';
 import './pages/usuario/UpdateUsuarioPage.js';
-
-import './pages/mesa/RegMesaPage.js';
 import './pages/mesa/ListMesaPage.js';
+import './pages/mesa/RegMesaPage.js';
 import './pages/mesa/UpdateMesaPage.js';
-
-import './pages/comanda/RegComandaPage.js';
 import './pages/comanda/ListComandaPage.js';
+import './pages/comanda/RegComandaPage.js';
 import './pages/comanda/UpdateComandaPage.js';
 
-import { isAuthenticated, setupSessionSync } from './services/auth.js';
+import { setupSessionSync } from './services/auth.js';
 
 // Global navigation guard
 (async function setupRouteGuard() {

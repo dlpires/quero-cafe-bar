@@ -1,7 +1,7 @@
 ---
 description: Analisador e Gerador de Testes Unitários FullStack (NestJS & Ionic)
 agent: build
-# model: google/gemini-flash-2.5
+model: google/gemma-4-31b-it
 ---
 
 Atue como um Especialista em QA e Desenvolvedor FullStack (NestJS/Ionic). Sua tarefa é:
