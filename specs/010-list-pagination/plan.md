@@ -28,6 +28,47 @@ Replace infinite scroll / virtual scroll with button-based pagination on all lis
 
 **Scale/Scope**: 5 list pages (usuário, produto, mesa, comanda, home/cozinha) with pagination controls
 
+## Changes During Implementation
+
+### 2026-06-16 — Responsive Page Size
+
+**Problema**: Valores fixos de `PAGE_SIZES` (produto/usuario: 10, mesa: 8, comanda: 6, home: 8) causavam overflow vertical no viewport. Itens vazavam para baixo do footer sem scroll, violando SC-001.
+
+**Solução**: Substituído `getPageSize(pageName)` por `calculateResponsivePageSize(pageName)` que calcula dinamicamente quantos itens cabem:
+
+```js
+export const PAGE_LAYOUT = {
+  produto:  { itemHeight: 80 },
+  usuario:  { itemHeight: 80 },
+  mesa:     { itemHeight: 80 },
+  comanda:  { itemHeight: 120 },
+  home:     { itemHeight: 200 },
+};
+
+const HEADER_HEIGHT = 56;
+const FOOTER_HEIGHT = 52;
+const CONTAINER_PADDING = 32;
+
+export function calculateResponsivePageSize(pageName) {
+  const layout = PAGE_LAYOUT[pageName] || PAGE_LAYOUT.produto;
+  const viewportHeight = window.innerHeight;
+  const contentHeight = viewportHeight - HEADER_HEIGHT - FOOTER_HEIGHT;
+  const availableHeight = contentHeight - CONTAINER_PADDING;
+  const count = Math.floor(availableHeight / layout.itemHeight);
+  return Math.max(3, Math.min(count, 50));
+}
+```
+
+**Testes**: Mocks de `calculateResponsivePageSize` retornam mesmos valores fixos anteriores, preservando asserts existentes. 216 testes, 20 suites — todos passam.
+
+**Arquivos**: `util.js`, 5 páginas de lista, 5 arquivos `.spec.js`.
+
+### Problema de JSDOM em Testes
+
+Durante implementação dos testes, `document.createElement('div')` dentro dos mocks de página disparava o lifecycle de custom elements do JSDOM, que tentava instanciar `ion-skeleton-text` e outros componentes — cujos construtores mock eram inválidos (`Error: Invalid custom element constructor return value`).
+
+**Solução**: Todos os containers nos testes usam objetos simples (`{ innerHTML: '' }`) em vez de nós reais do DOM; `querySelector` é sobrescrito com arrow function que retorna esses objetos mock.
+
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*

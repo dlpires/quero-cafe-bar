@@ -16,20 +16,43 @@ Represents the current pagination state for a list page. Each list page maintain
 
 | Page | Items per page | Rationale |
 |------|---------------|-----------|
-| ListProdutoPage | `10` | 72px item height, ~500px available → ~6-7 visible, 10 allows comfortable fit + some buffer |
-| ListUsuarioPage | `10` | Same layout as produto |
-| ListMesaPage | `8` | Slightly taller items (status icon + mesa info) |
-| ListComandaPage | `6` | Each comanda row has more info (items, totals, status) |
-| HomePage (cozinha) | `8` | Card grid: 2-4 cols × 2 rows ≈ 4-8 cards; `8` fits most layouts |
+| ListProdutoPage | `calculado`* | 80px item height, calculado via `calculateResponsivePageSize('produto')` |
+| ListUsuarioPage | `calculado`* | Mesma altura (80px) que produto |
+| ListMesaPage | `calculado`* | Mesma altura (80px) que produto |
+| ListComandaPage | `calculado`* | 120px item height (4 linhas por comanda) |
+| HomePage (cozinha) | `calculado`* | 200px item height (cards na grid) |
 
-*Note: These values are starting defaults. They can be adjusted during implementation/testing to ensure the "no scrollbar" requirement (FR-001) at 768px min viewport height.*
+*\*Valores calculados dinamicamente: `Math.floor((window.innerHeight - 140) / itemHeight)`, mínimo 3, máximo 50.*
+
+*Para referência, os valores fixos originais eram: produto/usuario: 10, mesa: 8, comanda: 6, home: 8 — substituídos durante implementação por causarem overflow vertical.*
 
 ## PageSizeCalculator (Frontend Utility)
 
 ```js
-// Returns { take: number } for a given page context
+// Original: returns fixed take from PAGE_SIZES constant
 function getPageSize(pageName: string): number
+
+// Actual implementation: returns dynamic take based on viewport height
+function calculateResponsivePageSize(pageName: string): number
 ```
+
+### Supporting constants
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `HEADER_HEIGHT` | 56 | Altura do `ion-header` fixo |
+| `FOOTER_HEIGHT` | 52 | Altura do `ion-footer` com barra de paginação |
+| `CONTAINER_PADDING` | 32 | Padding vertical do container da lista (16px × 2) |
+
+### PAGE_LAYOUT
+
+| Page | itemHeight | Descrição |
+|------|-----------|-----------|
+| `produto` | 80 | 2 linhas (nome + preço) |
+| `usuario` | 80 | 2 linhas (nome + usuário) |
+| `mesa` | 80 | 2 linhas (status + cadeiras) |
+| `comanda` | 120 | 4 linhas (título + mesa + itens/total + status) |
+| `home` | 200 | Cards em grid com altura variável (estimativa conservadora) |
 
 ## State Transitions
 

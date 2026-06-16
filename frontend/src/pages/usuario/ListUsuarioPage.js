@@ -1,6 +1,6 @@
 import './ListUsuarioPage.css'
 import { createHeader } from '../../shared/Header.js';
-import { logout, createEmptyState, focusFirstElement, showToast, getLoggedUserId, perfMeasureAsync, createPaginationState, getPageSize, renderPaginationBar, createListSkeleton } from '../../shared/util.js';
+import { logout, createEmptyState, focusFirstElement, showToast, getLoggedUserId, perfMeasureAsync, createPaginationState, calculateResponsivePageSize, renderPaginationBar, createListSkeleton } from '../../shared/util.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
 
@@ -11,7 +11,7 @@ class ListUsuarioPage extends HTMLElement {
     super();
     this.items = [];
     this.isLoading = false;
-    this.pagination = createPaginationState(getPageSize('usuario'));
+    this.pagination = createPaginationState(calculateResponsivePageSize('usuario'));
   }
 
   async connectedCallback() {
@@ -24,8 +24,10 @@ class ListUsuarioPage extends HTMLElement {
           <ion-refresher-content></ion-refresher-content>
         </ion-refresher>
         <div class="list-usuario-container"></div>
-        <div class="pagination-bar-container"></div>
       </ion-content>
+      <ion-footer>
+        <div class="pagination-bar-container"></div>
+      </ion-footer>
     `;
 
     this.querySelector('#logout-btn').addEventListener('click', logout);

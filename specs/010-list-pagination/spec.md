@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-15
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: User description: "Preciso criar uma spec para fazer um controle de paginação para todas as listas do projeto (usuários, produtos, mesas, comandas e os cards de comandas), de forma a deixar sem barra de rolagem nas páginas (apenas entre os cards de /home)"
 
@@ -93,6 +93,7 @@ Como usuário do sistema, quero ver o total de registros encontrados para cada l
 - **FR-011**: Quando houver apenas uma página de registros, os controles de paginação devem ser ocultados, mas o total de registros deve permanecer visível.
 - **FR-012**: A paginação deve ser preservada ao alternar entre as páginas do menu; ao retornar para uma lista, ela deve recarregar da primeira página.
 - **FR-013**: O tamanho de página (número de itens por página) deve ser definido de forma que o conteúdo caiba no viewport sem barra de rolagem, considerando resoluções mínimas de 768px de altura (tablet em paisagem).
+- **FR-014**: O tamanho de página deve ser calculado dinamicamente com base na altura da janela (`window.innerHeight`), descontando as alturas fixas do cabeçalho (56px), rodapé de paginação (52px) e padding do container (32px), e dividindo pela altura média dos itens da lista, respeitando os limites mínimo de 3 e máximo de 50 itens.
 
 ### Key Entities
 
@@ -109,10 +110,52 @@ Como usuário do sistema, quero ver o total de registros encontrados para cada l
 - **SC-004**: 100% das listas do sistema (usuários, produtos, mesas, comandas e cozinha) possuem controles de paginação funcionais.
 - **SC-005**: A interface mantém usabilidade em tablets com resolução mínima de 1024x768 (paisagem) sem overflow de conteúdo.
 
+## Implementation History
+
+### Session 2026-06-16 — Responsive Page Size
+
+**Bug descoberto**: Os tamanhos de página fixos (10, 10, 8, 6, 8) eram maiores que o espaço disponível no viewport para a maioria das resoluções de tablet (768px de altura), fazendo com que os itens vazassem para baixo do footer, violando SC-001 (sem barra de rolagem).
+
+**Solução implementada**: Substituição dos valores fixos por um cálculo responsivo (`calculateResponsivePageSize`):
+
+```
+itensPorPagina = Math.floor((window.innerHeight - 56 - 52 - 32) / itemHeight)
+```
+
+Onde:
+- 56px = altura do `ion-header`
+- 52px = altura do `ion-footer` (barra de paginação)
+- 32px = padding vertical do container da lista (16px top + 16px bottom)
+- `itemHeight` = 80px (produto/usuario/mesa), 120px (comanda), 200px (home/cards)
+
+Retorna entre 3 (mínimo) e 50 (máximo) itens por página.
+
+**Adicionado à spec**: FR-014
+
+**Arquivos modificados**:
+- `frontend/src/shared/util.js` — adicionados `PAGE_LAYOUT`, `calculateResponsivePageSize`, constantes `HEADER_HEIGHT`, `FOOTER_HEIGHT`, `CONTAINER_PADDING`
+- `frontend/src/pages/produto/ListProdutoPage.js` — trocado `getPageSize('produto')` → `calculateResponsivePageSize('produto')`
+- `frontend/src/pages/usuario/ListUsuarioPage.js` — idem
+- `frontend/src/pages/mesa/ListMesaPage.js` — idem
+- `frontend/src/pages/comanda/ListComandaPage.js` — idem
+- `frontend/src/pages/home/HomePage.js` — idem
+- Arquivos `.spec.js` correspondentes — atualizados mocks e imports
+
+**Testes**: 216 testes passando (20 suites), nenhuma regressão.
+
+### Session 2026-06-15 — Initial Implementation
+
+- Shared pagination utilities criadas em `util.js`: `createPaginationState`, `getPageSize`, `renderPaginationBar`, `createListSkeleton`, `createCardSkeleton`
+- 5 páginas de lista refatoradas para usar paginação com botões (Anterior/Próxima) + indicador de página + total de registros
+- Skeleton loader durante transições de página
+- Listas CRUD com `ion-content-no-scroll` (sem scroll vertical)
+- Home page com scroll interno no grid de cards
+- Testes de paginação, navegação, estados vazio/erro e responsividade adicionados
+
 ## Assumptions
 
 - O backend já fornece suporte a paginação via parâmetros `skip` e `take` nos endpoints de listagem, retornando o `total` de registros no formato `PaginatedResponse`.
-- O tamanho de página (take) será definido por um valor fixo por tipo de lista (produto/usuario: 10, mesa: 8, comanda: 6, home: 8), calculado para caber no viewport sem scroll em resolução mínima de 768px de altura.
+- ~~O tamanho de página (take) será definido por um valor fixo por tipo de lista (produto/usuario: 10, mesa: 8, comanda: 6, home: 8), calculado para caber no viewport sem scroll em resolução mínima de 768px de altura.~~ *(Substituído durante implementação — ver Implementation History)*
 - A paginação substituirá o infinite scroll existente nas páginas de usuários e produtos, e será adicionada às páginas de mesas e comandas que atualmente não possuem paginação visível (apenas infinite scroll).
 - As páginas de formulário (criação/edição) não são afetadas por esta especificação; apenas as telas de listagem.
 - O cabeçalho e menu lateral são fixos e não fazem parte da área de conteúdo paginável.

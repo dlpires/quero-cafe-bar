@@ -66,19 +66,36 @@ Currently loads all comandas with no skip/take. Must pass skip/take and paginate
 
 ## Page Size Calculation
 
-### Decision: Fixed `take` per list type, calculated to fit viewport at 768px min height
+### Originally planned: Fixed `take` per list type
+*See Implementation History in spec.md for context of the change.*
 
-**Rationale**: Using a fixed page size per list type (calculated once at init or via media query) is simpler and more reliable than dynamic calculation. The spec's FR-013 requires fitting content at 768px viewport height.
+### Actual implementation: Responsive page size via `calculateResponsivePageSize`
 
-- CRUD lists (produto, usuario, mesa, comanda): Each item ~72px (matching existing `ITEM_HEIGHT`). Available height ~500px after header/menu/pagination controls ≈ 6-7 items → `take = 6`.
-- Kitchen cards: Each card ~200px. Available height ~500px → 2-3 cards → `take = 2` per row × columns.
-- **However**: Starting with the existing `take = 20` and using `skip/take` from the backend is fine — the frontend will display one page at a time; the actual visible count per screen is a CSS/layout concern, not an API concern.
+During implementation/testing, fixed page sizes (10, 10, 8, 6, 8) were found to cause vertical overflow — items extended past the footer on viewports at 768px height. The assumption that fixed values could reliably fit all viewport sizes was incorrect.
 
-**Alternatives considered**:
-- Dynamic `take` based on `window.innerHeight`: Over-engineered; the backend has a hard `Max(100)` cap anyway.
-- CSS-only approach (hide overflow, just show N items): Unreliable across devices.
+**Final approach**: Dynamic `take` based on `window.innerHeight`, calculated at page mount:
 
-Final approach: **Frontend controls the visible page size via `take` param**, starting with a reasonable default that fits 768px viewport, and can be tuned per page.
+```
+take = Math.floor((window.innerHeight - 56 - 52 - 32) / itemHeight)
+```
+
+| Page | Item Height | At 768px | At 900px | At 1080px |
+|------|-------------|----------|----------|-----------|
+| produto/usuario/mesa | 80px | 7 | 9 | 11 |
+| comanda | 120px | 4 | 6 | 7 |
+| home | 200px | 2 | 3 | 4 |
+
+**Min**: 3 items, **Max**: 50 items. This ensures SC-001 (no scrollbar) at all viewport heights ≥ 768px.
+
+**Item heights determined by layout analysis**:
+- CRUD list items (ion-item-sliding): ~80px (2-line label with icon + edit button)
+- Comanda items (ion-item with 4 lines): ~120px
+- Kitchen cards (comanda-card in grid): ~200px minimum estimate
+
+**Constants used**:
+- `HEADER_HEIGHT` = 56px (ion-header default)
+- `FOOTER_HEIGHT` = 52px (ion-footer + pagination bar padding)
+- `CONTAINER_PADDING` = 32px (16px top + 16px bottom container padding)
 
 ---
 

@@ -1,6 +1,6 @@
 import './ListProdutoPage.css'
 import { createHeader } from '../../shared/Header.js';
-import { logout, createEmptyState, focusFirstElement, showToast, perfMeasureAsync, createPaginationState, getPageSize, renderPaginationBar, createListSkeleton } from '../../shared/util.js';
+import { logout, createEmptyState, focusFirstElement, showToast, perfMeasureAsync, createPaginationState, calculateResponsivePageSize, renderPaginationBar, createListSkeleton } from '../../shared/util.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
 
@@ -11,7 +11,7 @@ class ListProdutoPage extends HTMLElement {
     super();
     this.items = [];
     this.isLoading = false;
-    this.pagination = createPaginationState(getPageSize('produto'));
+    this.pagination = createPaginationState(calculateResponsivePageSize('produto'));
   }
 
   async connectedCallback() {
@@ -24,8 +24,10 @@ class ListProdutoPage extends HTMLElement {
           <ion-refresher-content></ion-refresher-content>
         </ion-refresher>
         <div class="list-produto-container"></div>
-        <div class="pagination-bar-container"></div>
       </ion-content>
+      <ion-footer>
+        <div class="pagination-bar-container"></div>
+      </ion-footer>
     `;
 
     this.querySelector('#logout-btn').addEventListener('click', logout);

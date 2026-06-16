@@ -43,53 +43,87 @@
 3. **Adapt HomePage** for card grid pagination (different layout but same pagination logic)
 4. **Verify** no scrollbar at 768px viewport height, all controls functional
 
-## Key implementation pattern
+## Key implementation patterns
+
+### Pattern 1: Pagination state management
 
 ```js
-// In connectedCallback (replace ionInfinite with pagination buttons):
-this.currentPage = 1;
-this.take = 10; // per-page constant
-this.totalRecords = 0;
-this.totalPages = 0;
+import { createPaginationState, calculateResponsivePageSize, renderPaginationBar, createListSkeleton } from '../../shared/util.js';
 
+// In constructor:
+this.pagination = createPaginationState(calculateResponsivePageSize('produto'));
+```
+
+### Pattern 2: Page loading with responsive take
+
+```js
 async loadPage(page) {
+  if (this.isLoading) return;
   this.isLoading = true;
-  this.renderSkeleton(); // show skeleton placeholders
+  const container = this.querySelector('.list-produto-container');
+  const paginationContainer = this.querySelector('.pagination-bar-container');
+
   try {
-    const skip = (page - 1) * this.take;
-    const response = await api.getProdutos(skip, this.take);
+    const skip = (page - 1) * this.pagination.take;
+    container.innerHTML = createListSkeleton(5);
+    paginationContainer.innerHTML = '';
+
+    const response = await api.getProdutos(skip, this.pagination.take);
     this.items = response.data || response;
-    this.totalRecords = response.total != null ? response.total : this.items.length;
-    this.currentPage = page;
-    this.totalPages = Math.ceil(this.totalRecords / this.take) || 1;
+    const total = response.total != null ? response.total : this.items.length;
+    this.pagination.update(total);
+    this.pagination.currentPage = page;
     this.renderItems();
     this.renderPaginationControls();
-  } catch (err) {
-    showToast('Erro ao carregar página. Tente novamente.');
-    this.renderItems(); // restore previous content
+  } catch (error) {
+    showToast('Erro ao carregar página. Tente novamente.', 'error');
+    this.renderItems();
+    this.renderPaginationControls();
   } finally {
     this.isLoading = false;
   }
 }
+```
 
+### Pattern 3: Responsive page size calculation
+
+```js
+// In shared/util.js:
+const HEADER_HEIGHT = 56;
+const FOOTER_HEIGHT = 52;
+const CONTAINER_PADDING = 32;
+
+export const PAGE_LAYOUT = {
+  produto:  { itemHeight: 80 },
+  usuario:  { itemHeight: 80 },
+  mesa:     { itemHeight: 80 },
+  comanda:  { itemHeight: 120 },
+  home:     { itemHeight: 200 },
+};
+
+export function calculateResponsivePageSize(pageName) {
+  const layout = PAGE_LAYOUT[pageName] || PAGE_LAYOUT.produto;
+  const viewportHeight = window.innerHeight;
+  const contentHeight = viewportHeight - HEADER_HEIGHT - FOOTER_HEIGHT;
+  const availableHeight = contentHeight - CONTAINER_PADDING;
+  const count = Math.floor(availableHeight / layout.itemHeight);
+  return Math.max(3, Math.min(count, 50));
+}
+```
+
+### Pattern 4: Pagination controls (sticky footer bar)
+
+```js
 renderPaginationControls() {
-  // Sticky bottom bar with Anterior/Page X of Y/Próxima/Total
-  const controlsHtml = `
-    <div class="pagination-bar">
-      <ion-button ${this.currentPage === 1 ? 'disabled' : ''}
-        onclick="this.closest('ion-content').hostElement.prevPage()">
-        <ion-icon name="chevron-back-outline"></ion-icon>
-        Anterior
-      </ion-button>
-      <span class="page-indicator">Página ${this.currentPage} de ${this.totalPages}</span>
-      <ion-button ${this.currentPage === this.totalPages ? 'disabled' : ''}
-        onclick="this.closest('ion-content').hostElement.nextPage()">
-        Próxima
-        <ion-icon name="chevron-forward-outline"></ion-icon>
-      </ion-button>
-      <span class="total-counter">Total: ${this.totalRecords} registro(s)</span>
-    </div>
-  `;
+  const container = this.querySelector('.pagination-bar-container');
+  if (this.items.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+  container.innerHTML = renderPaginationBar(this.pagination);
+
+  container.querySelector('[data-action="prev-page"]')?.addEventListener('click', () => this.prevPage());
+  container.querySelector('[data-action="next-page"]')?.addEventListener('click', () => this.nextPage());
 }
 ```
 

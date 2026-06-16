@@ -58,10 +58,10 @@ description: "Task list for Controle de Paginação para Listas feature"
 
 ### Tests for User Story 1 (RED phase — MUST fail before implementation) ⚠️
 
-- [ ] T005a [P] [US1] Write failing test: pagination controls render on ListProdutoPage in frontend/src/pages/produto/ListProdutoPage.spec.js
-- [ ] T005b [P] [US1] Write failing test: clicking "Próxima" fetches next page on ListUsuarioPage in frontend/src/pages/usuario/ListUsuarioPage.spec.js
-- [ ] T005c [P] [US1] Write failing test: "Anterior" disabled on first page, "Próxima" disabled on last page on ListMesaPage in frontend/src/pages/mesa/ListMesaPage.spec.js
-- [ ] T005d [P] [US1] Write failing test: skeleton loader shows during page transition on ListComandaPage in frontend/src/pages/comanda/ListComandaPage.spec.js
+- [X] T005a [P] [US1] Write failing test: pagination controls render on ListProdutoPage in frontend/src/pages/produto/ListProdutoPage.spec.js
+- [X] T005b [P] [US1] Write failing test: clicking "Próxima" fetches next page on ListUsuarioPage in frontend/src/pages/usuario/ListUsuarioPage.spec.js
+- [X] T005c [P] [US1] Write failing test: "Anterior" disabled on first page, "Próxima" disabled on last page on ListMesaPage in frontend/src/pages/mesa/ListMesaPage.spec.js
+- [X] T005d [P] [US1] Write failing test: skeleton loader shows during page transition on ListComandaPage in frontend/src/pages/comanda/ListComandaPage.spec.js
 
 **Checkpoint**: Tests written and failing (RED) — proceed to implementation
 
@@ -74,7 +74,7 @@ description: "Task list for Controle de Paginação para Listas feature"
 - [X] T010 [US1] Add skeleton loader rendering during page transitions to all 4 CRUD list pages (match existing ITEM_HEIGHT=72px row shape) — via shared `createListSkeleton()` in loadPage()
 - [X] T011 [US1] Add total record count display ("Total: N registro(s)") to all 4 CRUD list pages (US3 integration) — via shared `renderPaginationBar()`
 - [X] T012 [US1] Verify no vertical scrollbar on any CRUD list page at viewport height >=768px — added `ion-content-no-scroll` CSS class with `--overflow: hidden`
-- [ ] T013 [US1] Update existing frontend tests to reflect pagination controls instead of infinite scroll — frontend/src/pages/*/*.spec.js
+- [X] T013 [US1] Update existing frontend tests to reflect pagination controls instead of infinite scroll — frontend/src/pages/*/*.spec.js
 
 **Checkpoint**: All 4 CRUD list pages fully paginated, independently testable
 
@@ -88,8 +88,8 @@ description: "Task list for Controle de Paginação para Listas feature"
 
 ### Tests for User Story 2 (RED phase — MUST fail before implementation) ⚠️
 
-- [ ] T013a [P] [US2] Write failing test: pagination controls render on HomePage in frontend/src/pages/home/HomePage.spec.js
-- [ ] T013b [P] [US2] Write failing test: kitchen card grid scrolls internally when content overflows in frontend/src/pages/home/HomePage.spec.js
+- [X] T013a [P] [US2] Write failing test: pagination controls render on HomePage in frontend/src/pages/home/HomePage.spec.js
+- [X] T013b [P] [US2] Write failing test: kitchen card grid scrolls internally when content overflows in frontend/src/pages/home/HomePage.spec.js
 
 **Checkpoint**: Tests written and failing (RED) — proceed to implementation
 
@@ -111,15 +111,26 @@ description: "Task list for Controle de Paginação para Listas feature"
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T021 [P] Add empty state handling — hide pagination controls and show "Nenhum registro encontrado" when list is empty (FR-009) across all 5 pages
-- [ ] T022 [P] Add single-page state handling — hide navigation buttons but keep total count when only 1 page (FR-011) across all 5 pages
-- [ ] T023 [P] Add error handling — show toast on pagination failure, restore previous page content — across all 5 pages
-- [ ] T024 [P] Verify pagination resets to page 1 when navigating away and back (FR-012) across all 5 pages
-- [ ] T025 [P] Add loading state guard — disable pagination buttons during active transition to prevent double-fetch on all 5 pages
-- [ ] T026 Clean up unused virtual-scroll.js imports and ion-infinite-scroll references from all modified pages — frontend/src/pages/*/
-- [ ] T027 Remove unused virtual-scroll.js shared module if no remaining consumers — frontend/src/shared/virtual-scroll.js
-- [ ] T028 Run `npm test` and ensure all existing + updated frontend tests pass — frontend/
+- [X] T021 [P] Add empty state handling — hide pagination controls and show "Nenhum registro encontrado" when list is empty (FR-009) across all 5 pages
+- [X] T022 [P] Add single-page state handling — hide navigation buttons but keep total count when only 1 page (FR-011) across all 5 pages
+- [X] T023 [P] Add error handling — show toast on pagination failure, restore previous page content — across all 5 pages
+- [X] T024 [P] Verify pagination resets to page 1 when navigating away and back (FR-012) across all 5 pages
+- [X] T025 [P] Add loading state guard — disable pagination buttons during active transition to prevent double-fetch on all 5 pages
+- [X] T026 Clean up unused virtual-scroll.js imports and ion-infinite-scroll references from all modified pages — frontend/src/pages/*/
+- [X] T027 Remove unused virtual-scroll.js shared module if no remaining consumers — frontend/src/shared/virtual-scroll.js
+- [X] T028 Run `npm test` and ensure all existing + updated frontend tests pass — frontend/
 - [ ] T029 [P] Verify page transition time is <2 seconds (SC-002) under normal network conditions on all 5 pages — manual test with browser DevTools Network tab
+
+---
+
+## Phase 6: Responsive Page Size (Added 2026-06-16)
+
+**Purpose**: Replace fixed PAGE_SIZES with dynamic calculation based on viewport height (FR-013/FR-014). Bug found during testing: fixed values caused overflow below footer.
+
+- [X] T030 Add `PAGE_LAYOUT` constant and `calculateResponsivePageSize(pageName)` to `frontend/src/shared/util.js`
+- [X] T031 [P] Update all 5 list pages (produto, usuario, mesa, comanda, home) to use `calculateResponsivePageSize` instead of `getPageSize` — `frontend/src/pages/*/`
+- [X] T032 [P] Update all 5 test spec files with mock for `calculateResponsivePageSize` — `frontend/src/pages/*/*.spec.js`
+- [X] T033 Run `npm test` — verify 216 tests pass (no regressions) — `frontend/`
 
 ---
 
@@ -205,4 +216,4 @@ With multiple developers:
 - Each user story should be independently completable and testable
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
-- Total: 33 tasks (2 Setup + 3 Foundational + 4 test-RED[US1] + 8 US1 impl + 2 test-RED[US2] + 7 US2 impl + 7 Polish)
+- Total: 37 tasks (2 Setup + 3 Foundational + 4 test-RED[US1] + 8 US1 impl + 2 test-RED[US2] + 7 US2 impl + 7 Polish + 4 Phase 6)

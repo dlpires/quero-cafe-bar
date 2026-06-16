@@ -183,6 +183,27 @@ export function getPageSize(pageName) {
   return PAGE_SIZES[pageName] || 10;
 }
 
+const HEADER_HEIGHT = 56;
+const FOOTER_HEIGHT = 52;
+const CONTAINER_PADDING = 32;
+
+export const PAGE_LAYOUT = {
+  produto:  { itemHeight: 80 },
+  usuario:  { itemHeight: 80 },
+  mesa:     { itemHeight: 80 },
+  comanda:  { itemHeight: 120 },
+  home:     { itemHeight: 200 },
+};
+
+export function calculateResponsivePageSize(pageName) {
+  const layout = PAGE_LAYOUT[pageName] || PAGE_LAYOUT.produto;
+  const viewportHeight = window.innerHeight;
+  const contentHeight = viewportHeight - HEADER_HEIGHT - FOOTER_HEIGHT;
+  const availableHeight = contentHeight - CONTAINER_PADDING;
+  const count = Math.floor(availableHeight / layout.itemHeight);
+  return Math.max(3, Math.min(count, 50));
+}
+
 export function createPaginationState(take) {
   return {
     currentPage: 1,
@@ -219,7 +240,7 @@ export function renderPaginationBar(pagination) {
     <div class="pagination-bar" style="
       display: flex; align-items: center; justify-content: center; gap: 12px;
       padding: 8px 16px; background: var(--ion-background-color);
-      border-top: 1px solid var(--ion-border-color, #e0e0e0); position: sticky; bottom: 0; z-index: 10;
+      border-top: 1px solid var(--ion-border-color, #e0e0e0);
     ">
       ${singlePage ? '' : `
         <ion-button fill="clear" size="small" ${pagination.currentPage <= 1 ? 'disabled' : ''}
