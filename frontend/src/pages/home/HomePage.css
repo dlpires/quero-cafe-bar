@@ -2,6 +2,15 @@
   padding: 16px;
   padding-left: max(16px, env(safe-area-inset-left));
   padding-right: max(16px, env(safe-area-inset-right));
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.comandas-grid-container {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .comandas-grid {
@@ -121,4 +130,11 @@
 .skeleton-end {
   width: 80px;
   height: 24px;
+}
+
+.pagination-bar-container {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: var(--ion-background-color);
 }

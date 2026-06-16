@@ -1,18 +1,17 @@
 import './ListMesaPage.css'
 import { createHeader } from '../../shared/Header.js';
-import { logout, createEmptyState, focusFirstElement, showToast, perfMeasureAsync } from '../../shared/util.js';
+import { logout, createEmptyState, focusFirstElement, showToast, perfMeasureAsync, createPaginationState, getPageSize, renderPaginationBar, createListSkeleton } from '../../shared/util.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
 
 const pageName = 'Mesas';
-const PAGE_SIZE = 20;
 
 class ListMesaPage extends HTMLElement {
   constructor() {
     super();
     this.items = [];
     this.isLoading = false;
-    this.hasMore = true;
+    this.pagination = createPaginationState(getPageSize('mesa'));
   }
 
   async connectedCallback() {
@@ -20,14 +19,12 @@ class ListMesaPage extends HTMLElement {
     this.classList.add('ion-page');
     this.innerHTML = `
       ${createHeader(pageName)}
-      <ion-content>
+      <ion-content class="ion-content-no-scroll">
         <ion-refresher slot="fixed">
           <ion-refresher-content></ion-refresher-content>
         </ion-refresher>
         <div class="list-mesa-container"></div>
-        <ion-infinite-scroll>
-          <ion-infinite-scroll-content></ion-infinite-scroll-content>
-        </ion-infinite-scroll>
+        <div class="pagination-bar-container"></div>
       </ion-content>
     `;
 
@@ -36,15 +33,11 @@ class ListMesaPage extends HTMLElement {
     this.renderFabButton();
 
     const content = this.querySelector('ion-content');
-    content.addEventListener('ionInfinite', async (ev) => {
-      await this.loadMore(ev);
-    });
-
     content.addEventListener('ionRefresh', async (ev) => {
       await this.refreshData(ev);
     });
 
-    await this.fetchInitialData();
+    await this.loadPage(1);
 
     window.addEventListener('popstate', () => this.onRouteChange());
     this._routeListener = () => this.onRouteChange();
@@ -59,99 +52,59 @@ class ListMesaPage extends HTMLElement {
 
   async onRouteChange() {
     if (window.location.pathname === '/mesas') {
-      await this.refreshData();
+      this.pagination.reset();
+      await this.loadPage(1);
       focusFirstElement(this);
     }
   }
 
-  async fetchInitialData() {
+  async loadPage(page) {
+    if (this.isLoading) return;
+    this.isLoading = true;
     const container = this.querySelector('.list-mesa-container');
-    this.renderSkeleton(container);
-    this.items = [];
-    this.hasMore = true;
+    const paginationContainer = this.querySelector('.pagination-bar-container');
 
     try {
-      const response = await perfMeasureAsync('mesa:fetchInitial', () => api.getMesas(0, PAGE_SIZE));
+      const skip = (page - 1) * this.pagination.take;
+      container.innerHTML = createListSkeleton(4);
+      paginationContainer.innerHTML = '';
+
+      const response = await perfMeasureAsync('mesa:loadPage', () => api.getMesas(skip, this.pagination.take));
       this.items = response.data || response;
       const total = response.total != null ? response.total : this.items.length;
-      this.hasMore = this.items.length < total;
+      this.pagination.update(total);
+      this.pagination.currentPage = page;
       this.renderItems();
-      this.updateInfiniteScroll();
+      this.renderPaginationControls();
     } catch (error) {
-      console.error('Erro ao buscar mesas:', error);
-      container.innerHTML = '';
-      const alert = document.createElement('ion-alert');
-      alert.header = 'Erro';
-      alert.message = 'Não foi possível carregar as mesas.';
-      alert.buttons = ['OK'];
-      document.body.appendChild(alert);
-      await alert.present();
-    }
-  }
-
-  async loadMore(event) {
-    if (this.isLoading || !this.hasMore) {
-      if (event) event.target.complete();
-      return;
-    }
-    this.isLoading = true;
-    try {
-      const response = await perfMeasureAsync('mesa:loadMore', () => api.getMesas(this.items.length, PAGE_SIZE));
-      const newItems = response.data || response;
-      const total = response.total != null ? response.total : this.items.length + newItems.length;
-      this.items.push(...newItems);
-      this.hasMore = this.items.length < total;
+      console.error('Erro ao carregar mesas:', error);
+      await showToast('Erro ao carregar página. Tente novamente.', 'error', 3000);
       this.renderItems();
-      this.updateInfiniteScroll();
-    } catch (error) {
-      console.error('Erro ao carregar mais mesas:', error);
-      await showToast('Erro ao carregar mais mesas. Verifique sua conexão.', 'error', 3000);
+      this.renderPaginationControls();
     } finally {
       this.isLoading = false;
-      if (event) event.target.complete();
     }
   }
+
+  nextPage() { this.loadPage(this.pagination.currentPage + 1); }
+  prevPage() { this.loadPage(this.pagination.currentPage - 1); }
 
   async refreshData(event) {
-    this.items = [];
-    this.hasMore = true;
-
-    try {
-      const response = await perfMeasureAsync('mesa:refresh', () => api.getMesas(0, PAGE_SIZE));
-      this.items = response.data || response;
-      const total = response.total != null ? response.total : this.items.length;
-      this.hasMore = this.items.length < total;
-      this.renderItems();
-      this.updateInfiniteScroll();
-    } catch (error) {
-      console.error('Erro ao atualizar mesas:', error);
-      await showToast('Erro ao atualizar. Tente novamente.', 'error', 3000);
-      this.renderItems();
-    } finally {
-      if (event) event.target.complete();
-    }
+    this.pagination.reset();
+    await this.loadPage(1);
+    if (event) event.target.complete();
   }
 
-  updateInfiniteScroll() {
-    const scroll = this.querySelector('ion-infinite-scroll');
-    if (scroll) {
-      scroll.disabled = !this.hasMore;
+  renderPaginationControls() {
+    const container = this.querySelector('.pagination-bar-container');
+    if (this.items.length === 0) {
+      container.innerHTML = '';
+      return;
     }
-  }
+    container.innerHTML = renderPaginationBar(this.pagination);
 
-  renderSkeleton(container) {
-    container.innerHTML = `
-      <ion-list>
-        ${[1,2,3].map(() => `
-          <ion-item>
-            <ion-label>
-              <h3><ion-skeleton-text animated style="width: 50%"></ion-skeleton-text></h3>
-              <p><ion-skeleton-text animated style="width: 80%"></ion-skeleton-text></p>
-            </ion-label>
-          </ion-item>
-        `).join('')}
-      </ion-list>
-    `;
+    container.querySelector('[data-action="prev-page"]')?.addEventListener('click', () => this.prevPage());
+    container.querySelector('[data-action="next-page"]')?.addEventListener('click', () => this.nextPage());
   }
 
   renderFabButton() {
@@ -238,7 +191,8 @@ class ListMesaPage extends HTMLElement {
               try {
                 await api.deleteMesa(id);
                 await showToast('Mesa excluída com sucesso!', 'success', 2000);
-                await this.refreshData();
+                this.pagination.reset();
+                await this.loadPage(1);
               } catch (error) {
                 console.error('Erro ao excluir:', error);
                 await showToast(error.message, 'error', 5000);

@@ -9,11 +9,6 @@
   border-radius: 8px;
 }
 
-.virtual-scroll-viewport {
-  position: relative;
-  overflow: hidden;
-}
-
 .skeleton-w-50 {
   width: 50%;
 }
@@ -29,4 +24,15 @@ h3 {
   font-size: 0.9rem;
   font-weight: 500;
   margin: 0;
+}
+
+ion-content.ion-content-no-scroll {
+  --overflow: hidden;
+}
+
+.pagination-bar-container {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: var(--ion-background-color);
 }

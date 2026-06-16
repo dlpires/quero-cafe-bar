@@ -92,7 +92,7 @@ Commands configured in `.opencode/commands/`:
 | Command | Function | Agent | Model |
 |---------|----------|-------|-------|
 | `analyze-coverage` | Analisa relatório de cobertura e sugere novos testes | plan | google/gemma-4-31b-it |
-| `review-changes` | Revisa mudanças recentes do git e sugere melhorias | — | openrouter/deepseek/deepseek-v4-pro |
+| `review-changes` | Revisa mudanças recentes do git e sugere melhorias | — | opencode/big-pickle |
 | `run-tests` | Executa testes, analisa falhas e fornece correções | build | opencode/deepseek-v4-flash-free |
 | `update-docs` | Sincroniza AGENTS.md e README.md com estado atual do projeto | build | opencode/deepseek-v4-flash-free |
 
@@ -158,6 +158,6 @@ cd frontend && npm test
 - Java JDK 17+ + Android Studio (for mobile builds)
 
 <!-- SPECKIT START -->
-For additional context about the current feature (Redesign dos Cartões da Visão Cozinha), read
-specs/009-home-card-redesign/plan.md
+For additional context about the current feature (Controle de Paginação para Listas), read
+specs/010-list-pagination/plan.md
 <!-- SPECKIT END -->

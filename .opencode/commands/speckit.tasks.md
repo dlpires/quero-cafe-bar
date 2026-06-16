@@ -9,7 +9,7 @@ handoffs:
     agent: speckit.implement
     prompt: Start the implementation in phases
     send: true
-model: openrouter/deepseek/deepseek-v4-pro
+model: opencode/big-pickle
 ---
 
 ## User Input
