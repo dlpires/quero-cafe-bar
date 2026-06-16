@@ -1,18 +1,17 @@
 import './ListComandaPage.css'
 import { createHeader } from '../../shared/Header.js';
-import { logout, createEmptyState, focusFirstElement, showToast, perfMeasureAsync } from '../../shared/util.js';
+import { logout, createEmptyState, focusFirstElement, showToast, perfMeasureAsync, createPaginationState, calculateResponsivePageSize, renderPaginationBar, createListSkeleton } from '../../shared/util.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
 
 const pageName = 'Comandas';
-const PAGE_SIZE = 20;
 
 class ListComandaPage extends HTMLElement {
   constructor() {
     super();
     this.items = [];
     this.isLoading = false;
-    this.hasMore = true;
+    this.pagination = createPaginationState(calculateResponsivePageSize('comanda'));
     this.comandasWithDetails = [];
   }
 
@@ -21,15 +20,15 @@ class ListComandaPage extends HTMLElement {
     this.classList.add('ion-page');
     this.innerHTML = `
       ${createHeader(pageName)}
-      <ion-content>
+      <ion-content class="ion-content-no-scroll">
         <ion-refresher slot="fixed">
           <ion-refresher-content></ion-refresher-content>
         </ion-refresher>
         <div class="list-comanda-container"></div>
-        <ion-infinite-scroll>
-          <ion-infinite-scroll-content></ion-infinite-scroll-content>
-        </ion-infinite-scroll>
       </ion-content>
+      <ion-footer>
+        <div class="pagination-bar-container"></div>
+      </ion-footer>
     `;
 
     this.querySelector('#logout-btn').addEventListener('click', logout);
@@ -37,15 +36,11 @@ class ListComandaPage extends HTMLElement {
     this.renderFabButton();
 
     const content = this.querySelector('ion-content');
-    content.addEventListener('ionInfinite', async (ev) => {
-      await this.loadMore(ev);
-    });
-
     content.addEventListener('ionRefresh', async (ev) => {
       await this.refreshData(ev);
     });
 
-    await this.fetchInitialData();
+    await this.loadPage(1);
 
     window.addEventListener('popstate', () => this.onRouteChange());
     this._routeListener = () => this.onRouteChange();
@@ -60,81 +55,38 @@ class ListComandaPage extends HTMLElement {
 
   async onRouteChange() {
     if (window.location.pathname === '/comandas') {
-      await this.refreshData();
+      this.pagination.reset();
+      await this.loadPage(1);
       focusFirstElement(this);
     }
   }
 
-  async fetchInitialData() {
+  async loadPage(page) {
+    if (this.isLoading) return;
+    this.isLoading = true;
     const container = this.querySelector('.list-comanda-container');
-    this.renderSkeleton(container);
-    this.items = [];
-    this.hasMore = true;
-    this.comandasWithDetails = [];
+    const paginationContainer = this.querySelector('.pagination-bar-container');
 
     try {
-      const response = await perfMeasureAsync('comanda:fetchInitial', () => api.getComandas(0, PAGE_SIZE));
+      const skip = (page - 1) * this.pagination.take;
+      container.innerHTML = createListSkeleton(4);
+      paginationContainer.innerHTML = '';
+
+      const response = await perfMeasureAsync('comanda:loadPage', () => api.getComandas(skip, this.pagination.take));
       this.items = response.data || response;
       const total = response.total != null ? response.total : this.items.length;
-      this.hasMore = this.items.length < total;
+      this.pagination.update(total);
+      this.pagination.currentPage = page;
       await this.enrichComandas();
       this.renderItems();
-      this.updateInfiniteScroll();
+      this.renderPaginationControls();
     } catch (error) {
-      console.error('Erro ao buscar comandas:', error);
-      container.innerHTML = '';
-      const alert = document.createElement('ion-alert');
-      alert.header = 'Erro';
-      alert.message = 'Não foi possível carregar as comandas. Tente novamente mais tarde.';
-      alert.buttons = ['OK'];
-      document.body.appendChild(alert);
-      await alert.present();
-    }
-  }
-
-  async loadMore(event) {
-    if (this.isLoading || !this.hasMore) {
-      if (event) event.target.complete();
-      return;
-    }
-    this.isLoading = true;
-    try {
-      const response = await perfMeasureAsync('comanda:loadMore', () => api.getComandas(this.items.length, PAGE_SIZE));
-      const newItems = response.data || response;
-      const total = response.total != null ? response.total : this.items.length + newItems.length;
-      this.items.push(...newItems);
-      this.hasMore = this.items.length < total;
-      await this.enrichComandas();
+      console.error('Erro ao carregar comandas:', error);
+      await showToast('Erro ao carregar página. Tente novamente.', 'error', 3000);
       this.renderItems();
-      this.updateInfiniteScroll();
-    } catch (error) {
-      console.error('Erro ao carregar mais comandas:', error);
-      await showToast('Erro ao carregar mais comandas. Verifique sua conexão.', 'error', 3000);
+      this.renderPaginationControls();
     } finally {
       this.isLoading = false;
-      if (event) event.target.complete();
-    }
-  }
-
-  async refreshData(event) {
-    this.items = [];
-    this.hasMore = true;
-    this.comandasWithDetails = [];
-
-    try {
-      const response = await perfMeasureAsync('comanda:refresh', () => api.getComandas(0, PAGE_SIZE));
-      this.items = response.data || response;
-      const total = response.total != null ? response.total : this.items.length;
-      this.hasMore = this.items.length < total;
-      await this.enrichComandas();
-      this.renderItems();
-      this.updateInfiniteScroll();
-    } catch (error) {
-      console.error('Erro ao atualizar comandas:', error);
-      await showToast('Erro ao atualizar. Tente novamente.', 'error', 3000);
-      this.renderItems();
-    } finally {
-      if (event) event.target.complete();
     }
   }
 
@@ -155,26 +107,25 @@ class ListComandaPage extends HTMLElement {
     );
   }
 
-  updateInfiniteScroll() {
-    const scroll = this.querySelector('ion-infinite-scroll');
-    if (scroll) {
-      scroll.disabled = !this.hasMore;
-    }
+  nextPage() { this.loadPage(this.pagination.currentPage + 1); }
+  prevPage() { this.loadPage(this.pagination.currentPage - 1); }
+
+  async refreshData(event) {
+    this.pagination.reset();
+    await this.loadPage(1);
+    if (event) event.target.complete();
   }
 
-  renderSkeleton(container) {
-    container.innerHTML = `
-      <ion-list>
-        ${[1,2,3].map(() => `
-          <ion-item>
-            <ion-label>
-              <h3><ion-skeleton-text animated style="width: 50%"></ion-skeleton-text></h3>
-              <p><ion-skeleton-text animated style="width: 80%"></ion-skeleton-text></p>
-            </ion-label>
-          </ion-item>
-        `).join('')}
-      </ion-list>
-    `;
+  renderPaginationControls() {
+    const container = this.querySelector('.pagination-bar-container');
+    if (this.comandasWithDetails.length === 0) {
+      container.innerHTML = '';
+      return;
+    }
+    container.innerHTML = renderPaginationBar(this.pagination);
+
+    container.querySelector('[data-action="prev-page"]')?.addEventListener('click', () => this.prevPage());
+    container.querySelector('[data-action="next-page"]')?.addEventListener('click', () => this.nextPage());
   }
 
   renderFabButton() {
@@ -248,9 +199,7 @@ class ListComandaPage extends HTMLElement {
       </ion-item>
     `).join('');
 
-    container.innerHTML = `
-      <ion-list>${comandaItems}</ion-list>
-    `;
+    container.innerHTML = `<ion-list>${comandaItems}</ion-list>`;
 
     container.querySelectorAll('.btn-edit').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -274,7 +223,8 @@ class ListComandaPage extends HTMLElement {
               try {
                 await api.deleteComanda(id);
                 await showToast('Comanda excluída com sucesso!', 'success', 2000);
-                await this.refreshData();
+                this.pagination.reset();
+                await this.loadPage(1);
               } catch (error) {
                 console.error('Erro ao excluir:', error);
                 await showToast(error.message, 'error', 5000);

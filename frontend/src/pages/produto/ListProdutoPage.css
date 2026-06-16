@@ -9,11 +9,6 @@
   border-radius: 8px;
 }
 
-.virtual-scroll-viewport {
-  position: relative;
-  overflow: hidden;
-}
-
 .skeleton-w-50 {
   width: 50%;
 }
@@ -34,4 +29,12 @@ h3 {
 ion-input,
 ion-select {
   font-size: 16px;
+}
+
+ion-content.ion-content-no-scroll {
+  --overflow: hidden;
+}
+
+.pagination-bar-container {
+  background: var(--ion-background-color);
 }

@@ -1,25 +1,37 @@
 import './HomePage.css'
 import { createHeader } from '../../shared/Header.js';
-import { logout, createEmptyState, focusFirstElement, showToast } from '../../shared/util.js';
+import { logout, createEmptyState, focusFirstElement, showToast, createPaginationState, calculateResponsivePageSize, renderPaginationBar, createCardSkeleton } from '../../shared/util.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
 
 const pageName = 'Cozinha';
 
 class HomePage extends HTMLElement {
+  constructor() {
+    super();
+    this.comandas = [];
+    this.isLoading = false;
+    this.pagination = createPaginationState(calculateResponsivePageSize('home'));
+  }
+
   async connectedCallback() {
     if (!requireAuth()) return;
     this.classList.add('ion-page');
     this.innerHTML = `
       ${createHeader(pageName)}
       <ion-content>
-        <div class="home-container"></div>
+        <div class="home-container">
+          <div class="comandas-grid-container"></div>
+        </div>
       </ion-content>
+      <ion-footer>
+        <div class="pagination-bar-container"></div>
+      </ion-footer>
     `;
 
     this.querySelector('#logout-btn').addEventListener('click', logout);
     focusFirstElement(this);
-    await this.fetchComandas();
+    await this.loadPage(1);
 
     window.addEventListener('popstate', () => this.onRouteChange());
     this._routeListener = () => this.onRouteChange();
@@ -34,59 +46,65 @@ class HomePage extends HTMLElement {
 
   async onRouteChange() {
     if (window.location.pathname === '/home') {
-      await this.fetchComandas();
+      this.pagination.reset();
+      await this.loadPage(1);
       focusFirstElement(this);
     }
   }
 
-  async fetchComandas() {
-    const container = this.querySelector('.home-container');
-    this.renderSkeleton(container);
+  async loadPage(page) {
+    if (this.isLoading) return;
+    this.isLoading = true;
+    const gridContainer = this.querySelector('.comandas-grid-container');
+    const paginationContainer = this.querySelector('.pagination-bar-container');
 
     try {
-      const response = await api.getComandas();
-      const comandas = response.data || response;
-      this.renderComandas(comandas);
+      const skip = (page - 1) * this.pagination.take;
+      gridContainer.innerHTML = createCardSkeleton(4);
+      paginationContainer.innerHTML = '';
+
+      const response = await api.getComandas(skip, this.pagination.take);
+      this.comandas = response.data || response;
+      const total = response.total != null ? response.total : this.comandas.length;
+      this.pagination.update(total);
+      this.pagination.currentPage = page;
+      this.renderComandas();
+      this.renderPaginationControls();
+      gridContainer.scrollTop = 0;
     } catch (error) {
       console.error('Erro ao buscar comandas:', error);
-      container.innerHTML = '';
+      gridContainer.innerHTML = '';
       const alert = document.createElement('ion-alert');
       alert.header = 'Erro';
       alert.message = 'Não foi possível carregar os pedidos. Tente novamente.';
       alert.buttons = ['OK'];
       document.body.appendChild(alert);
       await alert.present();
+    } finally {
+      this.isLoading = false;
     }
   }
 
-  renderSkeleton(container) {
-    container.innerHTML = `
-      <div class="comandas-grid">
-        ${[1,2,3].map(() => `
-          <ion-card>
-            <ion-card-header>
-              <ion-card-title><ion-skeleton-text animated class="skeleton-w-70"></ion-skeleton-text></ion-card-title>
-            </ion-card-header>
-            <ion-card-content>
-              ${[1,2].map(() => `
-                <ion-item lines="none">
-                  <ion-label>
-                    <h3><ion-skeleton-text animated class="skeleton-w-60"></ion-skeleton-text></h3>
-                  </ion-label>
-                  <ion-skeleton-text animated class="skeleton-end" slot="end"></ion-skeleton-text>
-                </ion-item>
-              `).join('')}
-            </ion-card-content>
-          </ion-card>
-        `).join('')}
-      </div>
-    `;
+  nextPage() { this.loadPage(this.pagination.currentPage + 1); }
+  prevPage() { this.loadPage(this.pagination.currentPage - 1); }
+
+  renderPaginationControls() {
+    const container = this.querySelector('.pagination-bar-container');
+    if (this.comandas.length === 0) {
+      container.innerHTML = '';
+      return;
+    }
+    const barHtml = renderPaginationBar(this.pagination);
+    container.innerHTML = barHtml;
+
+    container.querySelector('[data-action="prev-page"]')?.addEventListener('click', () => this.prevPage());
+    container.querySelector('[data-action="next-page"]')?.addEventListener('click', () => this.nextPage());
   }
 
-  renderComandas(comandas) {
-    const container = this.querySelector('.home-container');
-    if (comandas.length === 0) {
-      createEmptyState(container, {
+  renderComandas() {
+    const gridContainer = this.querySelector('.comandas-grid-container');
+    if (this.comandas.length === 0) {
+      createEmptyState(gridContainer, {
         icon: 'restaurant-outline',
         message: 'Nenhum pedido pendente.',
         actionLabel: '',
@@ -95,13 +113,13 @@ class HomePage extends HTMLElement {
       return;
     }
 
-    container.innerHTML = `
+    gridContainer.innerHTML = `
       <div class="comandas-grid">
-        ${comandas.map(comanda => this.renderComandaCard(comanda)).join('')}
+        ${this.comandas.map(comanda => this.renderComandaCard(comanda)).join('')}
       </div>
     `;
 
-    container.querySelectorAll('.item-status-select').forEach(select => {
+    gridContainer.querySelectorAll('.item-status-select').forEach(select => {
       select.addEventListener('ionChange', async (e) => {
         const id_comanda = select.dataset.idComanda;
         const id_produto = select.dataset.idProduto;

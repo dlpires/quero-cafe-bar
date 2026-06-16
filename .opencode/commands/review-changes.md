@@ -1,6 +1,6 @@
 ---
 description: Revise alterações recentes
-model: openrouter/deepseek/deepseek-v4-pro
+model: opencode/big-pickle
 ---
 
 Commits recentes do git:

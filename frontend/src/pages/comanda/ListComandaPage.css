@@ -16,3 +16,11 @@
 .status-text-separator {
   margin-left: 12px;
 }
+
+ion-content.ion-content-no-scroll {
+  --overflow: hidden;
+}
+
+.pagination-bar-container {
+  background: var(--ion-background-color);
+}

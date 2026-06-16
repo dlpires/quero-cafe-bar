@@ -171,6 +171,140 @@ export async function perfMeasureAsync(name, fn) {
   }
 }
 
+const PAGE_SIZES = {
+  produto: 10,
+  usuario: 10,
+  mesa: 8,
+  comanda: 6,
+  home: 8,
+};
+
+export function getPageSize(pageName) {
+  return PAGE_SIZES[pageName] || 10;
+}
+
+const HEADER_HEIGHT = 56;
+const FOOTER_HEIGHT = 52;
+const CONTAINER_PADDING = 32;
+
+export const PAGE_LAYOUT = {
+  produto:  { itemHeight: 80 },
+  usuario:  { itemHeight: 80 },
+  mesa:     { itemHeight: 80 },
+  comanda:  { itemHeight: 120 },
+  home:     { itemHeight: 200 },
+};
+
+export function calculateResponsivePageSize(pageName) {
+  const layout = PAGE_LAYOUT[pageName] || PAGE_LAYOUT.produto;
+  const viewportHeight = window.innerHeight;
+  const contentHeight = viewportHeight - HEADER_HEIGHT - FOOTER_HEIGHT;
+  const availableHeight = contentHeight - CONTAINER_PADDING;
+  const count = Math.floor(availableHeight / layout.itemHeight);
+  return Math.max(3, Math.min(count, 50));
+}
+
+export function createPaginationState(take) {
+  return {
+    currentPage: 1,
+    totalPages: 0,
+    totalRecords: 0,
+    skip: 0,
+    take: take || 10,
+    next() {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage++;
+        this.skip = (this.currentPage - 1) * this.take;
+      }
+    },
+    prev() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+        this.skip = (this.currentPage - 1) * this.take;
+      }
+    },
+    reset() {
+      this.currentPage = 1;
+      this.skip = 0;
+    },
+    update(totalRecords) {
+      this.totalRecords = totalRecords;
+      this.totalPages = Math.ceil(totalRecords / this.take) || 1;
+    },
+  };
+}
+
+export function renderPaginationBar(pagination) {
+  const singlePage = pagination.totalPages <= 1;
+  return `
+    <div class="pagination-bar" style="
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      padding: 8px 16px; background: var(--ion-background-color);
+      border-top: 1px solid var(--ion-border-color, #e0e0e0);
+    ">
+      ${singlePage ? '' : `
+        <ion-button fill="clear" size="small" ${pagination.currentPage <= 1 ? 'disabled' : ''}
+          data-action="prev-page" aria-label="Página anterior">
+          <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
+          Anterior
+        </ion-button>
+        <span style="font-size: 14px; color: var(--ion-color-medium); min-width: 100px; text-align: center;">
+          Página ${pagination.currentPage} de ${pagination.totalPages}
+        </span>
+        <ion-button fill="clear" size="small" ${pagination.currentPage >= pagination.totalPages ? 'disabled' : ''}
+          data-action="next-page" aria-label="Próxima página">
+          Próxima
+          <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
+        </ion-button>
+      `}
+      <span style="font-size: 13px; color: var(--ion-color-medium);">
+        Total: ${pagination.totalRecords} registro(s)
+      </span>
+    </div>
+  `;
+}
+
+export function createListSkeleton(count = 5) {
+  return `
+    <ion-list>
+      ${Array.from({ length: count }, () => `
+        <ion-item>
+          <ion-label>
+            <h3><ion-skeleton-text animated style="width: 50%"></ion-skeleton-text></h3>
+            <p><ion-skeleton-text animated style="width: 80%"></ion-skeleton-text></p>
+          </ion-label>
+        </ion-item>
+      `).join('')}
+    </ion-list>
+  `;
+}
+
+export function createCardSkeleton(count = 4) {
+  return `
+    <div class="comandas-grid">
+      ${Array.from({ length: count }, () => `
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title><ion-skeleton-text animated style="width: 70%"></ion-skeleton-text></ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-item lines="none">
+              <ion-label>
+                <h3><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></h3>
+              </ion-label>
+            </ion-item>
+            <ion-item lines="none">
+              <ion-label>
+                <h3><ion-skeleton-text animated style="width: 40%"></ion-skeleton-text></h3>
+              </ion-label>
+            </ion-item>
+          </ion-card-content>
+        </ion-card>
+      `).join('')}
+    </div>
+  `;
+}
+
 export function logout() {
     localStorage.removeItem('token');
 
