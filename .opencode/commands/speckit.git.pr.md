@@ -12,7 +12,7 @@ Create a GitHub Pull Request for the current feature branch using the `gh` CLI. 
 ## User Input
 
 ```text
-
+$ARGUMENTS
 ```
 
 Supports:
