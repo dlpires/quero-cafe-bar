@@ -52,7 +52,7 @@ import { setupSessionSync } from './services/auth.js';
     const toPath = ev.detail?.to?.pathname;
     if (!toPath) return;
 
-    const authenticated = !!localStorage.getItem('token');
+    const authenticated = !!localStorage.getItem('logged_in');
 
     if (toPath !== '/login' && !authenticated) {
       await router.push('/login', 'root');

@@ -8,12 +8,16 @@ import {
   Delete,
   Query,
   Req,
+  Res,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
   ConflictException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import * as jwt from 'jsonwebtoken';
-import type { Request } from 'express';
-import { Public } from '../../common/guards/jwt-auth.guard';
+import type { Request, Response } from 'express';
+import { JwtAuthGuard, Public } from '../../common/guards/jwt-auth.guard';
 import { UsuarioService } from './usuario.service';
 import { PaginatedResponse } from '../produto/dto/paginated-response.dto';
 import { IUsuarioOutput } from './interfaces/usuario.interface';
@@ -61,7 +65,11 @@ export class UsuarioController {
   @Public()
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('login')
-  async login(@Body() loginDto: LoginUsuarioDto): Promise<{ token: string }> {
+  @HttpCode(HttpStatus.CREATED)
+  async login(
+    @Body() loginDto: LoginUsuarioDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<{ token: string }> {
     const user = await this.usuarioService.login(
       loginDto.username,
       loginDto.password,
@@ -75,7 +83,39 @@ export class UsuarioController {
       algorithm: 'HS256',
       expiresIn,
     } as jwt.SignOptions);
+
+    response.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 2 * 60 * 60 * 1000,
+      path: '/',
+    });
+
     return { token };
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  async getMe(@Req() request: Request) {
+    const decoded = (request as unknown as Record<string, unknown>)
+      .user as { id: number };
+    const user = await this.usuarioService.findOne(decoded.id);
+    return { id: user.id, usuario: user.usuario, perfil: user.perfil };
+  }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  logout(@Res({ passthrough: true }) response: Response) {
+    response.cookie('token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 0,
+      path: '/',
+    });
+    return { message: 'Logout realizado com sucesso' };
   }
 
   @Patch(':id')

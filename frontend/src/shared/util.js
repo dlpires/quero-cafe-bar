@@ -86,26 +86,31 @@ export function validatePositiveNumber(value, fieldName) {
     return null;
 }
 
-export function getLoggedUserId() {
-    const token = localStorage.getItem('token');
-    if (!token) return null;
+let _cachedUser = null;
+
+export async function getLoggedUser() {
+    if (_cachedUser) return _cachedUser;
+    const { api } = await import('../services/api.js');
     try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        return payload.id || null;
+        _cachedUser = await api.getMe();
+        return _cachedUser;
     } catch {
         return null;
     }
 }
 
-export function getLoggedUserProfile() {
-    const token = localStorage.getItem('token');
-    if (!token) return null;
-    try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        return payload.perfil ?? null;
-    } catch {
-        return null;
-    }
+export async function getLoggedUserId() {
+    const user = await getLoggedUser();
+    return user?.id ?? null;
+}
+
+export async function getLoggedUserProfile() {
+    const user = await getLoggedUser();
+    return user?.perfil ?? null;
+}
+
+export function clearLoggedUserCache() {
+    _cachedUser = null;
 }
 
 export function hasFormChanges(container, initialData) {
@@ -306,7 +311,11 @@ export function createCardSkeleton(count = 4) {
 }
 
 export function logout() {
-    localStorage.removeItem('token');
+    import('../services/api.js').then(({ api }) => {
+        api.logout().catch(() => {});
+    });
+    localStorage.removeItem('logged_in');
+    clearLoggedUserCache();
 
     const router = document.querySelector('ion-router');
     if (router) {

@@ -147,7 +147,7 @@ These implement a structured feature development workflow (constitution → spec
 # Backend — 22 suites, 149 tests passing
 cd backend && yarn test
 
-# Frontend — 20 suites, 216 tests passing
+# Frontend — 20 suites, 212 tests passing
 cd frontend && npm test
 ```
 
@@ -160,6 +160,6 @@ cd frontend && npm test
 - Java JDK 17+ + Android Studio (for mobile builds)
 
 <!-- SPECKIT START -->
-For additional context about the current feature (Correções de Segurança no Backend), read
-specs/011-seguranca-backend-correcoes/plan.md
+For additional context about the current feature (Correções de Segurança no Frontend), read
+specs/012-fix-frontend-xss-jwt/plan.md
 <!-- SPECKIT END -->

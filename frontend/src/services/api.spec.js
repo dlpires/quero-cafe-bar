@@ -29,48 +29,22 @@ global.fetch = jest.fn();
 import { api } from './api.js';
 
 describe('Api Service', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    localStorageMock.getItem.mockReturnValue(null);
-    api.token = null;
-  });
-
-  describe('Constructor e Token', () => {
-    it('deve inicializar com apiUrl do environment', () => {
-      expect(api.apiUrl).toBe('http://localhost:3001');
+    beforeEach(() => {
+        jest.clearAllMocks();
+        localStorageMock.getItem.mockReturnValue(null);
     });
 
-    it('deve carregar token do localStorage no constructor', () => {
-      localStorageMock.getItem.mockReturnValue('token-salvo');
+    describe('Constructor', () => {
+        it('deve inicializar com apiUrl do environment', () => {
+            expect(api.apiUrl).toBe('http://localhost:3001');
+        });
 
-      jest.resetModules();
-      const { api: newApi } = require('./api.js');
-      expect(localStorageMock.getItem).toHaveBeenCalledWith('token');
+        it('não deve ler localStorage no constructor', () => {
+            jest.resetModules();
+            require('./api.js');
+            expect(localStorageMock.getItem).not.toHaveBeenCalled();
+        });
     });
-  });
-
-  describe('setToken', () => {
-    it('deve definir token e salvar no localStorage quando token fornecido (Happy Path)', () => {
-      api.setToken('novo-token');
-      
-      expect(api.token).toBe('novo-token');
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('token', 'novo-token');
-    });
-
-    it('deve remover token do localStorage quando token for null (Edge Case)', () => {
-      api.setToken(null);
-      
-      expect(api.token).toBeNull();
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
-    });
-
-    it('deve remover token do localStorage quando token for undefined (Edge Case)', () => {
-      api.setToken(undefined);
-      
-      expect(api.token).toBeUndefined();
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
-    });
-  });
 
   describe('request', () => {
     it('deve fazer requisição GET com sucesso (Happy Path)', async () => {
@@ -89,32 +63,10 @@ describe('Api Service', () => {
           'Content-Type': 'application/json',
           'ngrok-skip-browser-warning': 'true',
         },
+        credentials: 'include',
         signal: expect.any(AbortSignal),
       });
       expect(result).toEqual({ id: 1, nome: 'Teste' });
-    });
-
-    it('deve incluir token no header quando autenticado (Happy Path)', async () => {
-      api.setToken('token-jwt');
-      
-      const mockResponse = {
-        ok: true,
-        status: 200,
-        json: jest.fn().mockResolvedValue({}),
-      };
-      fetch.mockResolvedValue(mockResponse);
-
-      await api.request('/usuario');
-
-      expect(fetch).toHaveBeenCalledWith(expect.any(String), {
-        method: undefined,
-        headers: {
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true',
-          'Authorization': 'Bearer token-jwt',
-        },
-        signal: expect.any(AbortSignal),
-      });
     });
 
     it('deve fazer requisição POST com body (Happy Path)', async () => {
@@ -138,6 +90,7 @@ describe('Api Service', () => {
           'Content-Type': 'application/json',
           'ngrok-skip-browser-warning': 'true',
         },
+        credentials: 'include',
         signal: expect.any(AbortSignal),
       });
     });
@@ -195,6 +148,7 @@ describe('Api Service', () => {
           'ngrok-skip-browser-warning': 'true',
           'Custom-Header': 'value',
         },
+        credentials: 'include',
         signal: expect.any(AbortSignal),
       });
     });
@@ -217,8 +171,10 @@ describe('Api Service', () => {
           'Content-Type': 'application/json',
           'ngrok-skip-browser-warning': 'true',
         },
+        credentials: 'include',
         signal: expect.any(AbortSignal),
       });
+      expect(localStorageMock.setItem).toHaveBeenCalledWith('logged_in', 'true');
       expect(result).toEqual({ token: 'jwt-token', user: { id: 1 } });
     });
 
@@ -267,7 +223,7 @@ describe('Api Service', () => {
       await expect(api.request('/produto')).rejects.toThrow(
         'Sessão expirada. Faça login novamente.',
       );
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('logged_in');
       expect(mockRouter.push).toHaveBeenCalledWith('/login', 'root');
       document.querySelector = originalQS;
     });

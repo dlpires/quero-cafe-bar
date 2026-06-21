@@ -148,50 +148,67 @@ class ListProdutoPage extends HTMLElement {
       return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     };
 
-    const itemsHtml = this.items.map(
-      (produto) => `
-      <ion-item-sliding>
-        <ion-item>
-          <ion-label>
-            <h2 class="item-title">
-              <ion-icon
-                name="${produto.status ? 'checkmark-circle' : 'close-circle'}"
-                color="${produto.status ? 'success' : 'danger'}"
-                class="item-icon"
-                aria-hidden="true"
-              ></ion-icon>
-              <span>${produto.dsc_produto}</span>
-            </h2>
-            <p>${formatCurrency(produto.valor_unit)}</p>
-          </ion-label>
-          <ion-buttons slot="end">
-            <ion-button fill="clear" class="btn-edit" data-id="${produto.id}" aria-label="Editar ${produto.dsc_produto}">
-              <ion-icon slot="icon-only" name="create-outline"></ion-icon>
-            </ion-button>
-          </ion-buttons>
-        </ion-item>
-        <ion-item-options side="end">
-          <ion-item-option color="danger" class="btn-swipe-delete" data-id="${produto.id}" aria-label="Excluir ${produto.dsc_produto}">
-            <ion-icon slot="start" name="trash-outline"></ion-icon>
-            Excluir
-          </ion-item-option>
-        </ion-item-options>
-      </ion-item-sliding>
-    `).join('');
+    const list = document.createElement('ion-list');
+    container.textContent = '';
+    container.appendChild(list);
 
-    container.innerHTML = `<ion-list>${itemsHtml}</ion-list>`;
+    this.items.forEach(produto => {
+      const sliding = document.createElement('ion-item-sliding');
 
-    container.querySelectorAll('.btn-edit').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-id');
-        const router = document.querySelector('ion-router');
-        router.push(`/produto/edit?id=${id}`);
+      const ionItem = document.createElement('ion-item');
+
+      const label = document.createElement('ion-label');
+      const titleDiv = document.createElement('h2');
+      titleDiv.className = 'item-title';
+
+      const icon = document.createElement('ion-icon');
+      icon.name = produto.status ? 'checkmark-circle' : 'close-circle';
+      icon.color = produto.status ? 'success' : 'danger';
+      icon.className = 'item-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      titleDiv.appendChild(icon);
+
+      const span = document.createElement('span');
+      span.textContent = produto.dsc_produto;
+      titleDiv.appendChild(span);
+      label.appendChild(titleDiv);
+
+      const p = document.createElement('p');
+      p.textContent = formatCurrency(produto.valor_unit);
+      label.appendChild(p);
+      ionItem.appendChild(label);
+
+      const buttons = document.createElement('ion-buttons');
+      buttons.slot = 'end';
+      const editBtn = document.createElement('ion-button');
+      editBtn.fill = 'clear';
+      editBtn.className = 'btn-edit';
+      editBtn.dataset.id = produto.id;
+      editBtn.setAttribute('aria-label', `Editar ${produto.dsc_produto}`);
+      editBtn.addEventListener('click', () => {
+        document.querySelector('ion-router').push(`/produto/edit?id=${produto.id}`);
       });
-    });
+      const editIcon = document.createElement('ion-icon');
+      editIcon.slot = 'icon-only';
+      editIcon.name = 'create-outline';
+      editBtn.appendChild(editIcon);
+      buttons.appendChild(editBtn);
+      ionItem.appendChild(buttons);
+      sliding.appendChild(ionItem);
 
-    container.querySelectorAll('.btn-swipe-delete').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const id = btn.getAttribute('data-id');
+      const options = document.createElement('ion-item-options');
+      options.side = 'end';
+      const deleteOpt = document.createElement('ion-item-option');
+      deleteOpt.color = 'danger';
+      deleteOpt.className = 'btn-swipe-delete';
+      deleteOpt.dataset.id = produto.id;
+      deleteOpt.setAttribute('aria-label', `Excluir ${produto.dsc_produto}`);
+      const deleteIcon = document.createElement('ion-icon');
+      deleteIcon.slot = 'start';
+      deleteIcon.name = 'trash-outline';
+      deleteOpt.appendChild(deleteIcon);
+      deleteOpt.append(' Excluir');
+      deleteOpt.addEventListener('click', async () => {
         const alert = document.createElement('ion-alert');
         alert.header = 'Confirmar';
         alert.message = 'Deseja realmente excluir este produto?';
@@ -201,7 +218,7 @@ class ListProdutoPage extends HTMLElement {
             text: 'Excluir',
             handler: async () => {
               try {
-                await api.deleteProduto(id);
+                await api.deleteProduto(produto.id);
                 await showToast('Produto excluído com sucesso!', 'success', 2000);
                 this.pagination.reset();
                 await this.loadPage(1);
@@ -215,6 +232,10 @@ class ListProdutoPage extends HTMLElement {
         document.body.appendChild(alert);
         await alert.present();
       });
+      options.appendChild(deleteOpt);
+      sliding.appendChild(options);
+
+      list.appendChild(sliding);
     });
   }
 }
