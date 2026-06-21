@@ -59,7 +59,17 @@ yarn make:migration MigratePasswordToBcrypt
 yarn migrate
 ```
 
-### 9. Rodar Testes
+### 9. Configurar Seed de Admin Padrão
+
+Adicione ao `.env` para ativar o seed automático do administrador padrão:
+
+```bash
+SEED_ADMIN=true
+```
+
+> ⚠️ **Apenas na primeira execução pós-migration**. Após criar o admin, a flag pode ser removida ou mantida (o seed é idempotente).
+
+### 10. Rodar Testes
 
 ```bash
 yarn test          # 163 testes existentes devem continuar passando
@@ -93,4 +103,11 @@ done
 # Verificar headers de segurança
 curl -I http://localhost:3001/
 # Deve conter X-Content-Type-Options, X-Frame-Options, etc.
+
+# Verificar seed do admin padrão
+# (após iniciar com SEED_ADMIN=true e banco vazio)
+curl -X POST http://localhost:3001/usuario/login \
+  -H "Content-Type: application/json" \
+  -d '{"usuario":"admin","senha":"admin"}'
+# Deve retornar 201 com token JWT
 ```

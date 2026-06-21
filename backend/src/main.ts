@@ -1,17 +1,33 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, BadRequestException } from '@nestjs/common';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { SeedService } from './common/seed/seed.service';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
 
+function validateEnvironment(): void {
+  if (!process.env.JWT_SECRET) {
+    throw new Error(
+      'JWT_SECRET não configurado nas variáveis de ambiente. ' +
+        'Defina JWT_SECRET no arquivo .env ou nas variáveis de ambiente do sistema.',
+    );
+  }
+}
+
 async function bootstrap() {
+  validateEnvironment();
+
   const app = await NestFactory.create(AppModule);
 
+  app.use(helmet());
+
   app.enableCors({
-    origin: '*',
+    origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:5173'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
     preflightContinue: false,
     optionsSuccessStatus: 204,
   });
@@ -39,6 +55,9 @@ async function bootstrap() {
   );
 
   app.useGlobalFilters(new GlobalExceptionFilter());
+
+  const seedService = app.get(SeedService);
+  await seedService.seed();
 
   await app.listen(process.env.PORT ?? 3000);
 }

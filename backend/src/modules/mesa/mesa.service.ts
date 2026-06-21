@@ -25,7 +25,10 @@ export class MesaService {
   async findAll(
     listMesaDto: ListMesaDto,
   ): Promise<PaginatedResponse<IMesaOutput>> {
-    const { skip, take, ...where } = listMesaDto;
+    const { skip, take, ...whereRaw } = listMesaDto;
+    const where = Object.fromEntries(
+      Object.entries(whereRaw).filter(([, v]) => v !== undefined),
+    );
     const [data, total] = await this.mesaRepository.findAndCount({
       where,
       skip,

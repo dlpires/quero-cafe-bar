@@ -25,7 +25,10 @@ export class ComandaService {
   async findAll(
     listComandaDto: ListComandaDto,
   ): Promise<PaginatedResponse<IComandaOutput>> {
-    const { skip, take, ...where } = listComandaDto;
+    const { skip, take, ...whereRaw } = listComandaDto;
+    const where = Object.fromEntries(
+      Object.entries(whereRaw).filter(([, v]) => v !== undefined),
+    );
     const [data, total] = await this.comandaRepository.findAndCount({
       where,
       relations: ['mesa', 'itens', 'itens.produto'],

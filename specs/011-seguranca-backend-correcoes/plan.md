@@ -73,23 +73,68 @@ specs/011-seguranca-backend-correcoes/
 backend/
 ├── src/
 │   ├── common/
-│   │   └── guards/
-│   │       └── jwt-auth.guard.ts     # NOVO
-│   │   └── encryption/
-│   │       └── encryption.utils.ts   # ALTERADO (remover fallback)
-│   │       └── encryption.transformer.ts  # REMOVIDO
+│   │   ├── guards/
+│   │   │   └── jwt-auth.guard.ts        # NOVO
+│   │   ├── encryption/
+│   │   │   └── encryption.utils.ts      # ALTERADO (remover fallback)
+│   │   │   └── encryption.transformer.ts # REMOVIDO
+│   │   └── seed/
+│   │       └── seed.service.ts           # NOVO — seed de admin padrão
 │   ├── modules/
 │   │   └── usuario/
 │   │       ├── entities/
-│   │       │   └── usuario.entity.ts  # ALTERADO (remover EncryptionTransformer)
-│   │       ├── usuario.controller.ts  # ALTERADO (algoritmo explícito, fallback removido)
-│   │       └── usuario.service.ts     # ALTERADO (bcrypt no lugar de decrypt)
-│   ├── app.module.ts                  # ALTERADO (adicionar ThrottlerModule)
-│   ├── main.ts                        # ALTERADO (CORS restrito, Helmet)
+│   │       │   └── usuario.entity.ts    # ALTERADO (remover EncryptionTransformer)
+│   │       ├── usuario.controller.ts    # ALTERADO (algoritmo explícito, fallback removido)
+│   │       └── usuario.service.ts       # ALTERADO (bcrypt + seedAdminIfNeeded)
+│   ├── app.module.ts                    # ALTERADO (ThrottlerModule + SeedService)
+│   ├── main.ts                          # ALTERADO (CORS restrito, Helmet, seed)
 │   └── config/
-│       └── orm.config.ts              # ALTERADO (logging condicional, pool size, SSL opcional)
-└── test/                              # NOVOS testes
+│       └── orm.config.ts                # ALTERADO (logging condicional, pool size, SSL opcional)
+└── test/                                # NOVOS testes
 ```
+
+## Fase 9: Seed de Administrador Padrão
+
+**Purpose**: Criar mecanismo para gerar usuário admin padrão na inicialização, resolvendo o bootstrap do sistema pós-migração.
+
+**Motivação**: Com o `JwtAuthGuard` global protegendo todas as rotas (incluindo `POST /usuario`), não é possível criar o primeiro usuário administrador sem já estar autenticado. O seed automático quebra esse ciclo.
+
+### Detalhes da Implementação
+
+1. **`seedAdminIfNeeded()` em `UsuarioService`**: Método que verifica se existe algum usuário com `perfil: 0` (Admin). Se não existir, cria o usuário `admin`/`admin` com hash bcrypt, usando o repositório diretamente para evitar validações de duplicidade do `create()`.
+
+2. **`SeedService` em `src/common/seed/seed.service.ts`**: Serviço dedicado para operações de seed. Injeta `UsuarioService` e expõe método `seed()` que:
+   - Verifica `process.env.SEED_ADMIN === 'true'` (flag de controle)
+   - Chama `usuarioService.seedAdminIfNeeded()`
+   - Loga o resultado
+   - É facilmente extensível para outros seeds no futuro (mesas, produtos, etc.)
+
+3. **Registro em `AppModule`**: `SeedService` adicionado como provider em `AppModule` para ser resolvível via `app.get()`.
+
+4. **Chamada em `main.ts`**: `app.get(SeedService).seed()` executado **antes** de `app.listen()`, garantindo que o seed ocorra antes do servidor aceitar requisições.
+
+5. **Controle via `.env`**: `SEED_ADMIN=true` deve ser adicionado ao `.env` para ativar o seed. Sem essa variável, nenhum seed ocorre. Após o primeiro seed bem-sucedido, a flag pode ser removida (ou mantida — o seed é idempotente).
+
+### Arquivos Afetados
+
+| Arquivo | Ação |
+|---------|------|
+| `src/common/seed/seed.service.ts` | CRIAR |
+| `src/modules/usuario/usuario.service.ts` | ALTERAR (add seedAdminIfNeeded + fix undefined where) |
+| `src/modules/comanda/comanda.service.ts` | ALTERAR (fix undefined where) |
+| `src/modules/produto/produto.service.ts` | ALTERAR (fix undefined where) |
+| `src/modules/mesa/mesa.service.ts` | ALTERAR (fix undefined where) |
+| `src/app.module.ts` | ALTERAR (add SeedService provider) |
+| `src/main.ts` | ALTERAR (chamar seed) |
+| `.env.example` | ALTERAR (add SEED_ADMIN) |
+
+## Fase 10: Correção de Undefined no Where do TypeORM
+
+**Purpose**: Corrigir o padrão `{ skip, take, ...where } = dto` que propaga `undefined` para o TypeORM, impedindo o carregamento de `relations` aninhadas.
+
+**Detalhes da Implementação**: Substituir `const { skip, take, ...where } = dto` por `const { skip, take, ...whereRaw } = dto` seguido de `Object.fromEntries(Object.entries(whereRaw).filter(([_, v]) => v !== undefined))` nos 4 services que usam o padrão.
+
+**Arquivos Afetados**: `comanda.service.ts`, `produto.service.ts`, `mesa.service.ts`, `usuario.service.ts`
 
 ## Complexity Tracking
 

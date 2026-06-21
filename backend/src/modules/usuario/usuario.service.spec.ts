@@ -1,11 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { UsuarioService } from './usuario.service';
 import { Usuario } from './entities/usuario.entity';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { ListUsuarioDto } from './dto/list-usuario.dto';
+
+jest.mock('bcrypt');
 
 describe('UsuarioService', () => {
   let service: UsuarioService;
@@ -37,6 +40,13 @@ describe('UsuarioService', () => {
 
     // Limpa todos os mocks antes de cada teste
     jest.clearAllMocks();
+
+    // Mock bcrypt
+    (bcrypt.genSalt as jest.Mock).mockResolvedValue('salt');
+    (bcrypt.hash as jest.Mock).mockResolvedValue('hashed_password');
+    (bcrypt.compare as jest.Mock).mockImplementation(
+      (plain: string, hash: string) => Promise.resolve(plain === hash),
+    );
   });
 
   describe('Criação de Usuário', () => {
@@ -54,6 +64,7 @@ describe('UsuarioService', () => {
         ...createUsuarioDto,
       } as Usuario;
 
+      mockUsuarioRepository.findOne.mockResolvedValue(null);
       mockUsuarioRepository.create.mockReturnValue(usuarioCriado);
       mockUsuarioRepository.save.mockResolvedValue(usuarioCriado);
 
@@ -62,7 +73,11 @@ describe('UsuarioService', () => {
 
       // Assert
       expect(mockUsuarioRepository.create).toHaveBeenCalledWith(
-        createUsuarioDto,
+        expect.objectContaining({
+          nome: 'João Silva',
+          usuario: 'joao.silva',
+          perfil: 1,
+        }),
       );
       expect(mockUsuarioRepository.save).toHaveBeenCalledWith(usuarioCriado);
       expect(result).toEqual(usuarioCriado);
@@ -82,6 +97,7 @@ describe('UsuarioService', () => {
         perfil: 0,
       } as Usuario;
 
+      mockUsuarioRepository.findOne.mockResolvedValue(null);
       mockUsuarioRepository.create.mockReturnValue(usuarioCriado);
       mockUsuarioRepository.save.mockResolvedValue(usuarioCriado);
 
@@ -89,6 +105,12 @@ describe('UsuarioService', () => {
       const result = await service.create(createUsuarioDto);
 
       // Assert
+      expect(mockUsuarioRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          nome: 'Maria Santos',
+          usuario: 'maria.santos',
+        }),
+      );
       expect(result.perfil).toBe(0);
     });
   });

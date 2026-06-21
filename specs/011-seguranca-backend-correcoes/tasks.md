@@ -136,6 +136,40 @@
 
 ---
 
+## Phase 9: Seed de Administrador Padrão
+
+**Purpose**: Criar mecanismo para gerar usuário admin padrão na inicialização, resolvendo o bootstrap do sistema pós-migração.
+
+**Motivação**: Com o `JwtAuthGuard` global protegendo todas as rotas, não é possível criar o primeiro usuário sem já estar autenticado.
+
+### Implementation for User Story 6
+
+- [ ] T026 [US6] Add `seedAdminIfNeeded()` method to `backend/src/modules/usuario/usuario.service.ts` — checks repo for existing admin (`perfil: 0`), creates `admin`/`admin` with bcrypt hash if none found, returns boolean indicating if creation occurred
+- [ ] T027 [US6] Create `SeedService` at `backend/src/common/seed/seed.service.ts` — injects `UsuarioService`, exposes `seed()` method that checks `SEED_ADMIN` env var and delegates to `usuarioService.seedAdminIfNeeded()`
+- [ ] T028 [US6] Register `SeedService` in `backend/src/app.module.ts` providers and call `app.get(SeedService).seed()` in `backend/src/main.ts` before `app.listen()`
+- [ ] T029 [US6] Add `SEED_ADMIN=true` to `backend/.env.example` with explanatory comment
+
+**Checkpoint**: System boots with empty DB and `SEED_ADMIN=true` → admin user is created automatically; login with admin/admin returns JWT token.
+
+---
+
+## Bug Fix: Undefined Values em `where` de `findAll`
+
+**Purpose**: Corrigir o padrão `{ skip, take, ...where } = dto` que propaga valores `undefined` para o TypeORM, interferindo no carregamento de `relations` aninhadas (ex: `itens.produto` na comanda).
+
+**Motivação**: Ao chamar `GET /comanda?skip=0&take=8` sem filtros opcionais, o `where` resultante é `{ id: undefined, id_mesa: undefined }`. TypeORM pode falhar ao resolver `relations: ['mesa', 'itens', 'itens.produto']` com valores `undefined` no where, retornando a comanda sem itens.
+
+### Implementation
+
+- [ ] T030 [FIX] Filter `undefined` from `where` in `ComandaService.findAll()` — `backend/src/modules/comanda/comanda.service.ts`
+- [ ] T031 [FIX] Filter `undefined` from `where` in `ProdutoService.findAll()` — `backend/src/modules/produto/produto.service.ts`
+- [ ] T032 [FIX] Filter `undefined` from `where` in `MesaService.findAll()` — `backend/src/modules/mesa/mesa.service.ts`
+- [ ] T033 [FIX] Filter `undefined` from `where` in `UsuarioService.findAll()` — `backend/src/modules/usuario/usuario.service.ts`
+
+**Checkpoint**: Kitchen view (`/home`) displays comanda items correctly; all paginated list endpoints return proper data with relations loaded.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -168,6 +202,11 @@
 - T004, T005, T006 can all run in parallel (different aspects of US1)
 - US1, US2, US4, US5 can all start in parallel after Setup completes
 - All Polish tasks (T018–T022) can run in parallel
+- T026 depends on US2 (bcrypt) — bcrypt must be available before seedAdminIfNeeded
+- T027 depends on T026 (SeedService uses seedAdminIfNeeded)
+- T028 depends on T027 (main.ts calls SeedService)
+- T029 independent — can run any time
+- T030-T033 independent — can run any time after implementation of respective services
 
 ---
 

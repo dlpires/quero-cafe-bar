@@ -10,8 +10,10 @@ import {
   Req,
   ConflictException,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import * as jwt from 'jsonwebtoken';
 import type { Request } from 'express';
+import { Public } from '../../common/guards/jwt-auth.guard';
 import { UsuarioService } from './usuario.service';
 import { PaginatedResponse } from '../produto/dto/paginated-response.dto';
 import { IUsuarioOutput } from './interfaces/usuario.interface';
@@ -56,16 +58,23 @@ export class UsuarioController {
     return await this.usuarioService.findByPerfil(perfil);
   }
 
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('login')
   async login(@Body() loginDto: LoginUsuarioDto): Promise<{ token: string }> {
     const user = await this.usuarioService.login(
       loginDto.username,
       loginDto.password,
     );
-    const secret = process.env.JWT_SECRET || 'dev-secret-change-in-production';
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error('JWT_SECRET não configurado nas variáveis de ambiente');
+    }
+    const expiresIn = process.env.JWT_EXPIRES_IN || '2h';
     const token = jwt.sign({ id: user.id, perfil: user.perfil }, secret, {
-      expiresIn: '24h',
-    });
+      algorithm: 'HS256',
+      expiresIn,
+    } as jwt.SignOptions);
     return { token };
   }
 
@@ -86,9 +95,15 @@ export class UsuarioController {
     if (authHeader) {
       const token = authHeader.replace('Bearer ', '');
       try {
-        const secret =
-          process.env.JWT_SECRET || 'dev-secret-change-in-production';
-        const decoded = jwt.verify(token, secret) as { id: number };
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+          throw new Error(
+            'JWT_SECRET não configurado nas variáveis de ambiente',
+          );
+        }
+        const decoded = jwt.verify(token, secret, {
+          algorithms: ['HS256'],
+        }) as { id: number };
         if (decoded.id === id) {
           throw new ConflictException(
             'Você não pode excluir seu próprio usuário',

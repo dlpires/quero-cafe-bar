@@ -1,5 +1,4 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { EncryptionTransformer } from '../../../common/encryption/encryption.transformer';
 
 @Entity('usuarios')
 export class Usuario {
@@ -12,10 +11,7 @@ export class Usuario {
   @Column()
   usuario: string;
 
-  @Column({
-    type: 'text',
-    transformer: new EncryptionTransformer(),
-  })
+  @Column()
   senha: string;
 
   @Column({ default: 0 })

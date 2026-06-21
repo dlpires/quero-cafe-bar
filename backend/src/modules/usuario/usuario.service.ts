@@ -5,6 +5,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
 import { Usuario } from './entities/usuario.entity';
 import { Repository } from 'typeorm';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
@@ -27,14 +28,22 @@ export class UsuarioService {
     if (existing) {
       throw new ConflictException('Já existe um usuário com este login');
     }
-    const usuario = this.usuarioRepository.create(createUsuarioDto);
+    const salt = await bcrypt.genSalt(10);
+    const hashedSenha = await bcrypt.hash(createUsuarioDto.senha, salt);
+    const usuario = this.usuarioRepository.create({
+      ...createUsuarioDto,
+      senha: hashedSenha,
+    });
     return await this.usuarioRepository.save(usuario);
   }
 
   async findAll(
     listUsuarioDto: ListUsuarioDto,
   ): Promise<PaginatedResponse<IUsuarioOutput>> {
-    const { skip, take, ...where } = listUsuarioDto;
+    const { skip, take, ...whereRaw } = listUsuarioDto;
+    const where = Object.fromEntries(
+      Object.entries(whereRaw).filter(([, v]) => v !== undefined),
+    );
     const [data, total] = await this.usuarioRepository.findAndCount({
       where,
       skip,
@@ -78,8 +87,8 @@ export class UsuarioService {
       throw new UnauthorizedException('Usuário ou senha inválidos');
     }
 
-    const senhaDescriptografada = user.senha;
-    if (senhaDescriptografada !== senha) {
+    const senhaValida = await bcrypt.compare(senha, user.senha);
+    if (!senhaValida) {
       throw new UnauthorizedException('Usuário ou senha inválidos');
     }
 
@@ -104,5 +113,22 @@ export class UsuarioService {
     await this.findOne(id);
     await this.usuarioRepository.delete(id);
     return { id };
+  }
+
+  async seedAdminIfNeeded(): Promise<boolean> {
+    const adminExists = await this.usuarioRepository.findOne({
+      where: { perfil: 0 },
+    });
+    if (adminExists) return false;
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedSenha = await bcrypt.hash('admin', salt);
+    await this.usuarioRepository.save({
+      usuario: 'admin',
+      senha: hashedSenha,
+      nome: 'Administrador',
+      perfil: 0,
+    });
+    return true;
   }
 }

@@ -23,7 +23,9 @@ describe('MesaController', () => {
               .fn()
               .mockResolvedValue({ id: 1, qtd_cadeiras: 6, status: true }),
             remove: jest.fn().mockResolvedValue({ id: 1 }),
-            findAll: jest.fn().mockResolvedValue({ data: [], total: 0, skip: 0, take: 20 }),
+            findAll: jest
+              .fn()
+              .mockResolvedValue({ data: [], total: 0, skip: 0, take: 20 }),
           },
         },
       ],

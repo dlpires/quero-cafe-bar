@@ -1,13 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { name, version } from '../package.json';
 
 @Injectable()
 export class AppService {
-  getServiceHealthCheck(): any {
+  getServiceHealthCheck(): Record<string, unknown> {
     return {
-      app_name: name,
-      version: version,
       health: 'ok',
+      timestamp: new Date().toISOString(),
     };
   }
 }

@@ -34,7 +34,10 @@ export class ProdutoService {
   async findAll(
     listProdutoDto: ListProdutoDto,
   ): Promise<PaginatedResponse<IProdutoOutput>> {
-    const { skip, take, ...where } = listProdutoDto;
+    const { skip, take, ...whereRaw } = listProdutoDto;
+    const where = Object.fromEntries(
+      Object.entries(whereRaw).filter(([, v]) => v !== undefined),
+    );
     const [data, total] = await this.produtoRepository.findAndCount({
       where,
       skip,

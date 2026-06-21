@@ -1,7 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import * as jwt from 'jsonwebtoken';
+import { Reflector, APP_GUARD } from '@nestjs/core';
 import { UsuarioController } from './usuario.controller';
 import { UsuarioService } from './usuario.service';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { ListUsuarioDto } from './dto/list-usuario.dto';
@@ -31,6 +33,11 @@ describe('UsuarioController', () => {
           provide: UsuarioService,
           useValue: mockUsuarioService,
         },
+        {
+          provide: APP_GUARD,
+          useClass: JwtAuthGuard,
+        },
+        Reflector,
       ],
     }).compile();
 
@@ -193,6 +200,7 @@ describe('UsuarioController', () => {
       };
 
       process.env.JWT_SECRET = 'test-secret';
+      process.env.JWT_EXPIRES_IN = '1h';
       service.login.mockResolvedValue(usuarioMock);
 
       // Act
@@ -205,38 +213,12 @@ describe('UsuarioController', () => {
       expect(service.login).toHaveBeenCalledWith('admin', 'senha123');
       expect(result).toHaveProperty('token');
 
-      const decoded = jwt.verify(result.token, 'test-secret') as any;
+      const decoded = jwt.verify(result.token, 'test-secret', {
+        algorithms: ['HS256'],
+      }) as any;
       expect(decoded.id).toBe(1);
       expect(decoded.perfil).toBe(0);
       expect(decoded.exp).toBeDefined();
-    });
-
-    it('deve usar fallback dev-secret quando JWT_SECRET não está definido', async () => {
-      delete process.env.JWT_SECRET;
-
-      const usuarioMock = {
-        id: 2,
-        nome: 'Garçom',
-        usuario: 'garcom',
-        senha: 'senha456',
-        perfil: 1,
-      };
-      service.login.mockResolvedValue(usuarioMock);
-
-      const result = await controller.login({
-        username: 'garcom',
-        password: 'senha456',
-      });
-
-      expect(result).toHaveProperty('token');
-      const decoded = jwt.verify(
-        result.token,
-        'dev-secret-change-in-production',
-      ) as any;
-      expect(decoded.id).toBe(2);
-      expect(decoded.perfil).toBe(1);
-
-      process.env.JWT_SECRET = 'test-secret';
     });
   });
 
