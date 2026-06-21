@@ -7,7 +7,7 @@ npm install              # Note: uses npm, not yarn
 npm run dev              # dev server
 npm run build            # web build (outputs to dist/)
 npm run build:prod       # production build
-npm test                 # Jest unit tests (161 tests — 20 suites)
+npm test                 # Jest unit tests (216 tests — 20 suites)
 npm run test:watch       # Jest in watch mode
 npm run test:coverage    # Jest with coverage report
 
