@@ -99,7 +99,10 @@ describe('ProdutoService', () => {
       ];
 
       const listProdutoDto: ListProdutoDto = { id: 1 };
-      mockProdutoRepository.findAndCount.mockResolvedValue([produtosFiltrados, 1]);
+      mockProdutoRepository.findAndCount.mockResolvedValue([
+        produtosFiltrados,
+        1,
+      ]);
 
       // Act
       const result = await service.findAll(listProdutoDto);

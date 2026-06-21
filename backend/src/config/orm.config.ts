@@ -12,10 +12,17 @@ const config: DataSourceOptions = {
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
+  ssl:
+    process.env.DB_SSL === 'true'
+      ? { rejectUnauthorized: true, ca: process.env.DB_CA_CERT }
+      : undefined,
   entities: [join(__dirname, '..', '**/*.entity{.ts,.js}')], // Path to your entity files
   migrations: [join(__dirname, '..', 'database/migrations/**/*{.ts,.js}')], // Path to your migration files
   synchronize: false, // Set to false in production to prevent data loss
-  logging: true,
+  logging: process.env.NODE_ENV === 'production' ? ['error'] : true,
+  extra: {
+    connectionLimit: Number(process.env.MAX_CONNECTION_POOL_SIZE) || 10,
+  },
 };
 
 export default config;

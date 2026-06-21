@@ -158,6 +158,6 @@ cd frontend && npm test
 - Java JDK 17+ + Android Studio (for mobile builds)
 
 <!-- SPECKIT START -->
-For additional context about the current feature (Controle de Paginação para Listas), read
-specs/010-list-pagination/plan.md
+For additional context about the current feature (Correções de Segurança no Backend), read
+specs/011-seguranca-backend-correcoes/plan.md
 <!-- SPECKIT END -->
