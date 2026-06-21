@@ -18,20 +18,6 @@ function getErrorMessage(status, fallback) {
 class Api {
     constructor() {
         this.apiUrl = environment.apiUrl;
-        this.token = localStorage.getItem('token');
-    }
-
-    /**
-     * Define o token de autenticação para as requisições subsequentes.
-     * @param {string} token - O token JWT recebido do backend.
-     */
-    setToken(token) {
-        this.token = token;
-        if (token) {
-            localStorage.setItem('token', token);
-        } else {
-            localStorage.removeItem('token');
-        }
     }
 
     /**
@@ -47,24 +33,22 @@ class Api {
             ...options.headers,
         };
 
-        if (this.token) {
-            headers['Authorization'] = `Bearer ${this.token}`;
-        }
-
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000);
 
         try {
-            const response = await fetch(`${this.apiUrl}${endpoint}`, {
+            const fetchOptions = {
                 ...options,
                 headers,
+                credentials: 'include',
                 signal: controller.signal,
-            });
+            };
+            const response = await fetch(`${this.apiUrl}${endpoint}`, fetchOptions);
 
             clearTimeout(timeoutId);
 
             if (response.status === 401) {
-                localStorage.removeItem('token');
+                localStorage.removeItem('logged_in');
                 const router = document.querySelector('ion-router');
                 if (router) {
                     router.push('/login', 'root');
@@ -95,11 +79,6 @@ class Api {
 
     // --- Métodos de Autenticação ---
 
-    /**
-     * Autentica um usuário e armazena o token.
-     * @param {string} username - Nome de usuário.
-     * @param {string} password - Senha.
-     */
     async login(username, password) {
         const headers = {
             'Content-Type': 'application/json',
@@ -114,6 +93,7 @@ class Api {
                 method: 'POST',
                 headers,
                 body: JSON.stringify({ username, password }),
+                credentials: 'include',
                 signal: controller.signal,
             });
 
@@ -139,6 +119,7 @@ class Api {
                 );
             }
 
+            localStorage.setItem('logged_in', 'true');
             return data;
         } catch (error) {
             clearTimeout(timeoutId);
@@ -147,6 +128,14 @@ class Api {
             }
             throw error;
         }
+    }
+
+    async getMe() {
+        return this.request('/usuario/me');
+    }
+
+    async logout() {
+        return this.request('/usuario/logout', { method: 'POST' });
     }
 
     // --- Métodos de Produtos ---

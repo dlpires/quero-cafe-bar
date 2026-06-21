@@ -113,68 +113,88 @@ class HomePage extends HTMLElement {
       return;
     }
 
-    gridContainer.innerHTML = `
-      <div class="comandas-grid">
-        ${this.comandas.map(comanda => this.renderComandaCard(comanda)).join('')}
-      </div>
-    `;
+    const grid = document.createElement('div');
+    grid.className = 'comandas-grid';
+    gridContainer.textContent = '';
+    gridContainer.appendChild(grid);
 
-    gridContainer.querySelectorAll('.item-status-select').forEach(select => {
-      select.addEventListener('ionChange', async (e) => {
-        const id_comanda = select.dataset.idComanda;
-        const id_produto = select.dataset.idProduto;
-        const statusEntrega = e.detail.value === 'true';
-        await this.updateItemEntrega(id_comanda, id_produto, statusEntrega, select.closest('ion-card'));
+    this.comandas.forEach(comanda => {
+      const card = document.createElement('ion-card');
+      card.className = 'comanda-card';
+      card.dataset.comandaId = comanda.id;
+      card.role = 'region';
+      card.setAttribute('aria-labelledby', `comanda-title-${comanda.id}`);
 
-        const ionItem = select.closest('ion-item');
-        if (ionItem) {
+      const header = document.createElement('ion-card-header');
+      const title = document.createElement('ion-card-title');
+      title.id = `comanda-title-${comanda.id}`;
+      title.textContent = `Comanda #${comanda.id} — Mesa: ${comanda.mesa.id}`;
+      header.appendChild(title);
+
+      const todosEntregues = comanda.itens.length > 0 && comanda.itens.every(item => item.statusEntrega);
+      const statusIcon = document.createElement('ion-icon');
+      statusIcon.name = todosEntregues ? 'checkmark-circle' : 'time-outline';
+      statusIcon.color = todosEntregues ? 'success' : 'warning';
+      statusIcon.className = 'card-status-icon';
+      statusIcon.setAttribute('aria-hidden', 'true');
+      header.appendChild(statusIcon);
+      card.appendChild(header);
+
+      const content = document.createElement('ion-card-content');
+      card.appendChild(content);
+
+      comanda.itens.forEach(item => {
+        const ionItem = document.createElement('ion-item');
+        ionItem.setAttribute('lines', 'none');
+        ionItem.className = `comanda-item ${item.statusEntrega ? 'item-delivered' : 'item-pending'}`;
+
+        const label = document.createElement('ion-label');
+        label.className = 'item-label';
+        const nameEl = document.createElement('h2');
+        nameEl.className = 'item-name';
+        nameEl.textContent = item.produto.dsc_produto;
+        label.appendChild(nameEl);
+        const qtyEl = document.createElement('p');
+        qtyEl.className = 'item-qty';
+        qtyEl.textContent = `Quantidade: ${item.qtd_item}`;
+        label.appendChild(qtyEl);
+        ionItem.appendChild(label);
+
+        const select = document.createElement('ion-select');
+        select.className = 'item-status-select';
+        select.slot = 'end';
+        select.dataset.idComanda = comanda.id;
+        select.dataset.idProduto = item.id_produto;
+        select.value = item.statusEntrega.toString();
+        select.interface = 'action-sheet';
+        const statusText = item.statusEntrega ? 'Entregue' : 'Pendente';
+        select.setAttribute('aria-label', `Status de ${item.produto.dsc_produto}: ${statusText}`);
+
+        const optPendente = document.createElement('ion-select-option');
+        optPendente.value = 'false';
+        optPendente.textContent = 'Pendente';
+        select.appendChild(optPendente);
+
+        const optEntregue = document.createElement('ion-select-option');
+        optEntregue.value = 'true';
+        optEntregue.textContent = 'Entregue';
+        select.appendChild(optEntregue);
+
+        select.addEventListener('ionChange', async (e) => {
+          const idComanda = select.dataset.idComanda;
+          const idProduto = select.dataset.idProduto;
+          const newStatus = e.detail.value === 'true';
+          await this.updateItemEntrega(idComanda, idProduto, newStatus, card);
           ionItem.classList.remove('item-pending', 'item-delivered');
-          ionItem.classList.add(statusEntrega ? 'item-delivered' : 'item-pending');
-        }
+          ionItem.classList.add(newStatus ? 'item-delivered' : 'item-pending');
+        });
+
+        ionItem.appendChild(select);
+        content.appendChild(ionItem);
       });
+
+      grid.appendChild(card);
     });
-  }
-
-  renderComandaCard(comanda) {
-    const todosEntregues = comanda.itens.length > 0 && comanda.itens.every(item => item.statusEntrega);
-    const statusIcon = todosEntregues ? 'checkmark-circle' : 'time-outline';
-    const statusColor = todosEntregues ? 'success' : 'warning';
-
-    const itensHtml = comanda.itens.map(item => {
-      const statusText = item.statusEntrega ? 'Entregue' : 'Pendente';
-      return `
-      <ion-item lines="none" class="comanda-item ${item.statusEntrega ? 'item-delivered' : 'item-pending'}">
-        <ion-label class="item-label">
-          <h2 class="item-name">${item.produto.dsc_produto}</h2>
-          <p class="item-qty">Quantidade: ${item.qtd_item}</p>
-        </ion-label>
-        <ion-select
-          class="item-status-select"
-          slot="end"
-          data-id-comanda="${comanda.id}"
-          data-id-produto="${item.id_produto}"
-          value="${item.statusEntrega.toString()}"
-          interface="action-sheet"
-          aria-label="Status de ${item.produto.dsc_produto}: ${statusText}"
-        >
-          <ion-select-option value="false">Pendente</ion-select-option>
-          <ion-select-option value="true">Entregue</ion-select-option>
-        </ion-select>
-      </ion-item>
-      `;
-    }).join('');
-
-    return `
-      <ion-card class="comanda-card" data-comanda-id="${comanda.id}" role="region" aria-labelledby="comanda-title-${comanda.id}">
-        <ion-card-header>
-          <ion-card-title id="comanda-title-${comanda.id}">Comanda #${comanda.id} — Mesa: ${comanda.mesa.id}</ion-card-title>
-          <ion-icon name="${statusIcon}" color="${statusColor}" class="card-status-icon" aria-hidden="true"></ion-icon>
-        </ion-card-header>
-        <ion-card-content>
-          ${itensHtml}
-        </ion-card-content>
-      </ion-card>
-    `;
   }
 
   async updateItemEntrega(id_comanda, id_produto, statusEntrega, cardElement) {

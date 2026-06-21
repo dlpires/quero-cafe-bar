@@ -147,7 +147,7 @@ These implement a structured feature development workflow (constitution → spec
 # Backend — 22 suites, 149 tests passing
 cd backend && yarn test
 
-# Frontend — 20 suites, 216 tests passing
+# Frontend — 20 suites, 212 tests passing
 cd frontend && npm test
 ```
 

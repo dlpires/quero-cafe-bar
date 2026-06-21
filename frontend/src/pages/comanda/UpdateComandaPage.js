@@ -112,8 +112,13 @@ class UpdateComandaPage extends HTMLElement {
 
   renderItens(itens) {
     const container = this.querySelector('.itens-container');
+    container.textContent = '';
+
     if (itens.length === 0) {
-      container.innerHTML = '<p class="ion-text-center">Nenhum item na comanda.</p>';
+      const emptyP = document.createElement('p');
+      emptyP.className = 'ion-text-center';
+      emptyP.textContent = 'Nenhum item na comanda.';
+      container.appendChild(emptyP);
       return;
     }
 
@@ -121,46 +126,63 @@ class UpdateComandaPage extends HTMLElement {
       return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     };
 
-    const itensHtml = itens.map(item => {
+    const list = document.createElement('ion-list');
+    container.appendChild(list);
+
+    itens.forEach(item => {
       const total = item.qtd_item * item.valor_venda;
-      return `
-        <ion-item>
-          <ion-label>
-            <h2>${item.produto?.dsc_produto || `Produto #${item.id_produto}`}</h2>
-            <p>Qtd: ${item.qtd_item} x ${formatCurrency(item.valor_venda)} = ${formatCurrency(total)}</p>
-          </ion-label>
-          <div slot="end" class="item-status">
-            <ion-checkbox id="statusPg-${item.id_produto}" ${item.statusPg ? 'checked' : ''} data-produto="${item.id_produto}">Pago</ion-checkbox>
-            <ion-checkbox id="statusEntrega-${item.id_produto}" ${item.statusEntrega ? 'checked' : ''} data-produto="${item.id_produto}">Entregue</ion-checkbox>
-            <ion-button fill="clear" color="danger" class="btn-remove-item" data-produto="${item.id_produto}" aria-label="Excluir item ${item.produto?.dsc_produto || item.id_produto}">
-              <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-            </ion-button>
-          </div>
-        </ion-item>
-      `;
-    }).join('');
+      const ionItem = document.createElement('ion-item');
 
-    container.innerHTML = `<ion-list>${itensHtml}</ion-list>`;
+      const label = document.createElement('ion-label');
+      const h2 = document.createElement('h2');
+      h2.textContent = item.produto?.dsc_produto || `Produto #${item.id_produto}`;
+      label.appendChild(h2);
+      const p = document.createElement('p');
+      p.textContent = `Qtd: ${item.qtd_item} x ${formatCurrency(item.valor_venda)} = ${formatCurrency(total)}`;
+      label.appendChild(p);
+      ionItem.appendChild(label);
 
-    container.querySelectorAll('.btn-remove-item').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const id_produto = parseInt(btn.getAttribute('data-produto'));
-        await this.removeItem(id_produto);
+      const statusDiv = document.createElement('div');
+      statusDiv.slot = 'end';
+      statusDiv.className = 'item-status';
+
+      const pgCheckbox = document.createElement('ion-checkbox');
+      pgCheckbox.id = `statusPg-${item.id_produto}`;
+      pgCheckbox.checked = item.statusPg;
+      pgCheckbox.dataset.produto = item.id_produto;
+      pgCheckbox.textContent = 'Pago';
+      pgCheckbox.addEventListener('ionChange', async (e) => {
+        await this.updateItemStatus(item.id_produto, 'statusPg', e.detail.checked);
       });
-    });
+      statusDiv.appendChild(pgCheckbox);
 
-    container.querySelectorAll('ion-checkbox[id^="statusPg-"]').forEach(checkbox => {
-      checkbox.addEventListener('ionChange', async (e) => {
-        const id_produto = parseInt(e.target.getAttribute('data-produto'));
-        await this.updateItemStatus(id_produto, 'statusPg', e.detail.checked);
+      const entCheckbox = document.createElement('ion-checkbox');
+      entCheckbox.id = `statusEntrega-${item.id_produto}`;
+      entCheckbox.checked = item.statusEntrega;
+      entCheckbox.dataset.produto = item.id_produto;
+      entCheckbox.textContent = 'Entregue';
+      entCheckbox.addEventListener('ionChange', async (e) => {
+        await this.updateItemStatus(item.id_produto, 'statusEntrega', e.detail.checked);
       });
-    });
+      statusDiv.appendChild(entCheckbox);
 
-    container.querySelectorAll('ion-checkbox[id^="statusEntrega-"]').forEach(checkbox => {
-      checkbox.addEventListener('ionChange', async (e) => {
-        const id_produto = parseInt(e.target.getAttribute('data-produto'));
-        await this.updateItemStatus(id_produto, 'statusEntrega', e.detail.checked);
+      const removeBtn = document.createElement('ion-button');
+      removeBtn.fill = 'clear';
+      removeBtn.color = 'danger';
+      removeBtn.className = 'btn-remove-item';
+      removeBtn.dataset.produto = item.id_produto;
+      removeBtn.setAttribute('aria-label', `Excluir item ${item.produto?.dsc_produto || item.id_produto}`);
+      removeBtn.addEventListener('click', async () => {
+        await this.removeItem(item.id_produto);
       });
+      const removeIcon = document.createElement('ion-icon');
+      removeIcon.slot = 'icon-only';
+      removeIcon.name = 'trash-outline';
+      removeBtn.appendChild(removeIcon);
+      statusDiv.appendChild(removeBtn);
+
+      ionItem.appendChild(statusDiv);
+      list.appendChild(ionItem);
     });
   }
 

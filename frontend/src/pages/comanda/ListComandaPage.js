@@ -167,51 +167,93 @@ class ListComandaPage extends HTMLElement {
       return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     };
 
-    const comandaItems = this.comandasWithDetails.map((comanda) => `
-      <ion-item>
-        <ion-label>
-          <h2 class="item-title">
-            <ion-icon
-              name="${comanda.todosPagos ? 'checkmark-circle' : 'cash-outline'}"
-              color="${comanda.todosPagos ? 'success' : 'warning'}"
-              class="item-icon"
-              aria-hidden="true"
-            ></ion-icon>
-            <span>Comanda #${comanda.id}</span>
-          </h2>
-          <p>Mesa: ${comanda.id_mesa}</p>
-          <p>Itens: ${comanda.qtdItens} | Total: ${formatCurrency(comanda.valorTotal)}</p>
-          <p>
-            <ion-icon name="${comanda.todosPagos ? 'checkmark-circle' : 'close-circle'}" color="${comanda.todosPagos ? 'success' : 'danger'}" aria-hidden="true"></ion-icon>
-            <span class="status-text">${comanda.todosPagos ? 'Pago' : 'Não Pago'}</span>
-            <ion-icon name="${comanda.todosEntregues ? 'checkmark-circle' : 'close-circle'}" color="${comanda.todosEntregues ? 'success' : 'danger'}" class="status-text-separator" aria-hidden="true"></ion-icon>
-            <span class="status-text">${comanda.todosEntregues ? 'Entregue' : 'Não Entregue'}</span>
-          </p>
-        </ion-label>
-        <ion-buttons slot="end">
-          <ion-button fill="clear" class="btn-edit" data-id="${comanda.id}" aria-label="Editar Comanda ${comanda.id}">
-            <ion-icon slot="icon-only" name="create-outline"></ion-icon>
-          </ion-button>
-          <ion-button fill="clear" color="danger" class="btn-delete" data-id="${comanda.id}" aria-label="Excluir Comanda ${comanda.id}">
-            <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-      </ion-item>
-    `).join('');
+    const list = document.createElement('ion-list');
+    container.textContent = '';
+    container.appendChild(list);
 
-    container.innerHTML = `<ion-list>${comandaItems}</ion-list>`;
+    this.comandasWithDetails.forEach(comanda => {
+      const ionItem = document.createElement('ion-item');
 
-    container.querySelectorAll('.btn-edit').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-id');
-        const router = document.querySelector('ion-router');
-        router.push(`/comanda/edit?id=${id}`);
+      const label = document.createElement('ion-label');
+      const titleDiv = document.createElement('h2');
+      titleDiv.className = 'item-title';
+
+      const statusIcon = document.createElement('ion-icon');
+      statusIcon.name = comanda.todosPagos ? 'checkmark-circle' : 'cash-outline';
+      statusIcon.color = comanda.todosPagos ? 'success' : 'warning';
+      statusIcon.className = 'item-icon';
+      statusIcon.setAttribute('aria-hidden', 'true');
+      titleDiv.appendChild(statusIcon);
+
+      const titleSpan = document.createElement('span');
+      titleSpan.textContent = `Comanda #${comanda.id}`;
+      titleDiv.appendChild(titleSpan);
+      label.appendChild(titleDiv);
+
+      const mesaP = document.createElement('p');
+      mesaP.textContent = `Mesa: ${comanda.id_mesa}`;
+      label.appendChild(mesaP);
+
+      const itensP = document.createElement('p');
+      itensP.textContent = `Itens: ${comanda.qtdItens} | Total: ${formatCurrency(comanda.valorTotal)}`;
+      label.appendChild(itensP);
+
+      const statusP = document.createElement('p');
+
+      const pgIcon = document.createElement('ion-icon');
+      pgIcon.name = comanda.todosPagos ? 'checkmark-circle' : 'close-circle';
+      pgIcon.color = comanda.todosPagos ? 'success' : 'danger';
+      pgIcon.setAttribute('aria-hidden', 'true');
+      statusP.appendChild(pgIcon);
+
+      const pgText = document.createElement('span');
+      pgText.className = 'status-text';
+      pgText.textContent = comanda.todosPagos ? 'Pago' : 'Não Pago';
+      statusP.appendChild(pgText);
+
+      const entIcon = document.createElement('ion-icon');
+      entIcon.name = comanda.todosEntregues ? 'checkmark-circle' : 'close-circle';
+      entIcon.color = comanda.todosEntregues ? 'success' : 'danger';
+      entIcon.className = 'status-text-separator';
+      entIcon.setAttribute('aria-hidden', 'true');
+      statusP.appendChild(entIcon);
+
+      const entText = document.createElement('span');
+      entText.className = 'status-text';
+      entText.textContent = comanda.todosEntregues ? 'Entregue' : 'Não Entregue';
+      statusP.appendChild(entText);
+
+      label.appendChild(statusP);
+      ionItem.appendChild(label);
+
+      const buttons = document.createElement('ion-buttons');
+      buttons.slot = 'end';
+
+      const editBtn = document.createElement('ion-button');
+      editBtn.fill = 'clear';
+      editBtn.className = 'btn-edit';
+      editBtn.dataset.id = comanda.id;
+      editBtn.setAttribute('aria-label', `Editar Comanda ${comanda.id}`);
+      editBtn.addEventListener('click', () => {
+        document.querySelector('ion-router').push(`/comanda/edit?id=${comanda.id}`);
       });
-    });
+      const editIcon = document.createElement('ion-icon');
+      editIcon.slot = 'icon-only';
+      editIcon.name = 'create-outline';
+      editBtn.appendChild(editIcon);
+      buttons.appendChild(editBtn);
 
-    container.querySelectorAll('.btn-delete').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const id = btn.getAttribute('data-id');
+      const deleteBtn = document.createElement('ion-button');
+      deleteBtn.fill = 'clear';
+      deleteBtn.color = 'danger';
+      deleteBtn.className = 'btn-delete';
+      deleteBtn.dataset.id = comanda.id;
+      deleteBtn.setAttribute('aria-label', `Excluir Comanda ${comanda.id}`);
+      const deleteIcon = document.createElement('ion-icon');
+      deleteIcon.slot = 'icon-only';
+      deleteIcon.name = 'trash-outline';
+      deleteBtn.appendChild(deleteIcon);
+      deleteBtn.addEventListener('click', async () => {
         const alert = document.createElement('ion-alert');
         alert.header = 'Confirmar';
         alert.message = 'Deseja realmente excluir esta comanda?';
@@ -221,7 +263,7 @@ class ListComandaPage extends HTMLElement {
             text: 'Excluir',
             handler: async () => {
               try {
-                await api.deleteComanda(id);
+                await api.deleteComanda(comanda.id);
                 await showToast('Comanda excluída com sucesso!', 'success', 2000);
                 this.pagination.reset();
                 await this.loadPage(1);
@@ -235,6 +277,10 @@ class ListComandaPage extends HTMLElement {
         document.body.appendChild(alert);
         await alert.present();
       });
+      buttons.appendChild(deleteBtn);
+
+      ionItem.appendChild(buttons);
+      list.appendChild(ionItem);
     });
   }
 }

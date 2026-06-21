@@ -67,10 +67,9 @@ class LoginPage extends HTMLElement {
       await loading.present();
 
       try {
-        const response = await api.login(user, password);
-        api.setToken(response.token);
+        await api.login(user, password);
 
-        await showToast('Login realizado com sucesso!', 'success', 2000);        
+        await showToast('Login realizado com sucesso!', 'success', 2000);
         document.querySelector('ion-router').push('/home', 'forward', 'replace');
       } catch (error) {
         const mensagem =

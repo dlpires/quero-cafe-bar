@@ -188,6 +188,35 @@ describe('UsuarioController', () => {
     });
   });
 
+  describe('GET /usuario/me - Perfil do Usuário Autenticado', () => {
+    it('deve retornar dados do usuário autenticado (Happy Path)', async () => {
+      // Arrange
+      const usuarioMock = {
+        id: 1,
+        nome: 'Admin',
+        usuario: 'admin',
+        senha: '123',
+        perfil: 0,
+      };
+
+      service.findOne.mockResolvedValue(usuarioMock);
+
+      const mockRequest = { user: { id: 1 } } as any;
+
+      // Act
+      const result = await controller.getMe(mockRequest);
+
+      // Assert
+      expect(service.findOne).toHaveBeenCalledWith(1);
+      expect(result).toEqual({
+        id: 1,
+        usuario: 'admin',
+        perfil: 0,
+      });
+      expect(result).not.toHaveProperty('senha');
+    });
+  });
+
   describe('POST /usuario/login - Login', () => {
     it('deve realizar login com sucesso e retornar JWT válido (Happy Path)', async () => {
       // Arrange
@@ -203,15 +232,27 @@ describe('UsuarioController', () => {
       process.env.JWT_EXPIRES_IN = '1h';
       service.login.mockResolvedValue(usuarioMock);
 
+      const mockResponse = {
+        cookie: jest.fn(),
+      } as any;
+
       // Act
-      const result = await controller.login({
-        username: 'admin',
-        password: 'senha123',
-      });
+      const result = await controller.login(
+        { username: 'admin', password: 'senha123' },
+        mockResponse,
+      );
 
       // Assert
       expect(service.login).toHaveBeenCalledWith('admin', 'senha123');
       expect(result).toHaveProperty('token');
+      expect(mockResponse.cookie).toHaveBeenCalledWith(
+        'token',
+        expect.any(String),
+        expect.objectContaining({
+          httpOnly: true,
+          sameSite: 'strict',
+        }),
+      );
 
       const decoded = jwt.verify(result.token, 'test-secret', {
         algorithms: ['HS256'],
@@ -219,6 +260,26 @@ describe('UsuarioController', () => {
       expect(decoded.id).toBe(1);
       expect(decoded.perfil).toBe(0);
       expect(decoded.exp).toBeDefined();
+    });
+  });
+
+  describe('POST /usuario/logout - Logout', () => {
+    it('deve limpar o cookie e retornar mensagem de sucesso (Happy Path)', async () => {
+      // Arrange
+      const mockResponse = {
+        cookie: jest.fn(),
+      } as any;
+
+      // Act
+      const result = await controller.logout(mockResponse);
+
+      // Assert
+      expect(mockResponse.cookie).toHaveBeenCalledWith(
+        'token',
+        '',
+        expect.objectContaining({ maxAge: 0 }),
+      );
+      expect(result).toEqual({ message: 'Logout realizado com sucesso' });
     });
   });
 

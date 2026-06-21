@@ -45,7 +45,7 @@ describe('Util - shared utilities', () => {
 
             logout();
 
-            expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
+            expect(localStorageMock.removeItem).toHaveBeenCalledWith('logged_in');
         });
 
         it('deve executar sem erros (teste básico)', () => {

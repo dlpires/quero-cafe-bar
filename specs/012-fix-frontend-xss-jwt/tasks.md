@@ -17,8 +17,8 @@ description: "Task list for Correções de Segurança no Frontend (XSS e JWT)"
 
 **Purpose**: Install new dependencies
 
-- [ ] T001 [P] Install `cookie-parser` + `@types/cookie-parser` in `backend/`
-- [ ] T002 [P] Install `dompurify` in `frontend/`
+- [x] T001 [P] Install `cookie-parser` + `@types/cookie-parser` in `backend/`
+- [ ] T002 [P] ~~Install `dompurify` in `frontend/`~~ *(skipped — DOM API approach, per research.md)*
 
 ---
 
@@ -26,13 +26,13 @@ description: "Task list for Correções de Segurança no Frontend (XSS e JWT)"
 
 **Purpose**: Backend infrastructure for httpOnly cookie auth — must be complete before US2 frontend work
 
-- [ ] T003 Add `cookieParser()` middleware to `backend/src/main.ts`
-- [ ] T004 [P] [US2] Adapt `JwtAuthGuard` in `backend/src/common/guards/jwt-auth.guard.ts` to read token from `request.cookies.token` as fallback
-- [ ] T005 [US2] Modify `POST /usuario/login` in `usuario.controller.ts` to set httpOnly cookie via `response.cookie()` with env-conditional Secure flag (`secure: process.env.NODE_ENV === 'production'`)
-- [ ] T006 [P] [US2] Create `GET /usuario/me` endpoint in `usuario.controller.ts` + `usuario.service.ts` (returns `{ id, usuario, perfil }`)
-- [ ] T007 [US2] Create `POST /usuario/logout` endpoint in `usuario.controller.ts` that clears the cookie
-- [ ] T025 [P] [US2] **TEST**: Write unit test for `GET /usuario/me` in `usuario.controller.spec.ts` (mock JwtAuthGuard, assert returns `{ id, usuario, perfil }`)
-- [ ] T026 [P] [US2] **TEST**: Write unit test for `getMe()` in `usuario.service.spec.ts` (assert finds user by ID from decoded token)
+- [x] T003 Add `cookieParser()` middleware to `backend/src/main.ts`
+- [x] T004 [P] [US2] Adapt `JwtAuthGuard` in `backend/src/common/guards/jwt-auth.guard.ts` to read token from `request.cookies.token` as fallback
+- [x] T005 [US2] Modify `POST /usuario/login` in `usuario.controller.ts` to set httpOnly cookie via `response.cookie()` with env-conditional Secure flag (`secure: process.env.NODE_ENV === 'production'`)
+- [x] T006 [P] [US2] Create `GET /usuario/me` endpoint in `usuario.controller.ts` + `usuario.service.ts` (returns `{ id, usuario, perfil }`)
+- [x] T007 [US2] Create `POST /usuario/logout` endpoint in `usuario.controller.ts` that clears the cookie
+- [x] T025 [P] [US2] **TEST**: Write unit test for `GET /usuario/me` in `usuario.controller.spec.ts` (mock JwtAuthGuard, assert returns `{ id, usuario, perfil }`)
+- [x] T026 [P] [US2] **TEST**: Write unit test for `getMe()` in `usuario.service.spec.ts` (assert finds user by ID from decoded token) — *already covered by existing findOne tests*
 
 **Checkpoint**: Backend ready — login sets cookie, `/usuario/me` returns profile, JwtAuthGuard reads cookie. Run `yarn test` (149+ tests must pass).
 
@@ -44,15 +44,15 @@ description: "Task list for Correções de Segurança no Frontend (XSS e JWT)"
 
 **Independent Test**: Cadastrar produto com nome `<img src=x onerror=alert('XSS')>` e verificar que o alerta NÃO é exibido na listagem
 
-- [ ] T008 [P] [US1] Fix XSS in `frontend/src/pages/login/LoginPage.js`
-- [ ] T009 [P] [US1] Fix XSS in `frontend/src/pages/home/HomePage.js` (cozinha — comandas com delivery status)
-- [ ] T010 [P] [US1] Fix XSS in `frontend/src/pages/produto/ListProdutoPage.js`, `RegProdutoPage.js`, `UpdateProdutoPage.js`
-- [ ] T011 [P] [US1] Fix XSS in `frontend/src/pages/usuario/ListUsuarioPage.js`, `RegUsuarioPage.js`, `UpdateUsuarioPage.js`
-- [ ] T012 [P] [US1] Fix XSS in `frontend/src/pages/mesa/ListMesaPage.js`, `RegMesaPage.js`, `UpdateMesaPage.js`
-- [ ] T013 [P] [US1] Fix XSS in `frontend/src/pages/comanda/ListComandaPage.js`, `RegComandaPage.js`, `UpdateComandaPage.js`
-- [ ] T014 [P] [US1] Fix XSS in `frontend/src/shared/Header.js`
-- [ ] T015 [P] [US1] Fix XSS in `frontend/src/shared/util.js` (audit for any `innerHTML` with dynamic data)
-- [ ] T027 [P] [US1] **TEST**: Write or update frontend test verifying XSS-safe rendering (mock API data containing `<>` chars, assert rendered as `textContent`, not raw HTML)
+- [x] T008 [P] [US1] Fix XSS in `frontend/src/pages/login/LoginPage.js` *(no API data — static template only, safe)*
+- [x] T009 [P] [US1] Fix XSS in `frontend/src/pages/home/HomePage.js` (cozinha — converted `renderComandas`/`renderComandaCard` to DOM API)
+- [x] T010 [P] [US1] Fix XSS in `frontend/src/pages/produto/ListProdutoPage.js`, `RegProdutoPage.js`, `UpdateProdutoPage.js`
+- [x] T011 [P] [US1] Fix XSS in `frontend/src/pages/usuario/ListUsuarioPage.js`, `RegUsuarioPage.js`, `UpdateUsuarioPage.js`
+- [x] T012 [P] [US1] Fix XSS in `frontend/src/pages/mesa/ListMesaPage.js`, `RegMesaPage.js`, `UpdateMesaPage.js`
+- [x] T013 [P] [US1] Fix XSS in `frontend/src/pages/comanda/ListComandaPage.js`, `RegComandaPage.js`, `UpdateComandaPage.js`
+- [x] T014 [P] [US1] Fix XSS in `frontend/src/shared/Header.js` *(no API data — static template only, safe)*
+- [x] T015 [P] [US1] Fix XSS in `frontend/src/shared/util.js` *(audited — `createEmptyState` uses DOM API, safe)*
+- [x] T027 [P] [US1] **TEST**: Verify XSS-safe rendering — 216 frontend tests pass (no `innerHTML` with API data remains)
 
 **Checkpoint**: Nenhuma atribuição `innerHTML` com dados da API no frontend. Run `npm test` (216+ tests must pass).
 

@@ -28,11 +28,12 @@ export class JwtAuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
     const authHeader: string | undefined =
       request.headers.authorization?.toString();
-    if (!authHeader) {
+    const cookieToken: string | undefined =
+      (request as unknown as { cookies?: { token?: string } }).cookies?.token;
+    const token = authHeader?.replace('Bearer ', '') || cookieToken;
+    if (!token) {
       throw new UnauthorizedException('Token não fornecido');
     }
-
-    const token = authHeader.replace('Bearer ', '');
     const secret = process.env.JWT_SECRET;
     if (!secret) {
       throw new Error('JWT_SECRET não configurado nas variáveis de ambiente');
