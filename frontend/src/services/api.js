@@ -246,6 +246,10 @@ class Api {
         return this.request(`/comanda/mesa/${id_mesa}`);
     }
 
+    async getActiveComandaByMesaId(id_mesa) {
+        return this.request(`/comanda/mesa/${id_mesa}`);
+    }
+
     async updateComanda(id, comandaData) {
         return this.request(`/comanda/${id}`, {
             method: 'PATCH',

@@ -15,4 +15,6 @@ export interface IUpdateMesaInput {
   status?: boolean;
 }
 
-export interface IMesaOutput extends IMesa {}
+export interface IMesaOutput extends IMesa {
+  hasActiveComanda?: boolean;
+}

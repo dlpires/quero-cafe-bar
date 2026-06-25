@@ -1,7 +1,7 @@
 jest.mock('../../services/api.js', () => ({
   api: {
-    getComandas: jest.fn(),
-    updateItemComanda: jest.fn(),
+    getMesas: jest.fn(),
+    getComandaByMesaId: jest.fn(),
   },
 }))
 
@@ -13,67 +13,37 @@ jest.mock('../../shared/Header.js', () => ({
   createHeader: jest.fn((title) => `<ion-header>${title}</ion-header>`),
 }))
 
-jest.mock('../../shared/util.js', () => {
-  const sizes = { produto: 10, usuario: 10, mesa: 8, comanda: 6, home: 8 }
-  return {
-    createPaginationState: (ps) => ({
-      currentPage: 1, take: ps, totalRecords: 0, totalPages: 0, skip: 0,
-      update: function (t) { this.totalRecords = t; this.totalPages = Math.ceil(t / this.take) || 1 },
-      next: function () { if (this.currentPage < this.totalPages) { this.currentPage++; this.skip = (this.currentPage - 1) * this.take } },
-      prev: function () { if (this.currentPage > 1) { this.currentPage--; this.skip = (this.currentPage - 1) * this.take } },
-      reset: function () { this.currentPage = 1; this.skip = 0 },
-    }),
-    getPageSize: (p) => sizes[p] || 10,
-    calculateResponsivePageSize: (p) => sizes[p] || 10,
-    renderPaginationBar: (p) => {
-      const single = p.totalPages <= 1
-      return `<div class="pagination-bar">${single ? '' : `
-        <ion-button fill="clear" size="small" ${p.currentPage <= 1 ? 'disabled' : ''} data-action="prev-page" aria-label="Página anterior">
-          <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
-          Anterior
-        </ion-button>
-        <span style="font-size:14px;min-width:100px;text-align:center;">
-          Página ${p.currentPage} de ${p.totalPages}
-        </span>
-        <ion-button fill="clear" size="small" ${p.currentPage >= p.totalPages ? 'disabled' : ''} data-action="next-page" aria-label="Próxima página">
-          Próxima
-          <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
-        </ion-button>`}
-        <span style="font-size:13px;">Total: ${p.totalRecords} registro(s)</span>
-      </div>`
-    },
-    createListSkeleton: (c = 5) => '<ion-list>' + Array.from({ length: c }, () => '<ion-item><ion-label><h3><ion-skeleton-text animated></ion-skeleton-text></h3><p><ion-skeleton-text animated></ion-skeleton-text></p></ion-label></ion-item>').join('') + '</ion-list>',
-    createCardSkeleton: (c = 4) => Array.from({ length: c }, () => '<ion-card><ion-card-header><ion-card-title></ion-card-title></ion-card-header><ion-card-content></ion-card-content></ion-card>').join(''),
-    showToast: jest.fn(),
-    logout: jest.fn(),
-    focusFirstElement: jest.fn(),
-  }
-})
+jest.mock('../../shared/util.js', () => ({
+  createCardSkeleton: (c = 4) => Array.from({ length: c }, () => '<ion-card><ion-card-header><ion-card-title></ion-card-title></ion-card-header><ion-card-content></ion-card-content></ion-card>').join(''),
+  createEmptyState: jest.fn((container, opts) => {
+    container.innerHTML = `<div class="empty-state">${opts.message}</div>`
+  }),
+  showToast: jest.fn(),
+  logout: jest.fn(),
+  focusFirstElement: jest.fn(),
+}))
 
 if (!customElements.get('ion-content')) {
   customElements.define('ion-content', class extends HTMLElement {})
   customElements.define('ion-footer', class extends HTMLElement {})
-  customElements.define('ion-card', class extends HTMLElement {})
+  customElements.define('ion-card', class extends HTMLElement {
+    constructor() { super(); this.addEventListener = jest.fn(); this.tabIndex = 0 }
+  })
   customElements.define('ion-card-header', class extends HTMLElement {})
   customElements.define('ion-card-title', class extends HTMLElement {})
   customElements.define('ion-card-content', class extends HTMLElement {})
-  customElements.define('ion-item', class extends HTMLElement {
-    constructor() {
-      super()
-      this.classList = { add: jest.fn(), remove: jest.fn(), contains: jest.fn() }
-    }
-  })
+  customElements.define('ion-item', class extends HTMLElement { constructor() { super(); this.button = false } })
   customElements.define('ion-label', class extends HTMLElement {})
-  customElements.define('ion-select', class extends HTMLElement {
-    constructor() { super(); this.value = ''; this.dataset = {}; this.closest = jest.fn(); }
-  })
-  customElements.define('ion-select-option', class extends HTMLElement {})
+  customElements.define('ion-list', class extends HTMLElement {})
   customElements.define('ion-icon', class extends HTMLElement {
-    constructor() { super(); this.name = ''; this.color = ''; }
+    constructor() { super(); this.name = ''; this.color = ''; this.slot = '' }
   })
   customElements.define('ion-button', class extends HTMLElement {
-    constructor() { super(); this.addEventListener = jest.fn(); }
+    constructor() { super(); this.addEventListener = jest.fn(); this.classList = { add: jest.fn(), remove: jest.fn(), toggle: jest.fn() } }
   })
+  customElements.define('ion-badge', class extends HTMLElement {})
+  customElements.define('ion-refresher', class extends HTMLElement { constructor() { super(); this.addEventListener = jest.fn() } })
+  customElements.define('ion-refresher-content', class extends HTMLElement {})
   customElements.define('ion-toast', class extends HTMLElement {
     constructor() { super(); this.message = ''; this.duration = 2000; this.color = 'danger'; this.present = jest.fn(); }
   })
@@ -81,37 +51,26 @@ if (!customElements.get('ion-content')) {
     constructor() { super(); this.header = ''; this.message = ''; this.buttons = []; this.present = jest.fn(); }
   })
   customElements.define('ion-router', class extends HTMLElement {
-    constructor() { super(); this.push = jest.fn(); }
+    constructor() { super(); this.push = jest.fn(); this.addEventListener = jest.fn(); }
   })
+  customElements.define('ion-buttons', class extends HTMLElement {})
 }
 
 import { api } from '../../services/api.js'
-import {
-  createPaginationState, calculateResponsivePageSize, renderPaginationBar, createCardSkeleton, showToast,
-} from '../../shared/util.js'
+import { showToast } from '../../shared/util.js'
 
 describe('HomePage', () => {
   let page
 
-  const mockComandas = [
-    {
-      id: 1, mesa: { id: 5 },
-      itens: [
-        { id_produto: 10, qtd_item: 2, statusEntrega: false, produto: { dsc_produto: 'Café Expresso' } },
-        { id_produto: 11, qtd_item: 1, statusEntrega: true, produto: { dsc_produto: 'Pão de Queijo' } },
-      ],
-    },
-    {
-      id: 2, mesa: { id: 3 },
-      itens: [
-        { id_produto: 12, qtd_item: 3, statusEntrega: false, produto: { dsc_produto: 'Suco Natural' } },
-      ],
-    },
+  const mockMesas = [
+    { id: 1, qtd_cadeiras: 4, status: true, hasActiveComanda: false },
+    { id: 2, qtd_cadeiras: 2, status: true, hasActiveComanda: true },
+    { id: 3, qtd_cadeiras: 6, status: false, hasActiveComanda: false },
   ]
 
   const mockPaginatedResponse = {
-    data: mockComandas,
-    total: 25,
+    data: mockMesas,
+    total: 10,
     skip: 0,
     take: 8,
   }
@@ -122,122 +81,83 @@ describe('HomePage', () => {
     class TestHomePage extends HTMLElement {
       constructor() {
         super()
-        this.comandas = []
+        this.mesas = []
         this.isLoading = false
-        this.pagination = createPaginationState(calculateResponsivePageSize('home'))
-        this._gridContainer = { innerHTML: '' }
-        this._pagContainer = { innerHTML: '' }
+        this.viewMode = 'cards'
+        this._gridContainer = { innerHTML: '', scrollTop: 0 }
+        this._summaryText = { textContent: '' }
         this.querySelector = jest.fn((selector) => {
-          if (selector === '.comandas-grid-container') return this._gridContainer
-          if (selector === '.pagination-bar-container') return this._pagContainer
+          if (selector === '.mesas-grid-container') return this._gridContainer
+          if (selector === '#summary-text') return this._summaryText
+          if (selector === '#refresher') return { addEventListener: jest.fn() }
+          if (selector === '#btn-view-cards' || selector === '#btn-view-list') {
+            return { addEventListener: jest.fn(), classList: { add: jest.fn(), toggle: jest.fn() } }
+          }
           return null
         })
       }
 
-      async loadPage(page) {
+      async loadPage() {
         if (this.isLoading) return
         this.isLoading = true
-        const gridContainer = this.querySelector('.comandas-grid-container')
-        const paginationContainer = this.querySelector('.pagination-bar-container')
+        const gridContainer = this.querySelector('.mesas-grid-container')
+        const summaryText = this.querySelector('#summary-text')
 
         try {
-          const skip = (page - 1) * this.pagination.take
-          gridContainer.innerHTML = createCardSkeleton(4)
-          paginationContainer.innerHTML = ''
+          summaryText.textContent = 'Carregando...'
 
-          const response = await api.getComandas(skip, this.pagination.take)
-          this.comandas = response.data || response
-          const total = response.total != null ? response.total : this.comandas.length
-          this.pagination.update(total)
-          this.pagination.currentPage = page
-          this.renderComandas()
-          this.renderPaginationControls()
+          const response = await api.getMesas(0, 100)
+          this.mesas = (response.data || response).filter(m => m.status)
+          const total = this.mesas.length
+
+          const activeCount = this.mesas.filter(m => m.hasActiveComanda).length
+          summaryText.textContent = `${total} mesas | ${total - activeCount} disponíveis`
+
+          this.renderMesas()
           gridContainer.scrollTop = 0
         } catch (error) {
           gridContainer.innerHTML = ''
-          const alert = document.createElement('ion-alert')
-          alert.header = 'Erro'
-          alert.message = 'Não foi possível carregar os pedidos.'
-          alert.buttons = ['OK']
-          document.body.appendChild(alert)
-          await alert.present()
+          summaryText.textContent = 'Erro ao carregar'
         } finally {
           this.isLoading = false
         }
       }
 
-      nextPage() { this.loadPage(this.pagination.currentPage + 1) }
-      prevPage() { this.loadPage(this.pagination.currentPage - 1) }
-
-      renderPaginationControls() {
-        const container = this.querySelector('.pagination-bar-container')
-        if (this.comandas.length === 0) {
-          container.innerHTML = ''
+      renderMesas() {
+        const gridContainer = this.querySelector('.mesas-grid-container')
+        if (this.mesas.length === 0) {
+          gridContainer.innerHTML = '<div class="empty-state">Nenhuma mesa ativa encontrada.</div>'
           return
         }
-        container.innerHTML = renderPaginationBar(this.pagination)
-      }
-
-      renderComandas() {
-        const gridContainer = this.querySelector('.comandas-grid-container')
-        if (this.comandas.length === 0) {
-          gridContainer.innerHTML = '<p class="ion-text-center">Nenhum pedido pendente.</p>'
-          return
+        if (this.viewMode === 'cards') {
+          gridContainer.innerHTML = `<div class="mesas-grid">
+            ${this.mesas.map(m => this.renderMesaCard(m)).join('')}
+          </div>`
+        } else {
+          gridContainer.innerHTML = `<ion-list class="mesas-list">
+            ${this.mesas.map(m => `<ion-item class="mesa-list-item ${m.hasActiveComanda ? 'mesa-ocupada' : 'mesa-disponivel'}" data-mesa-id="${m.id}">
+              <ion-icon name="${m.hasActiveComanda ? 'calendar-outline' : 'checkmark-circle-outline'}" color="${m.hasActiveComanda ? 'warning' : 'success'}" slot="start"></ion-icon>
+              <ion-label><h2>Mesa ${m.id}</h2><p>${m.qtd_cadeiras} cadeira(s) — ${m.hasActiveComanda ? 'Comanda Ativa' : 'Disponível'}</p></ion-label>
+            </ion-item>`).join('')}
+          </ion-list>`
         }
-        gridContainer.innerHTML = `<div class="comandas-grid">
-          ${this.comandas.map(c => this.renderComandaCard(c)).join('')}
-        </div>`
       }
 
-      renderComandaCard(comanda) {
-        const todosEntregues = comanda.itens.length > 0 && comanda.itens.every(i => i.statusEntrega)
-        const statusIcon = todosEntregues ? 'checkmark-circle' : 'time-outline'
-        const statusColor = todosEntregues ? 'success' : 'warning'
-
-        const itensHtml = comanda.itens.map(item => {
-          const statusText = item.statusEntrega ? 'Entregue' : 'Pendente'
-          return `<ion-item lines="none" class="comanda-item ${item.statusEntrega ? 'item-delivered' : 'item-pending'}">
-            <ion-label class="item-label">
-              <h2 class="item-name">${item.produto.dsc_produto}</h2>
-              <p class="item-qty">Quantidade: ${item.qtd_item}</p>
-            </ion-label>
-            <ion-select class="item-status-select" slot="end"
-              data-id-comanda="${comanda.id}" data-id-produto="${item.id_produto}"
-              value="${item.statusEntrega.toString()}" interface="action-sheet"
-              aria-label="Status de ${item.produto.dsc_produto}: ${statusText}">
-              <ion-select-option value="false">Pendente</ion-select-option>
-              <ion-select-option value="true">Entregue</ion-select-option>
-            </ion-select>
-          </ion-item>`
-        }).join('')
-
-        return `<ion-card class="comanda-card" data-comanda-id="${comanda.id}"
-          role="region" aria-labelledby="comanda-title-${comanda.id}">
-          <ion-card-header>
-            <ion-card-title id="comanda-title-${comanda.id}">Comanda #${comanda.id} — Mesa: ${comanda.mesa.id}</ion-card-title>
-            <ion-icon name="${statusIcon}" color="${statusColor}" class="card-status-icon" aria-hidden="true"></ion-icon>
-          </ion-card-header>
-          <ion-card-content>${itensHtml}</ion-card-content>
+      renderMesaCard(mesa) {
+        const isActive = mesa.hasActiveComanda
+        return `<ion-card class="mesa-card ${isActive ? 'mesa-ocupada' : 'mesa-disponivel'}" data-mesa-id="${mesa.id}" tabindex="0" role="button" aria-label="Mesa ${mesa.id} — ${isActive ? 'Comanda ativa' : 'Disponível'}">
+          <ion-card-header><ion-card-title class="mesa-card-title">Mesa ${mesa.id}</ion-card-title></ion-card-header>
+          <ion-card-content class="mesa-card-content">
+            <ion-badge color="${isActive ? 'warning' : 'success'}">${isActive ? 'Comanda Ativa' : 'Disponível'}</ion-badge>
+            <p class="mesa-chairs">${mesa.qtd_cadeiras} cadeira(s)</p>
+          </ion-card-content>
         </ion-card>`
       }
 
-      async updateItemEntrega(id_comanda, id_produto, statusEntrega, cardElement) {
-        try {
-          await api.updateItemComanda(id_comanda, id_produto, { statusEntrega })
-          this.updateCardStatusIcon(cardElement)
-          showToast('Status do item atualizado!', 'success')
-        } catch (error) {
-          showToast(error.message, 'error')
+      async onMesaClick(mesa, isActive) {
+        if (isActive) {
+          await api.getComandaByMesaId(mesa.id)
         }
-      }
-
-      updateCardStatusIcon(cardElement) {
-        const selects = cardElement.querySelectorAll('.item-status-select')
-        const allEntregues = Array.from(selects).every(select => select.value === 'true')
-        const icon = cardElement.querySelector('.card-status-icon')
-        if (!icon) return
-        icon.name = allEntregues ? 'checkmark-circle' : 'time-outline'
-        icon.color = allEntregues ? 'success' : 'warning'
       }
     }
 
@@ -248,221 +168,105 @@ describe('HomePage', () => {
     page = new TestHomePage()
   })
 
-  describe('Paginação', () => {
-    it('deve renderizar controles quando há múltiplas páginas', async () => {
-      api.getComandas.mockResolvedValue(mockPaginatedResponse)
-      await page.loadPage(1)
-
-      const html = page.querySelector('.pagination-bar-container').innerHTML
-      expect(html).toContain('Página 1 de 4')
-      expect(html).toContain('Próxima')
-      expect(html).toContain('Anterior')
-      expect(html).toContain('Total: 25 registro(s)')
+  describe('Carregamento', () => {
+    it('deve carregar todas as mesas ativas sem paginação', async () => {
+      api.getMesas.mockResolvedValue({ data: [], total: 0, skip: 0, take: 0 })
+      await page.loadPage()
+      expect(api.getMesas).toHaveBeenCalledWith(0, 100)
     })
 
-    it('deve desabilitar "Anterior" na primeira página', async () => {
-      api.getComandas.mockResolvedValue(mockPaginatedResponse)
-      await page.loadPage(1)
-
-      const html = page.querySelector('.pagination-bar-container').innerHTML
-      expect(html).toContain('data-action="prev-page"')
-      expect(html).toContain('disabled')
+    it('deve filtrar apenas mesas ativas', async () => {
+      api.getMesas.mockResolvedValue(mockPaginatedResponse)
+      await page.loadPage()
+      expect(page.mesas).toHaveLength(2)
+      expect(page.mesas.every(m => m.status)).toBe(true)
     })
 
-    it('deve desabilitar "Próxima" na última página', async () => {
-      api.getComandas.mockResolvedValue({ ...mockPaginatedResponse, skip: 24 })
-      await page.loadPage(4)
-
-      const html = page.querySelector('.pagination-bar-container').innerHTML
-      expect(html).toContain('data-action="next-page"')
-      expect(html).toContain('disabled')
-    })
-
-    it('deve ocultar botões quando há apenas 1 página', async () => {
-      api.getComandas.mockResolvedValue({ data: mockComandas, total: 2, skip: 0, take: 8 })
-      await page.loadPage(1)
-
-      const html = page.querySelector('.pagination-bar-container').innerHTML
-      expect(html).not.toContain('Próxima')
-      expect(html).toContain('Total: 2 registro(s)')
-    })
-
-    it('deve ocultar barra quando não há comandas', async () => {
-      api.getComandas.mockResolvedValue({ data: [], total: 0, skip: 0, take: 8 })
-      await page.loadPage(1)
-      expect(page.querySelector('.pagination-bar-container').innerHTML).toBe('')
-    })
-
-    it('deve navegar entre páginas', async () => {
-      api.getComandas.mockResolvedValue(mockPaginatedResponse)
-      await page.loadPage(1)
-      api.getComandas.mockResolvedValue({ ...mockPaginatedResponse, skip: 8 })
-      await page.nextPage()
-
-      expect(page.querySelector('.pagination-bar-container').innerHTML).toContain('Página 2 de 4')
-    })
-
-    it('deve ter container de paginação no template', () => {
-      expect(page.querySelector('.pagination-bar-container')).not.toBeNull()
-    })
-  })
-
-  describe('Renderização Inicial', () => {
-    it('deve carregar comandas com parâmetros de paginação', async () => {
-      api.getComandas.mockResolvedValue({ data: [], total: 0, skip: 0, take: 8 })
-      await page.loadPage(1)
-      expect(api.getComandas).toHaveBeenCalled()
+    it('deve atualizar sumário com contagem correta', async () => {
+      api.getMesas.mockResolvedValue(mockPaginatedResponse)
+      await page.loadPage()
+      expect(page._summaryText.textContent).toContain('2 mesas')
+      expect(page._summaryText.textContent).toContain('1 disponíveis')
     })
   })
 
   describe('Renderização de Cards', () => {
-    it('deve renderizar card com informações corretas', () => {
-      const html = page.renderComandaCard(mockComandas[0])
-      expect(html).toContain('Comanda #1')
-      expect(html).toContain('Mesa: 5')
-    })
-
-    it('deve mostrar checkmark quando todos itens entregues', () => {
-      const comanda = { id: 3, mesa: { id: 1 }, itens: [
-        { statusEntrega: true, produto: {} },
-        { statusEntrega: true, produto: {} },
-      ]}
-      const html = page.renderComandaCard(comanda)
-      expect(html).toContain('checkmark-circle')
+    it('deve renderizar card com informações da mesa', () => {
+      const html = page.renderMesaCard(mockMesas[0])
+      expect(html).toContain('Mesa 1')
+      expect(html).toContain('4 cadeira(s)')
+      expect(html).toContain('Disponível')
       expect(html).toContain('success')
     })
 
-    it('deve mostrar warning quando há itens pendentes', () => {
-      const html = page.renderComandaCard(mockComandas[1])
-      expect(html).toContain('time-outline')
+    it('deve renderizar mesa ocupada com badge warning', () => {
+      const html = page.renderMesaCard(mockMesas[1])
+      expect(html).toContain('Mesa 2')
+      expect(html).toContain('Comanda Ativa')
       expect(html).toContain('warning')
     })
 
-    it('T023: card deve ter role region e aria-labelledby', () => {
-      const html = page.renderComandaCard(mockComandas[0])
-      expect(html).toContain('role="region"')
-      expect(html).toContain('aria-labelledby="comanda-title-1"')
-      expect(html).toContain('id="comanda-title-1"')
+    it('deve ter role button e aria-label', () => {
+      const html = page.renderMesaCard(mockMesas[0])
+      expect(html).toContain('role="button"')
+      expect(html).toContain('Disponível')
     })
 
-    it('T024: ícone de status deve ser aria-hidden', () => {
-      const html = page.renderComandaCard(mockComandas[0])
-      expect(html).toContain('aria-hidden="true"')
-      expect(html).toContain('class="card-status-icon"')
+    it('deve ter tabindex 0 para foco via teclado', () => {
+      const html = page.renderMesaCard(mockMesas[0])
+      expect(html).toContain('tabindex="0"')
     })
   })
 
-  describe('Atualização de Status', () => {
-    it('deve chamar api.updateItemComanda com parâmetros corretos', async () => {
-      api.updateItemComanda.mockResolvedValue({})
-      await page.updateItemEntrega(1, 10, true, document.createElement('ion-card'))
-      expect(api.updateItemComanda).toHaveBeenCalledWith(1, 10, { statusEntrega: true })
-    })
-
-    it('deve mostrar toast de sucesso', async () => {
-      api.updateItemComanda.mockResolvedValue({})
-      await page.updateItemEntrega(1, 10, true, document.createElement('ion-card'))
-      expect(showToast).toHaveBeenCalledWith('Status do item atualizado!', 'success')
-    })
-
-    it('deve mostrar toast de erro', async () => {
-      api.updateItemComanda.mockRejectedValue(new Error('Erro de rede'))
-      await page.updateItemEntrega(1, 10, true, document.createElement('ion-card'))
-      expect(showToast).toHaveBeenCalledWith('Erro de rede', 'error')
+  describe('Empty State', () => {
+    it('deve mostrar mensagem quando não há mesas', async () => {
+      api.getMesas.mockResolvedValue({ data: [], total: 0, skip: 0, take: 0 })
+      await page.loadPage()
+      expect(page.querySelector('.mesas-grid-container').innerHTML).toContain('Nenhuma mesa ativa encontrada.')
     })
   })
 
-  describe('Atualização de Ícone do Card', () => {
-    it('deve atualizar para checkmark quando todos entregues', () => {
-      const icon = { name: '', color: '' }
-      const card = {
-        querySelectorAll: jest.fn(() => [{ value: 'true' }, { value: 'true' }]),
-        querySelector: jest.fn(() => icon),
-      }
-      page.updateCardStatusIcon(card)
-      expect(icon.name).toBe('checkmark-circle')
-      expect(icon.color).toBe('success')
+  describe('Click Navigation', () => {
+    it('deve chamar api.getComandaByMesaId para mesa com comanda ativa', async () => {
+      api.getComandaByMesaId.mockResolvedValue({ id: 10 })
+      await page.onMesaClick(mockMesas[1], true)
+      expect(api.getComandaByMesaId).toHaveBeenCalledWith(2)
     })
 
-    it('deve manter warning quando há pendentes', () => {
-      const icon = { name: '', color: '' }
-      const card = {
-        querySelectorAll: jest.fn(() => [{ value: 'true' }, { value: 'false' }]),
-        querySelector: jest.fn(() => icon),
-      }
-      page.updateCardStatusIcon(card)
-      expect(icon.name).toBe('time-outline')
-      expect(icon.color).toBe('warning')
+    it('não deve chamar API para mesa disponível', async () => {
+      await page.onMesaClick(mockMesas[0], false)
+      expect(api.getComandaByMesaId).not.toHaveBeenCalled()
     })
   })
 
-  describe('Responsividade', () => {
-    it('T003: deve exibir 1 coluna em viewport ≤480px', () => {
-      const style = document.createElement('style')
-      style.textContent = '.comandas-grid { display: grid; grid-template-columns: 1fr; }'
-      document.head.appendChild(style)
-      const grid = document.createElement('div')
-      grid.className = 'comandas-grid'
-      document.body.appendChild(grid)
-      expect(getComputedStyle(grid).gridTemplateColumns).toBe('1fr')
-      style.remove(); grid.remove()
+  describe('Alternância de Visualização', () => {
+    it('deve iniciar no modo cards por padrão', () => {
+      expect(page.viewMode).toBe('cards')
     })
 
-    it('T004: deve exibir 2 colunas em viewport 481-900px', () => {
-      const style = document.createElement('style')
-      style.textContent = '.comandas-grid { display: grid; grid-template-columns: repeat(2, 1fr); }'
-      document.head.appendChild(style)
-      const grid = document.createElement('div')
-      grid.className = 'comandas-grid'
-      document.body.appendChild(grid)
-      expect(getComputedStyle(grid).gridTemplateColumns).toBe('repeat(2, 1fr)')
-      style.remove(); grid.remove()
+    it('deve renderizar lista quando viewMode é list', () => {
+      page.mesas = mockMesas.filter(m => m.status)
+      page.viewMode = 'list'
+      page.renderMesas()
+      const html = page.querySelector('.mesas-grid-container').innerHTML
+      expect(html).toContain('ion-list')
+      expect(html).toContain('mesa-list-item')
     })
 
-    it('T005: deve exibir 3 colunas em viewport 901-1200px', () => {
-      const style = document.createElement('style')
-      style.textContent = '.comandas-grid { display: grid; grid-template-columns: repeat(3, 1fr); }'
-      document.head.appendChild(style)
-      const grid = document.createElement('div')
-      grid.className = 'comandas-grid'
-      document.body.appendChild(grid)
-      expect(getComputedStyle(grid).gridTemplateColumns).toBe('repeat(3, 1fr)')
-      style.remove(); grid.remove()
+    it('deve renderizar cards quando viewMode é cards', () => {
+      page.mesas = mockMesas.filter(m => m.status)
+      page.viewMode = 'cards'
+      page.renderMesas()
+      const html = page.querySelector('.mesas-grid-container').innerHTML
+      expect(html).toContain('mesa-card')
     })
+  })
 
-    it('T006: deve exibir 4 colunas em viewport ≥1201px', () => {
-      const style = document.createElement('style')
-      style.textContent = '.comandas-grid { display: grid; grid-template-columns: repeat(4, 1fr); }'
-      document.head.appendChild(style)
-      const grid = document.createElement('div')
-      grid.className = 'comandas-grid'
-      document.body.appendChild(grid)
-      expect(getComputedStyle(grid).gridTemplateColumns).toBe('repeat(4, 1fr)')
-      style.remove(); grid.remove()
-    })
-
-    it('T017: não deve ter overflow horizontal em viewport 320px', () => {
-      const container = document.createElement('div')
-      container.className = 'home-container'
-      container.style.width = '320px'
-      document.body.appendChild(container)
-      const card = document.createElement('div')
-      card.className = 'comanda-card'
-      card.style.minWidth = '280px'
-      container.appendChild(card)
-      expect(container.scrollWidth).toBeLessThanOrEqual(container.offsetWidth + 1)
-      container.remove()
-    })
-
-    it('T015: seletor de status deve ter min-height 44px', () => {
-      const style = document.createElement('style')
-      style.textContent = '.item-status-select { --min-height: 44px; min-width: 100px; }'
-      document.head.appendChild(style)
-      const select = document.createElement('div')
-      select.className = 'item-status-select'
-      document.body.appendChild(select)
-      expect(getComputedStyle(select).minWidth).toBe('100px')
-      style.remove(); select.remove()
+  describe('Tratamento de Erros', () => {
+    it('deve mostrar mensagem de erro quando API falha', async () => {
+      api.getMesas.mockRejectedValue(new Error('Erro de rede'))
+      await page.loadPage()
+      expect(page._summaryText.textContent).toBe('Erro ao carregar')
     })
   })
 })

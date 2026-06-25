@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Comanda } from './entities/comanda.entity';
@@ -39,7 +39,10 @@ export class ComandaService {
   }
 
   async findOne(id: number): Promise<IComandaOutput> {
-    const comanda = await this.comandaRepository.findOne({ where: { id } });
+    const comanda = await this.comandaRepository.findOne({
+      where: { id },
+      relations: ['mesa', 'itens', 'itens.produto'],
+    });
     if (!comanda) {
       throw new NotFoundException(`Comanda com ID ${id} não encontrada`);
     }
@@ -48,11 +51,13 @@ export class ComandaService {
 
   async findOneByMesaId(id_mesa: number): Promise<IComandaOutput> {
     const comanda = await this.comandaRepository.findOne({
-      where: { id_mesa },
+      where: { id_mesa, status: 'aberta' },
+      relations: ['mesa', 'itens', 'itens.produto'],
+      order: { id: 'DESC' },
     });
     if (!comanda) {
       throw new NotFoundException(
-        `Comanda da Mesa com ID ${id_mesa} não encontrada`,
+        `Nenhuma comanda ativa encontrada para a Mesa ${id_mesa}`,
       );
     }
     return comanda;
@@ -63,6 +68,20 @@ export class ComandaService {
     updateComandaDto: UpdateComandaDto,
   ): Promise<IComandaOutput> {
     const comanda = await this.findOne(id);
+
+    if (comanda.status === 'fechada') {
+      throw new BadRequestException('Comanda já está fechada');
+    }
+
+    if (updateComandaDto.status === 'aberta' && comanda.status === 'fechada') {
+      throw new BadRequestException('Não é possível reabrir uma comanda fechada');
+    }
+
+    if (updateComandaDto.status === 'fechada') {
+      Object.assign(comanda, { status: 'fechada' });
+      return await this.comandaRepository.save(comanda);
+    }
+
     const updatedComanda = Object.assign(comanda, updateComandaDto);
     return await this.comandaRepository.save(updatedComanda);
   }

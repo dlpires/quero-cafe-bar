@@ -9,16 +9,25 @@ const pageName = 'Abrir Comanda';
 class RegComandaPage extends HTMLElement {
   async connectedCallback() {
     if (!requireAuth()) return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const preselectedMesaId = urlParams.get('id_mesa');
+
     this.classList.add('ion-page');
     this.innerHTML = `
       ${createHeader(pageName)}
       <ion-content class="ion-padding">
         <form id="form-comanda">
           <ion-list>
-            <ion-item>
+            <ion-item id="mesa-select-item">
               <ion-select name="id_mesa" id="id_mesa" label="Selecionar Mesa" label-placement="floating" required>
                 <div slot="label">Selecionar Mesa</div>
               </ion-select>
+            </ion-item>
+            <ion-item id="mesa-readonly-item" style="display:none">
+              <ion-label>
+                <h2 id="mesa-readonly-label"></h2>
+                <p>Mesa selecionada</p>
+              </ion-label>
             </ion-item>
 
             <ion-item>
@@ -43,11 +52,11 @@ class RegComandaPage extends HTMLElement {
     this.querySelector('#form-comanda').addEventListener('submit', (e) => this.handleSubmit(e));
     this.querySelector('#btn-cancelar').addEventListener('click', () => this.confirmCancel());
 
-    await this.loadMesas();
+    await this.loadMesas(preselectedMesaId);
     focusFirstElement(this);
   }
 
-  async loadMesas() {
+  async loadMesas(preselectedMesaId) {
     try {
       const response = await api.getMesas();
       const mesas = response.data || response;
@@ -60,6 +69,21 @@ class RegComandaPage extends HTMLElement {
           select.appendChild(option);
         }
       });
+
+      if (preselectedMesaId) {
+        const mesa = mesas.find(m => m.id === parseInt(preselectedMesaId));
+        if (mesa) {
+          select.value = preselectedMesaId;
+          const selectItem = this.querySelector('#mesa-select-item');
+          const readonlyItem = this.querySelector('#mesa-readonly-item');
+          const readonlyLabel = this.querySelector('#mesa-readonly-label');
+          if (selectItem && readonlyItem && readonlyLabel) {
+            selectItem.style.display = 'none';
+            readonlyItem.style.display = '';
+            readonlyLabel.textContent = `Mesa #${mesa.id} (${mesa.qtd_cadeiras} cadeiras)`;
+          }
+        }
+      }
     } catch (error) {
       console.error('Erro ao carregar mesas:', error);
       await showToast('Erro ao carregar lista de mesas.', 'error', 3000);
@@ -71,7 +95,11 @@ class RegComandaPage extends HTMLElement {
     const form = event.target;
     const formData = new FormData(form);
 
-    const id_mesa = formData.get('id_mesa');
+    const id_mesaInput = formData.get('id_mesa');
+    const urlParams = new URLSearchParams(window.location.search);
+    const preselectedId = urlParams.get('id_mesa');
+    const id_mesa = preselectedId || id_mesaInput;
+
     if (!id_mesa) {
       await showToast('O campo Mesa é obrigatório.', 'warning', 3000);
       focusFirstElement(form);
@@ -119,7 +147,7 @@ class RegComandaPage extends HTMLElement {
 
   navigateBack() {
     const router = document.querySelector('ion-router');
-    router.push('/comandas', 'root');
+    router.push('/home', 'root');
   }
 }
 

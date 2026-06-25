@@ -25,6 +25,7 @@ import '@ionic/core/css/display.css';
 // Static imports for all pages
 import './pages/login/LoginPage.js';
 import './pages/home/HomePage.js';
+import './pages/cozinha/CozinhaPage.js';
 import './pages/produto/ListProdutoPage.js';
 import './pages/produto/RegProdutoPage.js';
 import './pages/produto/UpdateProdutoPage.js';

@@ -53,6 +53,10 @@ const createAndInjectMenu = () => {
                     <ion-icon name="receipt-outline" slot="start" aria-hidden="true"></ion-icon>
                     <ion-label>Comandas</ion-label>
                 </ion-item>
+                <ion-item button class="menu-item" data-url="/cozinha">
+                    <ion-icon name="restaurant-outline" slot="start" aria-hidden="true"></ion-icon>
+                    <ion-label>Cozinha</ion-label>
+                </ion-item>
 
             </ion-list>
         </ion-content>
