@@ -3,6 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ComandaItemService } from './comanda-item.service';
 import { ComandaItem } from './entities/comanda-item.entity';
+import { Comanda } from '../comanda/entities/comanda.entity';
 import { CreateComandaItemDto } from './dto/create-comanda-item.dto';
 import { UpdateComandaItemDto } from './dto/update-comanda-item.dto';
 import { ListComandaItemDto } from './dto/list-comanda-item.dto';
@@ -20,6 +21,10 @@ describe('ComandaItemService', () => {
     delete: jest.fn(),
   };
 
+  const mockComandaRepository = {
+    findOne: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -27,6 +32,10 @@ describe('ComandaItemService', () => {
         {
           provide: getRepositoryToken(ComandaItem),
           useValue: mockComandaItemRepository,
+        },
+        {
+          provide: getRepositoryToken(Comanda),
+          useValue: mockComandaRepository,
         },
       ],
     }).compile();
@@ -60,6 +69,7 @@ describe('ComandaItemService', () => {
 
       mockComandaItemRepository.create.mockReturnValue(itemCriado);
       mockComandaItemRepository.save.mockResolvedValue(itemCriado);
+      mockComandaRepository.findOne.mockResolvedValue({ id: 1, status: 'aberta' });
 
       // Act
       const result = await service.create(createComandaItemDto);
@@ -192,6 +202,7 @@ describe('ComandaItemService', () => {
 
       mockComandaItemRepository.findOne.mockResolvedValue(itemExistente);
       mockComandaItemRepository.save.mockResolvedValue(itemAtualizado);
+      mockComandaRepository.findOne.mockResolvedValue({ id: 1, status: 'aberta' });
 
       // Act
       const result = await service.update(1, 10, updateComandaItemDto);
@@ -240,6 +251,7 @@ describe('ComandaItemService', () => {
 
       mockComandaItemRepository.findOne.mockResolvedValue(itemExistente);
       mockComandaItemRepository.delete.mockResolvedValue({ affected: 1 });
+      mockComandaRepository.findOne.mockResolvedValue({ id: 1, status: 'aberta' });
 
       // Act
       const result = await service.remove(1, 10);

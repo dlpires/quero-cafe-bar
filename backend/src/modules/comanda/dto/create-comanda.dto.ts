@@ -1,4 +1,5 @@
 import {
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -16,4 +17,9 @@ export class CreateComandaDto implements ICreateComandaInput {
   @IsOptional()
   @MaxLength(100)
   obs_comanda?: string;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['aberta', 'fechada'])
+  status?: string;
 }

@@ -12,6 +12,19 @@ describe('MesaService', () => {
   let service: MesaService;
   let mockRepository: jest.Mocked<Repository<Mesa>>;
 
+  const mockQueryBuilder = {
+    select: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    andWhere: jest.fn().mockReturnThis(),
+    getRawMany: jest.fn().mockResolvedValue([]),
+  };
+
+  const mockManager = {
+    getRepository: jest.fn().mockReturnValue({
+      createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
+    }),
+  };
+
   const mockMesaRepository = {
     create: jest.fn(),
     save: jest.fn(),
@@ -19,6 +32,7 @@ describe('MesaService', () => {
     findOne: jest.fn(),
     delete: jest.fn(),
     findAndCount: jest.fn(),
+    manager: mockManager,
   };
 
   beforeEach(async () => {
@@ -81,7 +95,9 @@ describe('MesaService', () => {
         skip: undefined,
         take: undefined,
       });
-      expect(result.data).toEqual(mesasMock);
+      expect(result.data).toEqual(
+        mesasMock.map((m) => ({ ...m, hasActiveComanda: false })),
+      );
       expect(result.total).toBe(3);
       expect(result.data).toHaveLength(3);
     });

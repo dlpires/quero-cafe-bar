@@ -119,6 +119,7 @@ describe('ComandaService', () => {
       // Assert
       expect(mockComandaRepository.findOne).toHaveBeenCalledWith({
         where: { id: 1 },
+        relations: ['mesa', 'itens', 'itens.produto'],
       });
       expect(result).toEqual(comandaMock);
     });
@@ -150,7 +151,9 @@ describe('ComandaService', () => {
 
       // Assert
       expect(mockComandaRepository.findOne).toHaveBeenCalledWith({
-        where: { id_mesa: 5 },
+        where: { id_mesa: 5, status: 'aberta' },
+        relations: ['mesa', 'itens', 'itens.produto'],
+        order: { id: 'DESC' },
       });
       expect(result).toEqual(comandaMock);
     });
@@ -161,7 +164,7 @@ describe('ComandaService', () => {
 
       // Act & Assert
       await expect(service.findOneByMesaId(999)).rejects.toThrow(
-        new NotFoundException(`Comanda da Mesa com ID 999 não encontrada`),
+        new NotFoundException(`Nenhuma comanda ativa encontrada para a Mesa 999`),
       );
     });
   });
@@ -190,6 +193,7 @@ describe('ComandaService', () => {
       // Assert
       expect(mockComandaRepository.findOne).toHaveBeenCalledWith({
         where: { id: 1 },
+        relations: ['mesa', 'itens', 'itens.produto'],
       });
       expect(mockComandaRepository.save).toHaveBeenCalledWith(
         expect.objectContaining(updateComandaDto),
@@ -224,6 +228,7 @@ describe('ComandaService', () => {
       // Assert
       expect(mockComandaRepository.findOne).toHaveBeenCalledWith({
         where: { id: 1 },
+        relations: ['mesa', 'itens', 'itens.produto'],
       });
       expect(mockComandaRepository.delete).toHaveBeenCalledWith(1);
       expect(result).toEqual({ id: 1 });

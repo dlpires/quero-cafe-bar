@@ -1,0 +1,137 @@
+.home-container {
+  padding: 16px;
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.comandas-grid-container {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.comandas-grid {
+  display: grid;
+  gap: 16px;
+}
+
+@media (max-width: 480px) {
+  .comandas-grid {
+    grid-template-columns: 1fr;
+  }
+  .home-container {
+    padding: 12px;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+}
+
+@media (min-width: 481px) and (max-width: 900px) {
+  .comandas-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1200px) {
+  .comandas-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1201px) {
+  .comandas-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.comanda-card {
+  margin: 0;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.comanda-card ion-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--ion-color-light);
+  padding-bottom: 8px;
+}
+
+.comanda-card ion-card-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.card-status-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.comanda-card ion-card-content {
+  padding-top: 8px;
+}
+
+.comanda-card ion-item {
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  --min-height: 48px;
+}
+
+.comanda-item {
+  border-left: 4px solid transparent;
+}
+
+.comanda-item.item-pending {
+  border-left-color: var(--ion-color-danger);
+}
+
+.comanda-item.item-delivered {
+  border-left-color: var(--ion-color-success);
+}
+
+.item-label {
+  overflow: hidden;
+}
+
+.item-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  font-size: 15px;
+  margin: 0;
+}
+
+.item-qty {
+  font-size: 13px;
+  color: var(--ion-color-medium);
+  margin: 2px 0 0 0;
+  flex-shrink: 0;
+}
+
+.item-status-select {
+  --min-height: 44px;
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.skeleton-w-70 {
+  width: 70%;
+}
+
+.skeleton-w-60 {
+  width: 60%;
+}
+
+.skeleton-end {
+  width: 80px;
+  height: 24px;
+}
+
+.pagination-bar-container {
+  background: var(--ion-background-color);
+}

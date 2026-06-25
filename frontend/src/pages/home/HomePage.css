@@ -7,19 +7,46 @@
   flex-direction: column;
 }
 
-.comandas-grid-container {
+.summary-bar {
+  font-size: 14px;
+  color: var(--ion-color-medium);
+  padding: 8px 0;
+  text-align: center;
+  font-weight: 500;
+}
+
+.view-toggle {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.view-toggle ion-button {
+  --padding-start: 8px;
+  --padding-end: 8px;
+  --min-height: 36px;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.view-toggle .view-btn.active {
+  --color: var(--ion-color-primary);
+  --background: var(--ion-color-primary-tint);
+}
+
+.mesas-grid-container {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
 }
 
-.comandas-grid {
+.mesas-grid {
   display: grid;
   gap: 16px;
 }
 
 @media (max-width: 480px) {
-  .comandas-grid {
+  .mesas-grid {
     grid-template-columns: 1fr;
   }
   .home-container {
@@ -30,106 +57,94 @@
 }
 
 @media (min-width: 481px) and (max-width: 900px) {
-  .comandas-grid {
+  .mesas-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (min-width: 901px) and (max-width: 1200px) {
-  .comandas-grid {
+  .mesas-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
 @media (min-width: 1201px) {
-  .comandas-grid {
+  .mesas-grid {
     grid-template-columns: repeat(4, 1fr);
   }
 }
 
-.comanda-card {
+.mesa-card {
   margin: 0;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  outline: none;
 }
 
-.comanda-card ion-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--ion-color-light);
+.mesa-card:focus-visible {
+  box-shadow: 0 0 0 3px var(--ion-color-primary);
+}
+
+.mesa-card:active {
+  transform: scale(0.97);
+}
+
+.mesa-card.mesa-disponivel {
+  border-left: 4px solid var(--ion-color-success);
+}
+
+.mesa-card.mesa-ocupada {
+  border-left: 4px solid var(--ion-color-warning);
+}
+
+.mesa-card ion-card-header {
   padding-bottom: 8px;
+  text-align: center;
 }
 
-.comanda-card ion-card-title {
-  font-size: 16px;
-  font-weight: 600;
+.mesa-card-title {
+  font-size: 28px;
+  font-weight: 700;
 }
 
-.card-status-icon {
-  font-size: 24px;
-  flex-shrink: 0;
+.mesa-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding-top: 0;
 }
 
-.comanda-card ion-card-content {
-  padding-top: 8px;
+.mesa-card-content ion-badge {
+  font-size: 13px;
+  padding: 4px 12px;
+  border-radius: 12px;
 }
 
-.comanda-card ion-item {
-  --padding-start: 0;
-  --inner-padding-end: 0;
-  --min-height: 48px;
-}
-
-.comanda-item {
-  border-left: 4px solid transparent;
-}
-
-.comanda-item.item-pending {
-  border-left-color: var(--ion-color-danger);
-}
-
-.comanda-item.item-delivered {
-  border-left-color: var(--ion-color-success);
-}
-
-.item-label {
-  overflow: hidden;
-}
-
-.item-name {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-weight: 500;
-  font-size: 15px;
-  margin: 0;
-}
-
-.item-qty {
+.mesa-chairs {
   font-size: 13px;
   color: var(--ion-color-medium);
-  margin: 2px 0 0 0;
-  flex-shrink: 0;
+  margin: 4px 0 0 0;
 }
 
-.item-status-select {
-  --min-height: 44px;
-  min-width: 100px;
-  flex-shrink: 0;
+.mesas-list {
+  background: transparent;
 }
 
-.skeleton-w-70 {
-  width: 70%;
+.mesa-list-item {
+  --border-radius: 8px;
+  margin-bottom: 4px;
+  cursor: pointer;
 }
 
-.skeleton-w-60 {
-  width: 60%;
+.mesa-list-item.mesa-disponivel {
+  --border-left: 4px solid var(--ion-color-success);
 }
 
-.skeleton-end {
-  width: 80px;
-  height: 24px;
+.mesa-list-item.mesa-ocupada {
+  --border-left: 4px solid var(--ion-color-warning);
 }
 
 .pagination-bar-container {

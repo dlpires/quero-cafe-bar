@@ -29,7 +29,7 @@ class UpdateComandaPage extends HTMLElement {
             </ion-item>
           </ion-list>
 
-          <ion-button expand="block" type="submit" class="ion-margin-top">
+          <ion-button expand="block" type="submit" class="ion-margin-top" id="btn-submit">
             <ion-icon name="checkmark-circle" class="radio-icon"></ion-icon>
             Salvar Dados
           </ion-button>
@@ -45,6 +45,13 @@ class UpdateComandaPage extends HTMLElement {
         </div>
 
         <div class="ion-padding">
+          <ion-button expand="block" id="btn-fechar-comanda" color="medium" class="ion-margin-top">
+            <ion-icon name="lock-closed-outline" class="radio-icon"></ion-icon>
+            Fechar Comanda
+          </ion-button>
+        </div>
+
+        <div class="ion-padding">
           <ion-button expand="block" color="danger" id="btn-cancelar">
             <ion-icon name="close-circle" class="radio-icon"></ion-icon>
             Voltar
@@ -56,6 +63,7 @@ class UpdateComandaPage extends HTMLElement {
     this.querySelector('#form-comanda').addEventListener('submit', (e) => this.handleSubmit(e));
     this.querySelector('#btn-cancelar').addEventListener('click', () => this.confirmCancel());
     this.querySelector('#btn-add-item').addEventListener('click', () => this.showAddItemModal());
+    this.querySelector('#btn-fechar-comanda').addEventListener('click', () => this.confirmFecharComanda());
 
     if (this.comandaId) {
       await this.loadComandaData();
@@ -63,6 +71,24 @@ class UpdateComandaPage extends HTMLElement {
     }
 
     focusFirstElement(this);
+  }
+
+  async setComandaReadOnly() {
+    const formElements = this.querySelectorAll('#id_mesa, #obs_comanda');
+    formElements.forEach(el => el.disabled = true);
+    const submitBtn = this.querySelector('#btn-submit');
+    if (submitBtn) submitBtn.style.display = 'none';
+    const addItemBtn = this.querySelector('#btn-add-item');
+    if (addItemBtn) addItemBtn.style.display = 'none';
+    const fecharBtn = this.querySelector('#btn-fechar-comanda');
+    if (fecharBtn) fecharBtn.style.display = 'none';
+
+    const statusBadge = document.createElement('ion-badge');
+    statusBadge.color = 'medium';
+    statusBadge.className = 'comanda-status-badge';
+    statusBadge.textContent = 'Comanda Fechada';
+    const form = this.querySelector('#form-comanda');
+    form.parentNode.insertBefore(statusBadge, form.nextSibling);
   }
 
   async loadMesas() {
@@ -86,8 +112,13 @@ class UpdateComandaPage extends HTMLElement {
     try {
       await this.loadMesas();
       const comanda = await api.getComandaById(this.comandaId);
+      this.comandaStatus = comanda.status;
       this.querySelector('#id_mesa').value = comanda.id_mesa;
       this.querySelector('#obs_comanda').value = comanda.obs_comanda || '';
+
+      if (comanda.status === 'fechada') {
+        await this.setComandaReadOnly();
+      }
     } catch (error) {
       console.error('Erro ao carregar comanda:', error);
       const alert = document.createElement('ion-alert');
@@ -151,6 +182,7 @@ class UpdateComandaPage extends HTMLElement {
       pgCheckbox.checked = item.statusPg;
       pgCheckbox.dataset.produto = item.id_produto;
       pgCheckbox.textContent = 'Pago';
+      pgCheckbox.disabled = this.comandaStatus === 'fechada';
       pgCheckbox.addEventListener('ionChange', async (e) => {
         await this.updateItemStatus(item.id_produto, 'statusPg', e.detail.checked);
       });
@@ -161,25 +193,28 @@ class UpdateComandaPage extends HTMLElement {
       entCheckbox.checked = item.statusEntrega;
       entCheckbox.dataset.produto = item.id_produto;
       entCheckbox.textContent = 'Entregue';
+      entCheckbox.disabled = this.comandaStatus === 'fechada';
       entCheckbox.addEventListener('ionChange', async (e) => {
         await this.updateItemStatus(item.id_produto, 'statusEntrega', e.detail.checked);
       });
       statusDiv.appendChild(entCheckbox);
 
-      const removeBtn = document.createElement('ion-button');
-      removeBtn.fill = 'clear';
-      removeBtn.color = 'danger';
-      removeBtn.className = 'btn-remove-item';
-      removeBtn.dataset.produto = item.id_produto;
-      removeBtn.setAttribute('aria-label', `Excluir item ${item.produto?.dsc_produto || item.id_produto}`);
-      removeBtn.addEventListener('click', async () => {
-        await this.removeItem(item.id_produto);
-      });
-      const removeIcon = document.createElement('ion-icon');
-      removeIcon.slot = 'icon-only';
-      removeIcon.name = 'trash-outline';
-      removeBtn.appendChild(removeIcon);
-      statusDiv.appendChild(removeBtn);
+      if (this.comandaStatus !== 'fechada') {
+        const removeBtn = document.createElement('ion-button');
+        removeBtn.fill = 'clear';
+        removeBtn.color = 'danger';
+        removeBtn.className = 'btn-remove-item';
+        removeBtn.dataset.produto = item.id_produto;
+        removeBtn.setAttribute('aria-label', `Excluir item ${item.produto?.dsc_produto || item.id_produto}`);
+        removeBtn.addEventListener('click', async () => {
+          await this.removeItem(item.id_produto);
+        });
+        const removeIcon = document.createElement('ion-icon');
+        removeIcon.slot = 'icon-only';
+        removeIcon.name = 'trash-outline';
+        removeBtn.appendChild(removeIcon);
+        statusDiv.appendChild(removeBtn);
+      }
 
       ionItem.appendChild(statusDiv);
       list.appendChild(ionItem);
@@ -332,6 +367,30 @@ class UpdateComandaPage extends HTMLElement {
     });
   }
 
+  async confirmFecharComanda() {
+    const alert = document.createElement('ion-alert');
+    alert.header = 'Fechar Comanda';
+    alert.message = 'Tem certeza que deseja fechar esta comanda? Esta ação não pode ser desfeita.';
+    alert.buttons = [
+      { text: 'Cancelar', role: 'cancel' },
+      {
+        text: 'Fechar',
+        handler: async () => {
+          try {
+            await api.updateComanda(this.comandaId, { status: 'fechada' });
+            await showToast('Comanda fechada com sucesso!', 'success', 3000);
+            this.navigateBack();
+          } catch (error) {
+            console.error('Erro ao fechar comanda:', error);
+            await showToast(error.message, 'error', 5000);
+          }
+        }
+      }
+    ];
+    document.body.appendChild(alert);
+    await alert.present();
+  }
+
   async handleSubmit(event) {
     event.preventDefault();
     const form = event.target;
@@ -385,7 +444,7 @@ class UpdateComandaPage extends HTMLElement {
 
   navigateBack() {
     const router = document.querySelector('ion-router');
-    router.push('/comandas', 'root');
+    router.push('/home', 'root');
   }
 }
 
