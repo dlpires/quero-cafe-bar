@@ -1,13 +1,19 @@
 import { createHeader } from '../../shared/Header.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
-import { showToast, withLoading, validateRequired, validatePositiveNumber, focusFirstElement, hasFormChanges } from '../../shared/util.js';
+import { showToast, withLoading, validateRequired, validatePositiveNumber, focusFirstElement, hasFormChanges, getLoggedUserProfile } from '../../shared/util.js';
 
 const pageName = 'Cadastrar Mesa';
 
 class RegMesaPage extends HTMLElement {
-  connectedCallback() {
+  async connectedCallback() {
     if (!requireAuth()) return;
+    const perfil = await getLoggedUserProfile();
+    if (perfil !== 0) {
+      await showToast('Você não tem permissão para acessar esta página.', 'error', 3000);
+      document.querySelector('ion-router')?.push('/home', 'root');
+      return;
+    }
     this.classList.add('ion-page');
     this.innerHTML = `
       ${createHeader(pageName)}

@@ -28,8 +28,9 @@ export class JwtAuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
     const authHeader: string | undefined =
       request.headers.authorization?.toString();
-    const cookieToken: string | undefined =
-      (request as unknown as { cookies?: { token?: string } }).cookies?.token;
+    const cookieToken: string | undefined = (
+      request as unknown as { cookies?: { token?: string } }
+    ).cookies?.token;
     const token = authHeader?.replace('Bearer ', '') || cookieToken;
     if (!token) {
       throw new UnauthorizedException('Token não fornecido');

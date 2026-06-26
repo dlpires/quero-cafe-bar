@@ -22,6 +22,24 @@ const createAndInjectMenu = () => {
         mainContent.id = contentId;
     }
 
+    const menuItems = [
+        { url: '/home', icon: 'home-outline', label: 'Home', profiles: [0, 1] },
+        { url: '/produtos', icon: 'fast-food-outline', label: 'Produtos', profiles: [0] },
+        { url: '/usuarios', icon: 'people-outline', label: 'Usuários', profiles: [0] },
+        { url: '/mesas', icon: 'grid-outline', label: 'Mesas', profiles: [0] },
+        { url: '/comandas', icon: 'receipt-outline', label: 'Comandas', profiles: [0, 1] },
+        { url: '/cozinha', icon: 'restaurant-outline', label: 'Cozinha', profiles: [0, 1, 2] },
+    ];
+
+    const userPerfil = (() => {
+        const stored = localStorage.getItem('user_perfil');
+        return stored !== null ? parseInt(stored, 10) : null;
+    })();
+
+    const allowedItems = userPerfil !== null
+        ? menuItems.filter(item => item.profiles.includes(userPerfil))
+        : menuItems;
+
     // 3. Cria o elemento <ion-menu>
     const menu = document.createElement('ion-menu');
     menu.contentId = mainContent.id; // Garante que o ID do conteúdo seja o mesmo que o menu espera.
@@ -33,31 +51,12 @@ const createAndInjectMenu = () => {
         </ion-header>
         <ion-content>
             <ion-list>
-                <ion-item button class="menu-item" data-url="/home">
-                    <ion-icon name="home-outline" slot="start" aria-hidden="true"></ion-icon>
-                    <ion-label>Home</ion-label>
-                </ion-item>
-                <ion-item button class="menu-item" data-url="/produtos">
-                    <ion-icon name="fast-food-outline" slot="start" aria-hidden="true"></ion-icon>
-                    <ion-label>Produtos</ion-label>
-                </ion-item>
-                <ion-item button class="menu-item" data-url="/usuarios">
-                    <ion-icon name="people-outline" slot="start" aria-hidden="true"></ion-icon>
-                    <ion-label>Usuários</ion-label>
-                </ion-item>
-                <ion-item button class="menu-item" data-url="/mesas">
-                    <ion-icon name="grid-outline" slot="start" aria-hidden="true"></ion-icon>
-                    <ion-label>Mesas</ion-label>
-                </ion-item>
-                <ion-item button class="menu-item" data-url="/comandas">
-                    <ion-icon name="receipt-outline" slot="start" aria-hidden="true"></ion-icon>
-                    <ion-label>Comandas</ion-label>
-                </ion-item>
-                <ion-item button class="menu-item" data-url="/cozinha">
-                    <ion-icon name="restaurant-outline" slot="start" aria-hidden="true"></ion-icon>
-                    <ion-label>Cozinha</ion-label>
-                </ion-item>
-
+                ${allowedItems.map(item => `
+                    <ion-item button class="menu-item" data-url="${item.url}">
+                        <ion-icon name="${item.icon}" slot="start" aria-hidden="true"></ion-icon>
+                        <ion-label>${item.label}</ion-label>
+                    </ion-item>
+                `).join('')}
             </ion-list>
         </ion-content>
     `;

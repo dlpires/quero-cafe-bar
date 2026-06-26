@@ -7,6 +7,7 @@ import { Usuario } from './entities/usuario.entity';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { ListUsuarioDto } from './dto/list-usuario.dto';
+import { AuditService } from '../audit/audit.service';
 
 jest.mock('bcrypt');
 
@@ -24,6 +25,11 @@ describe('UsuarioService', () => {
     findAndCount: jest.fn(),
   };
 
+  const mockAuditService = {
+    log: jest.fn(),
+    findAll: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -31,6 +37,10 @@ describe('UsuarioService', () => {
         {
           provide: getRepositoryToken(Usuario),
           useValue: mockUsuarioRepository,
+        },
+        {
+          provide: AuditService,
+          useValue: mockAuditService,
         },
       ],
     }).compile();

@@ -10,17 +10,32 @@ import { DeleteMesaDto } from './dto/delete-mesa.dto';
 import { PaginatedResponse } from '../produto/dto/paginated-response.dto';
 import { IMesaOutput } from './interfaces/mesa.interface';
 import { NotFoundException } from '@nestjs/common';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class MesaService {
   constructor(
     @InjectRepository(Mesa)
     private readonly mesaRepository: Repository<Mesa>,
+    private readonly auditService: AuditService,
   ) {}
 
-  async create(createMesaDto: CreateMesaDto): Promise<IMesaOutput> {
+  async create(
+    createMesaDto: CreateMesaDto,
+    authenticatedUser?: { id: number },
+  ): Promise<IMesaOutput> {
     const mesa = this.mesaRepository.create(createMesaDto);
-    return await this.mesaRepository.save(mesa);
+    const result = await this.mesaRepository.save(mesa);
+    if (authenticatedUser) {
+      await this.auditService.log(
+        authenticatedUser.id,
+        'CREATE',
+        'mesa',
+        result.id,
+        { qtd_cadeiras: createMesaDto.qtd_cadeiras },
+      );
+    }
+    return result;
   }
 
   async findAll(
@@ -69,15 +84,44 @@ export class MesaService {
     return mesa;
   }
 
-  async update(id: number, updateMesaDto: UpdateMesaDto): Promise<IMesaOutput> {
+  async update(
+    id: number,
+    updateMesaDto: UpdateMesaDto,
+    authenticatedUser?: { id: number },
+  ): Promise<IMesaOutput> {
     const mesa = await this.findOne(id);
     const updatedMesa = Object.assign(mesa, updateMesaDto);
-    return await this.mesaRepository.save(updatedMesa);
+    const result = await this.mesaRepository.save(updatedMesa);
+    if (authenticatedUser) {
+      const details: Record<string, unknown> = {};
+      if (updateMesaDto.qtd_cadeiras !== undefined) details.qtd_cadeiras = updateMesaDto.qtd_cadeiras;
+      if (updateMesaDto.status !== undefined) details.status = updateMesaDto.status;
+      await this.auditService.log(
+        authenticatedUser.id,
+        'UPDATE',
+        'mesa',
+        id,
+        Object.keys(details).length > 0 ? details : undefined,
+      );
+    }
+    return result;
   }
 
-  async remove(id: number): Promise<DeleteMesaDto> {
-    await this.findOne(id);
+  async remove(
+    id: number,
+    authenticatedUser?: { id: number },
+  ): Promise<DeleteMesaDto> {
+    const mesa = await this.findOne(id);
     await this.mesaRepository.delete(id);
+    if (authenticatedUser) {
+      await this.auditService.log(
+        authenticatedUser.id,
+        'DELETE',
+        'mesa',
+        id,
+        { qtd_cadeiras: mesa.qtd_cadeiras },
+      );
+    }
     return { id };
   }
 }

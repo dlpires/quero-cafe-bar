@@ -1,6 +1,6 @@
 import './ListUsuarioPage.css'
 import { createHeader } from '../../shared/Header.js';
-import { logout, createEmptyState, focusFirstElement, showToast, getLoggedUserId, perfMeasureAsync, createPaginationState, calculateResponsivePageSize, renderPaginationBar, createListSkeleton } from '../../shared/util.js';
+import { logout, createEmptyState, focusFirstElement, showToast, getLoggedUserId, getLoggedUserProfile, perfMeasureAsync, createPaginationState, calculateResponsivePageSize, renderPaginationBar, createListSkeleton } from '../../shared/util.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
 
@@ -32,6 +32,12 @@ class ListUsuarioPage extends HTMLElement {
 
     this.querySelector('#logout-btn').addEventListener('click', logout);
     focusFirstElement(this);
+    const perfil = await getLoggedUserProfile();
+    if (perfil !== 0) {
+      await showToast('Você não tem permissão para acessar esta página.', 'error', 3000);
+      document.querySelector('ion-router')?.push('/home', 'root');
+      return;
+    }
     this.renderFabButton();
 
     const content = this.querySelector('ion-content');
