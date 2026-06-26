@@ -7,6 +7,7 @@ import { CreateMesaDto } from './dto/create-mesa.dto';
 import { UpdateMesaDto } from './dto/update-mesa.dto';
 import { ListMesaDto } from './dto/list-mesa.dto';
 import { NotFoundException } from '@nestjs/common';
+import { AuditService } from '../audit/audit.service';
 
 describe('MesaService', () => {
   let service: MesaService;
@@ -35,6 +36,10 @@ describe('MesaService', () => {
     manager: mockManager,
   };
 
+  const mockAuditService = {
+    log: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -42,6 +47,10 @@ describe('MesaService', () => {
         {
           provide: getRepositoryToken(Mesa),
           useValue: mockMesaRepository,
+        },
+        {
+          provide: AuditService,
+          useValue: mockAuditService,
         },
       ],
     }).compile();

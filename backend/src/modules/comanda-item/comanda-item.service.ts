@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ComandaItem } from './entities/comanda-item.entity';
@@ -23,7 +27,9 @@ export class ComandaItemService {
       where: { id: id_comanda },
     });
     if (!comanda) {
-      throw new NotFoundException(`Comanda com ID ${id_comanda} não encontrada`);
+      throw new NotFoundException(
+        `Comanda com ID ${id_comanda} não encontrada`,
+      );
     }
     if (comanda.status === 'fechada') {
       throw new BadRequestException('Comanda já está fechada');

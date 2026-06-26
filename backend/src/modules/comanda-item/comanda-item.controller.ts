@@ -8,6 +8,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { ComandaItemService } from './comanda-item.service';
 import { CreateComandaItemDto } from './dto/create-comanda-item.dto';
 import { ListComandaItemDto } from './dto/list-comanda-item.dto';
@@ -20,6 +21,7 @@ export class ComandaItemController {
   constructor(private readonly comandaItemService: ComandaItemService) {}
 
   @Post()
+  @Roles(0, 1)
   async create(
     @Body() createComandaItemDto: CreateComandaItemDto,
   ): Promise<IComandaItemOutput> {
@@ -27,6 +29,7 @@ export class ComandaItemController {
   }
 
   @Get()
+  @Roles(0, 1, 2)
   async findAll(
     @Query() listComandaItemDto: ListComandaItemDto,
   ): Promise<IComandaItemOutput[]> {
@@ -34,6 +37,7 @@ export class ComandaItemController {
   }
 
   @Get('status-pg/:id_comanda')
+  @Roles(0, 1, 2)
   async findByComandaPaga(
     @Param('id_comanda') id_comanda: number,
   ): Promise<IComandaItemOutput[]> {
@@ -44,6 +48,7 @@ export class ComandaItemController {
   }
 
   @Get('status-entrega/:id_comanda')
+  @Roles(0, 1, 2)
   async findByComandaEntrega(
     @Param('id_comanda') id_comanda: number,
   ): Promise<IComandaItemOutput[]> {
@@ -54,6 +59,7 @@ export class ComandaItemController {
   }
 
   @Get(':id_comanda/:id_produto')
+  @Roles(0, 1, 2)
   async findOne(
     @Param('id_comanda') id_comanda: number,
     @Param('id_produto') id_produto: number,
@@ -62,11 +68,13 @@ export class ComandaItemController {
   }
 
   @Get(':id_comanda')
+  @Roles(0, 1, 2)
   async findByComanda(@Param('id_comanda') id_comanda: number) {
     return await this.comandaItemService.findAll({ id_comanda });
   }
 
   @Patch(':id_comanda/:id_produto')
+  @Roles(0, 1, 2)
   async update(
     @Param('id_comanda') id_comanda: number,
     @Param('id_produto') id_produto: number,
@@ -80,6 +88,7 @@ export class ComandaItemController {
   }
 
   @Delete(':id_comanda/:id_produto')
+  @Roles(0, 1)
   async remove(
     @Param('id_comanda') id_comanda: number,
     @Param('id_produto') id_produto: number,

@@ -1,4 +1,6 @@
-import { Controller, ConflictException } from '@nestjs/common';
+import { Controller, ConflictException, Req } from '@nestjs/common';
+import type { Request } from 'express';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { MesaService } from './mesa.service';
 import { CreateMesaDto } from './dto/create-mesa.dto';
 import { ListMesaDto } from './dto/list-mesa.dto';
@@ -13,11 +15,19 @@ export class MesaController {
   constructor(private readonly mesaService: MesaService) {}
 
   @Post()
-  async create(@Body() createMesaDto: CreateMesaDto): Promise<IMesaOutput> {
-    return await this.mesaService.create(createMesaDto);
+  @Roles(0)
+  async create(
+    @Body() createMesaDto: CreateMesaDto,
+    @Req() request: Request,
+  ): Promise<IMesaOutput> {
+    const decoded = (request as unknown as Record<string, unknown>).user as
+      | { id: number }
+      | undefined;
+    return await this.mesaService.create(createMesaDto, decoded);
   }
 
   @Get()
+  @Roles(0, 1)
   async findAll(
     @Query() listMesaDto: ListMesaDto,
   ): Promise<PaginatedResponse<IMesaOutput>> {
@@ -25,22 +35,35 @@ export class MesaController {
   }
 
   @Get(':id')
+  @Roles(0, 1)
   async findOne(@Param('id') id: number): Promise<IMesaOutput> {
     return await this.mesaService.findOne(id);
   }
 
   @Patch(':id')
+  @Roles(0)
   async update(
     @Param('id') id: number,
     @Body() updateMesaDto: UpdateMesaDto,
+    @Req() request: Request,
   ): Promise<IMesaOutput> {
-    return await this.mesaService.update(id, updateMesaDto);
+    const decoded = (request as unknown as Record<string, unknown>).user as
+      | { id: number }
+      | undefined;
+    return await this.mesaService.update(id, updateMesaDto, decoded);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: number): Promise<DeleteMesaDto> {
+  @Roles(0)
+  async remove(
+    @Param('id') id: number,
+    @Req() request: Request,
+  ): Promise<DeleteMesaDto> {
+    const decoded = (request as unknown as Record<string, unknown>).user as
+      | { id: number }
+      | undefined;
     try {
-      return await this.mesaService.remove(id);
+      return await this.mesaService.remove(id, decoded);
     } catch (error: unknown) {
       if (
         typeof error === 'object' &&

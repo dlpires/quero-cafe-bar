@@ -22,9 +22,12 @@ export function redirectToLogin() {
 }
 
 export function redirectToHome() {
+  const stored = localStorage.getItem('user_perfil');
+  const perfil = stored !== null ? parseInt(stored, 10) : null;
+  const redirect = perfil === 2 ? '/cozinha' : '/home';
   const router = document.querySelector('ion-router');
   if (router) {
-    router.push('/home', 'root');
+    router.push(redirect, 'root');
   }
 }
 

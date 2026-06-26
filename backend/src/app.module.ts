@@ -11,6 +11,8 @@ import { ProdutoModule } from './modules/produto/produto.module';
 import { ComandaItemModule } from './modules/comanda-item/comanda-item.module';
 import { UsuarioModule } from './modules/usuario/usuario.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { RolesGuard } from './common/guards/roles.guard';
+import { AuditModule } from './modules/audit/audit.module';
 import { SeedService } from './common/seed/seed.service';
 import ormConfig from './config/orm.config';
 
@@ -34,6 +36,7 @@ import ormConfig from './config/orm.config';
     ProdutoModule,
     ComandaItemModule,
     UsuarioModule,
+    AuditModule,
   ],
   controllers: [AppController],
   providers: [
@@ -46,6 +49,10 @@ import ormConfig from './config/orm.config';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
   ],
 })

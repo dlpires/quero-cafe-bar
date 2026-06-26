@@ -13,10 +13,12 @@ import {
   HttpStatus,
   UseGuards,
   ConflictException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import * as jwt from 'jsonwebtoken';
 import type { Request, Response } from 'express';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard, Public } from '../../common/guards/jwt-auth.guard';
 import { UsuarioService } from './usuario.service';
 import { PaginatedResponse } from '../produto/dto/paginated-response.dto';
@@ -32,25 +34,62 @@ export class UsuarioController {
   constructor(private readonly usuarioService: UsuarioService) {}
 
   @Post()
+  @Roles(0)
   async create(
     @Body() createUsuarioDto: CreateUsuarioDto,
+    @Req() request: Request,
   ): Promise<IUsuarioOutput> {
-    return await this.usuarioService.create(createUsuarioDto);
+    const decoded = (request as unknown as Record<string, unknown>).user as
+      | { id: number }
+      | undefined;
+    return await this.usuarioService.create(createUsuarioDto, decoded);
   }
 
   @Get()
+  @Roles(0)
   async findAll(
     @Query() listUsuarioDto: ListUsuarioDto,
   ): Promise<PaginatedResponse<IUsuarioOutput>> {
     return await this.usuarioService.findAll(listUsuarioDto);
   }
 
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  async getMe(@Req() request: Request) {
+    const decoded = (request as unknown as Record<string, unknown>).user as
+      | { id: number }
+      | undefined;
+    if (!decoded || decoded.id == null) {
+      throw new UnauthorizedException(
+        'Token inválido: ID de usuário não encontrado',
+      );
+    }
+    const user = await this.usuarioService.findOne(decoded.id);
+    return { id: user.id, usuario: user.usuario, perfil: user.perfil };
+  }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  logout(@Res({ passthrough: true }) response: Response) {
+    response.cookie('token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 0,
+      path: '/',
+    });
+    return { message: 'Logout realizado com sucesso' };
+  }
+
   @Get(':id')
+  @Roles(0)
   async findOne(@Param('id') id: number): Promise<IUsuarioOutput> {
     return await this.usuarioService.findOne(id);
   }
 
   @Get('usuario/:usuario')
+  @Roles(0)
   async findByUsuario(
     @Param('usuario') usuario: string,
   ): Promise<IUsuarioOutput> {
@@ -58,6 +97,7 @@ export class UsuarioController {
   }
 
   @Get('perfil/:perfil')
+  @Roles(0)
   async findByPerfil(@Param('perfil') perfil: number): Promise<IUsuarioOutput> {
     return await this.usuarioService.findByPerfil(perfil);
   }
@@ -95,66 +135,31 @@ export class UsuarioController {
     return { token };
   }
 
-  @Get('me')
-  @UseGuards(JwtAuthGuard)
-  async getMe(@Req() request: Request) {
-    const decoded = (request as unknown as Record<string, unknown>)
-      .user as { id: number };
-    const user = await this.usuarioService.findOne(decoded.id);
-    return { id: user.id, usuario: user.usuario, perfil: user.perfil };
-  }
-
-  @Post('logout')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  logout(@Res({ passthrough: true }) response: Response) {
-    response.cookie('token', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 0,
-      path: '/',
-    });
-    return { message: 'Logout realizado com sucesso' };
-  }
-
   @Patch(':id')
+  @Roles(0)
   async update(
     @Param('id') id: number,
     @Body() updateUsuarioDto: UpdateUsuarioDto,
+    @Req() request: Request,
   ): Promise<IUsuarioOutput> {
-    return await this.usuarioService.update(id, updateUsuarioDto);
+    const decoded = (request as unknown as Record<string, unknown>).user as
+      | { id: number; perfil: number }
+      | undefined;
+    return await this.usuarioService.update(id, updateUsuarioDto, decoded);
   }
 
   @Delete(':id')
+  @Roles(0)
   async remove(
     @Param('id') id: number,
     @Req() request: Request,
   ): Promise<DeleteUsuarioDto> {
-    const authHeader = request.headers.authorization;
-    if (authHeader) {
-      const token = authHeader.replace('Bearer ', '');
-      try {
-        const secret = process.env.JWT_SECRET;
-        if (!secret) {
-          throw new Error(
-            'JWT_SECRET não configurado nas variáveis de ambiente',
-          );
-        }
-        const decoded = jwt.verify(token, secret, {
-          algorithms: ['HS256'],
-        }) as { id: number };
-        if (decoded.id === id) {
-          throw new ConflictException(
-            'Você não pode excluir seu próprio usuário',
-          );
-        }
-      } catch (error) {
-        if (error instanceof ConflictException) {
-          throw error;
-        }
-      }
+    const decoded = (request as unknown as Record<string, unknown>).user as
+      | { id: number }
+      | undefined;
+    if (decoded && decoded.id === id) {
+      throw new ConflictException('Você não pode excluir seu próprio usuário');
     }
-    return await this.usuarioService.remove(id);
+    return await this.usuarioService.remove(id, decoded);
   }
 }

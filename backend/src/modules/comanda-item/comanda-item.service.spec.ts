@@ -69,7 +69,10 @@ describe('ComandaItemService', () => {
 
       mockComandaItemRepository.create.mockReturnValue(itemCriado);
       mockComandaItemRepository.save.mockResolvedValue(itemCriado);
-      mockComandaRepository.findOne.mockResolvedValue({ id: 1, status: 'aberta' });
+      mockComandaRepository.findOne.mockResolvedValue({
+        id: 1,
+        status: 'aberta',
+      });
 
       // Act
       const result = await service.create(createComandaItemDto);
@@ -202,7 +205,10 @@ describe('ComandaItemService', () => {
 
       mockComandaItemRepository.findOne.mockResolvedValue(itemExistente);
       mockComandaItemRepository.save.mockResolvedValue(itemAtualizado);
-      mockComandaRepository.findOne.mockResolvedValue({ id: 1, status: 'aberta' });
+      mockComandaRepository.findOne.mockResolvedValue({
+        id: 1,
+        status: 'aberta',
+      });
 
       // Act
       const result = await service.update(1, 10, updateComandaItemDto);
@@ -251,7 +257,10 @@ describe('ComandaItemService', () => {
 
       mockComandaItemRepository.findOne.mockResolvedValue(itemExistente);
       mockComandaItemRepository.delete.mockResolvedValue({ affected: 1 });
-      mockComandaRepository.findOne.mockResolvedValue({ id: 1, status: 'aberta' });
+      mockComandaRepository.findOne.mockResolvedValue({
+        id: 1,
+        status: 'aberta',
+      });
 
       // Act
       const result = await service.remove(1, 10);

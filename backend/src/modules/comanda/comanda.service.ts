@@ -74,7 +74,9 @@ export class ComandaService {
     }
 
     if (updateComandaDto.status === 'aberta' && comanda.status === 'fechada') {
-      throw new BadRequestException('Não é possível reabrir uma comanda fechada');
+      throw new BadRequestException(
+        'Não é possível reabrir uma comanda fechada',
+      );
     }
 
     if (updateComandaDto.status === 'fechada') {

@@ -164,7 +164,9 @@ describe('ComandaService', () => {
 
       // Act & Assert
       await expect(service.findOneByMesaId(999)).rejects.toThrow(
-        new NotFoundException(`Nenhuma comanda ativa encontrada para a Mesa 999`),
+        new NotFoundException(
+          `Nenhuma comanda ativa encontrada para a Mesa 999`,
+        ),
       );
     });
   });

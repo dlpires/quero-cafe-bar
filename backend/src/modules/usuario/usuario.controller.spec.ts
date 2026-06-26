@@ -67,10 +67,11 @@ describe('UsuarioController', () => {
       service.create.mockResolvedValue(usuarioCriado);
 
       // Act
-      const result = await controller.create(createUsuarioDto);
+      const mockRequest = { user: { id: 1 } } as any;
+      const result = await controller.create(createUsuarioDto, mockRequest);
 
       // Assert
-      expect(service.create).toHaveBeenCalledWith(createUsuarioDto);
+      expect(service.create).toHaveBeenCalledWith(createUsuarioDto, { id: 1 });
       expect(result).toEqual(usuarioCriado);
     });
   });
@@ -303,10 +304,18 @@ describe('UsuarioController', () => {
       service.update.mockResolvedValue(usuarioAtualizado);
 
       // Act
-      const result = await controller.update(1, updateUsuarioDto);
+      const mockUpdateRequest = { user: { id: 1, perfil: 0 } } as any;
+      const result = await controller.update(
+        1,
+        updateUsuarioDto,
+        mockUpdateRequest,
+      );
 
       // Assert
-      expect(service.update).toHaveBeenCalledWith(1, updateUsuarioDto);
+      expect(service.update).toHaveBeenCalledWith(1, updateUsuarioDto, {
+        id: 1,
+        perfil: 0,
+      });
       expect(result).toEqual(usuarioAtualizado);
     });
   });
@@ -318,11 +327,11 @@ describe('UsuarioController', () => {
       service.remove.mockResolvedValue(deleteResult);
 
       // Act
-      const mockRequest = { headers: { authorization: 'Bearer token' } } as any;
-      const result = await controller.remove(1, mockRequest);
+      const mockRemoveRequest = { user: { id: 2 } } as any;
+      const result = await controller.remove(1, mockRemoveRequest);
 
       // Assert
-      expect(service.remove).toHaveBeenCalledWith(1);
+      expect(service.remove).toHaveBeenCalledWith(1, { id: 2 });
       expect(result).toEqual(deleteResult);
     });
   });

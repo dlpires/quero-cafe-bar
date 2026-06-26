@@ -43,32 +43,30 @@ export function createEmptyState(container, options) {
     const icon = options.icon || 'file-tray-outline';
     const message = options.message || 'Nenhum registro encontrado';
 
-    container.innerHTML = `
-        <div class="empty-state" style="
-            display: flex; flex-direction: column; align-items: center;
-            justify-content: center; padding: 48px 16px; text-align: center;
-        ">
-            <ion-icon name="${icon}" style="
-                font-size: 64px; color: var(--ion-color-medium); margin-bottom: 16px;
-            "></ion-icon>
-            <p style="
-                font-size: 16px; color: var(--ion-color-medium);
-                margin: 0 0 16px 0; max-width: 280px;
-            ">${message}</p>
-            ${options.actionLabel && options.actionHandler ? `
-                <ion-button fill="solid" color="primary">
-                    ${options.actionLabel}
-                </ion-button>
-            ` : ''}
-        </div>
-    `;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'empty-state';
+    wrapper.style.cssText = 'display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 16px; text-align: center;';
+
+    wrapper.innerHTML = '<ion-icon style="font-size: 64px; color: var(--ion-color-medium); margin-bottom: 16px;"></ion-icon>' +
+        '<p style="font-size: 16px; color: var(--ion-color-medium); margin: 0 0 16px 0; max-width: 280px;"></p>' +
+        (options.actionLabel && options.actionHandler ? '<ion-button fill="solid" color="primary"></ion-button>' : '');
+
+    const iconEl = wrapper.querySelector('ion-icon');
+    if (iconEl) iconEl.setAttribute('name', icon);
+
+    const p = wrapper.querySelector('p');
+    if (p) p.textContent = message;
 
     if (options.actionLabel && options.actionHandler) {
-        const button = container.querySelector('ion-button');
-        if (button) {
-            button.addEventListener('click', options.actionHandler);
+        const btn = wrapper.querySelector('ion-button');
+        if (btn) {
+            btn.textContent = options.actionLabel;
+            btn.addEventListener('click', options.actionHandler);
         }
     }
+
+    container.textContent = '';
+    container.appendChild(wrapper);
 }
 
 export function validateRequired(value, fieldName) {
@@ -315,7 +313,13 @@ export function logout() {
         api.logout().catch(() => {});
     });
     localStorage.removeItem('logged_in');
+    localStorage.removeItem('user_perfil');
     clearLoggedUserCache();
+
+    const existingMenu = document.querySelector('ion-menu');
+    if (existingMenu) {
+        existingMenu.remove();
+    }
 
     const router = document.querySelector('ion-router');
     if (router) {

@@ -2,13 +2,19 @@ import './RegUsuarioPage.css'
 import { createHeader } from '../../shared/Header.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
-import { showToast, withLoading, validateRequired, focusFirstElement, hasFormChanges } from '../../shared/util.js';
+import { showToast, withLoading, validateRequired, focusFirstElement, hasFormChanges, getLoggedUserProfile } from '../../shared/util.js';
 
 const pageName = 'Cadastrar Usuário';
 
 class RegUsuarioPage extends HTMLElement {
-  connectedCallback() {
+  async connectedCallback() {
     if (!requireAuth()) return;
+    const perfil = await getLoggedUserProfile();
+    if (perfil !== 0) {
+      await showToast('Você não tem permissão para acessar esta página.', 'error', 3000);
+      document.querySelector('ion-router')?.push('/home', 'root');
+      return;
+    }
     this.classList.add('ion-page');
     this.innerHTML = `
       ${createHeader(pageName)}
@@ -31,6 +37,7 @@ class RegUsuarioPage extends HTMLElement {
               <ion-select name="perfil" label="Perfil" label-placement="floating" value="1">
                 <ion-select-option value="0">Administrador</ion-select-option>
                 <ion-select-option value="1">Atendente</ion-select-option>
+                <ion-select-option value="2">Cozinha</ion-select-option>
               </ion-select>
             </ion-item>
           </ion-list>
