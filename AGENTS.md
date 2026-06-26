@@ -6,6 +6,7 @@
 - **Stack**: NestJS 11.x (Backend) + Ionic 8.x Vanilla JS + Vite 7.x (Frontend) + MySQL 8.x (DB, compatível com MariaDB 10.x).
 - **Main Workflow**: Admin/Waiters manage products and tables, opening "comandas" (orders) for customers. Kitchen views orders and updates delivery status.
 - **Workflow Automation**: Speckit-based pipeline — constitution → spec → plan → tasks → implement.
+- **Workflow Automation**: Speckit-based pipeline — constitution → spec → plan → tasks → implement.
 
 ## Dev Commands
 
@@ -16,7 +17,7 @@ yarn install
 yarn run start:dev        # dev server with watch (port 3001)
 yarn run build            # production build
 yarn run lint             # ESLint + Prettier (--fix)
-yarn run test             # Jest unit tests (22 suites, 149 tests)
+yarn run test             # Jest unit tests (24 suites, 163 tests)
 yarn run test:cov         # Jest with coverage report
 yarn make:migration <name>  # Generate migration
 yarn migrate              # Run migrations
@@ -30,7 +31,7 @@ npm install               # Note: uses npm, not yarn
 npm run dev               # Vite dev server (port 5173)
 npm run build             # web build (outputs to dist/)
 npm run build:prod        # production build (--mode production)
-npm run test              # Jest unit tests (20 suites, 216 tests)
+npm run test              # Jest unit tests (21 suites, 221 tests)
 npm run test:watch        # Jest in watch mode
 npm run test:coverage     # Jest with coverage report
 npx cap copy              # sync web build to Android
@@ -46,8 +47,8 @@ npx cap build android     # build APK directly
   - Entry: `src/main.ts`, root module: `src/app.module.ts`
   - Logic: Controllers handle routes, Services handle business logic, Entities define DB schema.
   - Config: `src/config/orm.config.ts` (TypeORM + MySQL)
-  - Global: `ValidationPipe` (whitelist + forbidNonWhitelisted + transform), `GlobalExceptionFilter`, `JwtAuthGuard`, `ThrottlerGuard`, `helmet`
-  - New: `src/common/guards/jwt-auth.guard.ts`, `src/common/seed/seed.service.ts`
+  - Global: `ValidationPipe` (whitelist + forbidNonWhitelisted + transform), `GlobalExceptionFilter`, `JwtAuthGuard`, `RolesGuard`, `ThrottlerGuard`, `helmet`
+  - New: `src/common/guards/jwt-auth.guard.ts`, `src/common/guards/roles.guard.ts`, `src/common/decorators/roles.decorator.ts`, `src/common/seed/seed.service.ts`
 
 - **Frontend**: `frontend/src/` — Vanilla JS (ES Modules) with Ionic web components
   - Entry: `src/main.js`
@@ -57,6 +58,7 @@ npx cap build android     # build APK directly
     - Home page = Kitchen view with delivery status updates (red = pending, green = delivered)
   - Environments: `src/environments/environment.js` (dev), `environment.prod.js`
   - Shared: `src/shared/Header.js` (menu + header), `src/shared/util.js` (toast, loading, validation, focus, logout)
+  - Route guard: `src/main.js` (global `ionRouteDidChange` listener with profile-based blocking)
 
 ## Available Subagents
 
@@ -144,10 +146,10 @@ These implement a structured feature development workflow (constitution → spec
 ## Test Status
 
 ```bash
-# Backend — 22 suites, 149 tests passing
+# Backend — 24 suites, 163 tests passing
 cd backend && yarn test
 
-# Frontend — 20 suites, 212 tests passing
+# Frontend — 21 suites, 221 tests passing
 cd frontend && npm test
 ```
 
