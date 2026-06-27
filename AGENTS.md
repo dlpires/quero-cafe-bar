@@ -162,6 +162,6 @@ cd frontend && npm test
 - Java JDK 17+ + Android Studio (for mobile builds)
 
 <!-- SPECKIT START -->
-For additional context about the current feature (User Permissions Profiles), read
-specs/014-user-permissions-profiles/plan.md
+For additional context about the current feature (Test Coverage Improvement), read
+specs/015-test-coverage-improvement/plan.md
 <!-- SPECKIT END -->
