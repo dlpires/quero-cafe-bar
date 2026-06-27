@@ -1,39 +1,27 @@
 import './HomePage.css'
 import { createHeader } from '../../shared/Header.js';
-import { logout, createEmptyState, focusFirstElement, showToast, createPaginationState, calculateResponsivePageSize, renderPaginationBar, createCardSkeleton } from '../../shared/util.js';
+import { logout, createEmptyState, focusFirstElement, showToast, createCardSkeleton } from '../../shared/util.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
 
-const pageName = 'Cozinha';
+const pageName = 'Home';
 
 class HomePage extends HTMLElement {
   constructor() {
     super();
-    this.comandas = [];
+    this.mesas = [];
     this.isLoading = false;
-    this.pagination = createPaginationState(calculateResponsivePageSize('home'));
+    this.viewMode = localStorage.getItem('home-view-mode') || 'cards';
   }
 
   async connectedCallback() {
     if (!requireAuth()) return;
     this.classList.add('ion-page');
-    this.innerHTML = `
-      ${createHeader(pageName)}
-      <ion-content>
-        <div class="home-container">
-          <div class="comandas-grid-container"></div>
-        </div>
-      </ion-content>
-      <ion-footer>
-        <div class="pagination-bar-container"></div>
-      </ion-footer>
-    `;
-
-    this.querySelector('#logout-btn').addEventListener('click', logout);
+    this.innerHTML = this.getTemplate();
+    this.initEventListeners();
     focusFirstElement(this);
-    await this.loadPage(1);
+    await this.loadPage();
 
-    window.addEventListener('popstate', () => this.onRouteChange());
     this._routeListener = () => this.onRouteChange();
     document.querySelector('ion-router').addEventListener('urlChanged', this._routeListener);
   }
@@ -44,39 +32,91 @@ class HomePage extends HTMLElement {
     }
   }
 
+  getTemplate() {
+    return `
+      ${createHeader(pageName)}
+      <ion-content>
+        <ion-refresher slot="fixed" id="refresher">
+          <ion-refresher-content></ion-refresher-content>
+        </ion-refresher>
+        <div class="home-container">
+          <div class="summary-bar">
+            <span id="summary-text">Carregando...</span>
+          </div>
+          <div class="view-toggle">
+            <ion-buttons>
+              <ion-button id="btn-view-cards" class="view-btn ${this.viewMode === 'cards' ? 'active' : ''}" data-mode="cards">
+                <ion-icon name="grid-outline" slot="icon-only"></ion-icon>
+              </ion-button>
+              <ion-button id="btn-view-list" class="view-btn ${this.viewMode === 'list' ? 'active' : ''}" data-mode="list">
+                <ion-icon name="list-outline" slot="icon-only"></ion-icon>
+              </ion-button>
+            </ion-buttons>
+          </div>
+          <div class="mesas-grid-container"></div>
+        </div>
+      </ion-content>
+    `;
+  }
+
+  initEventListeners() {
+    const refresher = this.querySelector('#refresher');
+    if (refresher) {
+      refresher.addEventListener('ionRefresh', async (e) => {
+        await this.loadPage();
+        e.target.complete();
+      });
+    }
+
+    this.querySelector('#logout-btn')?.addEventListener('click', logout);
+
+    this.querySelector('#btn-view-cards')?.addEventListener('click', () => this.setViewMode('cards'));
+    this.querySelector('#btn-view-list')?.addEventListener('click', () => this.setViewMode('list'));
+  }
+
+  setViewMode(mode) {
+    this.viewMode = mode;
+    localStorage.setItem('home-view-mode', mode);
+    const cardsBtn = this.querySelector('#btn-view-cards');
+    const listBtn = this.querySelector('#btn-view-list');
+    if (cardsBtn) cardsBtn.classList.toggle('active', mode === 'cards');
+    if (listBtn) listBtn.classList.toggle('active', mode === 'list');
+    this.renderMesas();
+  }
+
   async onRouteChange() {
     if (window.location.pathname === '/home') {
-      this.pagination.reset();
-      await this.loadPage(1);
+      await this.loadPage();
       focusFirstElement(this);
     }
   }
 
-  async loadPage(page) {
+  async loadPage() {
     if (this.isLoading) return;
     this.isLoading = true;
-    const gridContainer = this.querySelector('.comandas-grid-container');
-    const paginationContainer = this.querySelector('.pagination-bar-container');
+    const gridContainer = this.querySelector('.mesas-grid-container');
+    const summaryText = this.querySelector('#summary-text');
 
     try {
-      const skip = (page - 1) * this.pagination.take;
       gridContainer.innerHTML = createCardSkeleton(4);
-      paginationContainer.innerHTML = '';
+      summaryText.textContent = 'Carregando...';
 
-      const response = await api.getComandas(skip, this.pagination.take);
-      this.comandas = response.data || response;
-      const total = response.total != null ? response.total : this.comandas.length;
-      this.pagination.update(total);
-      this.pagination.currentPage = page;
-      this.renderComandas();
-      this.renderPaginationControls();
+      const response = await api.getMesas(0, 100);
+      this.mesas = (response.data || response).filter(m => m.status);
+      const total = this.mesas.length;
+
+      const activeCount = this.mesas.filter(m => m.hasActiveComanda).length;
+      summaryText.textContent = `${total} mesas | ${total - activeCount} disponíveis`;
+
+      this.renderMesas();
       gridContainer.scrollTop = 0;
     } catch (error) {
-      console.error('Erro ao buscar comandas:', error);
+      console.error('Erro ao buscar mesas:', error);
       gridContainer.innerHTML = '';
+      summaryText.textContent = 'Erro ao carregar';
       const alert = document.createElement('ion-alert');
       alert.header = 'Erro';
-      alert.message = 'Não foi possível carregar os pedidos. Tente novamente.';
+      alert.message = 'Não foi possível carregar as mesas. Tente novamente.';
       alert.buttons = ['OK'];
       document.body.appendChild(alert);
       await alert.present();
@@ -85,119 +125,122 @@ class HomePage extends HTMLElement {
     }
   }
 
-  nextPage() { this.loadPage(this.pagination.currentPage + 1); }
-  prevPage() { this.loadPage(this.pagination.currentPage - 1); }
+  renderMesas() {
+    const gridContainer = this.querySelector('.mesas-grid-container');
 
-  renderPaginationControls() {
-    const container = this.querySelector('.pagination-bar-container');
-    if (this.comandas.length === 0) {
-      container.innerHTML = '';
-      return;
-    }
-    const barHtml = renderPaginationBar(this.pagination);
-    container.innerHTML = barHtml;
-
-    container.querySelector('[data-action="prev-page"]')?.addEventListener('click', () => this.prevPage());
-    container.querySelector('[data-action="next-page"]')?.addEventListener('click', () => this.nextPage());
-  }
-
-  renderComandas() {
-    const gridContainer = this.querySelector('.comandas-grid-container');
-    if (this.comandas.length === 0) {
+    if (this.mesas.length === 0) {
       createEmptyState(gridContainer, {
-        icon: 'restaurant-outline',
-        message: 'Nenhum pedido pendente.',
+        icon: 'grid-outline',
+        message: 'Nenhuma mesa ativa encontrada.',
         actionLabel: '',
         actionHandler: null
       });
       return;
     }
 
-    gridContainer.innerHTML = `
-      <div class="comandas-grid">
-        ${this.comandas.map(comanda => this.renderComandaCard(comanda)).join('')}
-      </div>
-    `;
-
-    gridContainer.querySelectorAll('.item-status-select').forEach(select => {
-      select.addEventListener('ionChange', async (e) => {
-        const id_comanda = select.dataset.idComanda;
-        const id_produto = select.dataset.idProduto;
-        const statusEntrega = e.detail.value === 'true';
-        await this.updateItemEntrega(id_comanda, id_produto, statusEntrega, select.closest('ion-card'));
-
-        const ionItem = select.closest('ion-item');
-        if (ionItem) {
-          ionItem.classList.remove('item-pending', 'item-delivered');
-          ionItem.classList.add(statusEntrega ? 'item-delivered' : 'item-pending');
-        }
-      });
-    });
-  }
-
-  renderComandaCard(comanda) {
-    const todosEntregues = comanda.itens.length > 0 && comanda.itens.every(item => item.statusEntrega);
-    const statusIcon = todosEntregues ? 'checkmark-circle' : 'time-outline';
-    const statusColor = todosEntregues ? 'success' : 'warning';
-
-    const itensHtml = comanda.itens.map(item => {
-      const statusText = item.statusEntrega ? 'Entregue' : 'Pendente';
-      return `
-      <ion-item lines="none" class="comanda-item ${item.statusEntrega ? 'item-delivered' : 'item-pending'}">
-        <ion-label class="item-label">
-          <h2 class="item-name">${item.produto.dsc_produto}</h2>
-          <p class="item-qty">Quantidade: ${item.qtd_item}</p>
-        </ion-label>
-        <ion-select
-          class="item-status-select"
-          slot="end"
-          data-id-comanda="${comanda.id}"
-          data-id-produto="${item.id_produto}"
-          value="${item.statusEntrega.toString()}"
-          interface="action-sheet"
-          aria-label="Status de ${item.produto.dsc_produto}: ${statusText}"
-        >
-          <ion-select-option value="false">Pendente</ion-select-option>
-          <ion-select-option value="true">Entregue</ion-select-option>
-        </ion-select>
-      </ion-item>
-      `;
-    }).join('');
-
-    return `
-      <ion-card class="comanda-card" data-comanda-id="${comanda.id}" role="region" aria-labelledby="comanda-title-${comanda.id}">
-        <ion-card-header>
-          <ion-card-title id="comanda-title-${comanda.id}">Comanda #${comanda.id} — Mesa: ${comanda.mesa.id}</ion-card-title>
-          <ion-icon name="${statusIcon}" color="${statusColor}" class="card-status-icon" aria-hidden="true"></ion-icon>
-        </ion-card-header>
-        <ion-card-content>
-          ${itensHtml}
-        </ion-card-content>
-      </ion-card>
-    `;
-  }
-
-  async updateItemEntrega(id_comanda, id_produto, statusEntrega, cardElement) {
-    try {
-      await api.updateItemComanda(id_comanda, id_produto, { statusEntrega });
-      this.updateCardStatusIcon(cardElement);
-      await showToast('Status do item atualizado!', 'success', 2000);
-    } catch (error) {
-      console.error('Erro ao atualizar item:', error);
-      await showToast(error.message, 'error', 5000);
+    if (this.viewMode === 'cards') {
+      this.renderCardView(gridContainer);
+    } else {
+      this.renderListView(gridContainer);
     }
   }
 
-  updateCardStatusIcon(cardElement) {
-    const selects = cardElement.querySelectorAll('.item-status-select');
-    const allEntregues = Array.from(selects).every(select => select.value === 'true');
-    const icon = cardElement.querySelector('.card-status-icon');
-    if (allEntregues) {
-      icon.name = 'checkmark-circle';
-      icon.color = 'success';
+  renderCardView(container) {
+    const grid = document.createElement('div');
+    grid.className = 'mesas-grid';
+    container.textContent = '';
+    container.appendChild(grid);
+
+    this.mesas.forEach(mesa => {
+      const isActive = mesa.hasActiveComanda;
+      const card = document.createElement('ion-card');
+      card.className = `mesa-card ${isActive ? 'mesa-ocupada' : 'mesa-disponivel'}`;
+      card.dataset.mesaId = mesa.id;
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', `Mesa ${mesa.id} — ${isActive ? 'Comanda ativa' : 'Disponível'}`);
+
+      const header = document.createElement('ion-card-header');
+      const title = document.createElement('ion-card-title');
+      title.className = 'mesa-card-title';
+      title.textContent = `Mesa ${mesa.id}`;
+      header.appendChild(title);
+      card.appendChild(header);
+
+      const content = document.createElement('ion-card-content');
+      content.className = 'mesa-card-content';
+
+      const statusBadge = document.createElement('ion-badge');
+      statusBadge.color = isActive ? 'warning' : 'success';
+      statusBadge.textContent = isActive ? 'Comanda Ativa' : 'Disponível';
+      content.appendChild(statusBadge);
+
+      const chairsText = document.createElement('p');
+      chairsText.className = 'mesa-chairs';
+      chairsText.textContent = `${mesa.qtd_cadeiras} cadeira${mesa.qtd_cadeiras !== 1 ? 's' : ''}`;
+      content.appendChild(chairsText);
+
+      card.appendChild(content);
+
+      card.addEventListener('click', () => this.onMesaClick(mesa, isActive));
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.onMesaClick(mesa, isActive);
+        }
+      });
+
+      grid.appendChild(card);
+    });
+  }
+
+  renderListView(container) {
+    const list = document.createElement('ion-list');
+    list.className = 'mesas-list';
+    container.textContent = '';
+    container.appendChild(list);
+
+    this.mesas.forEach(mesa => {
+      const isActive = mesa.hasActiveComanda;
+      const item = document.createElement('ion-item');
+      item.className = `mesa-list-item ${isActive ? 'mesa-ocupada' : 'mesa-disponivel'}`;
+      item.dataset.mesaId = mesa.id;
+      item.button = true;
+      item.tabIndex = 0;
+      item.setAttribute('aria-label', `Mesa ${mesa.id} — ${isActive ? 'Comanda ativa' : 'Disponível'}`);
+
+      const statusIcon = document.createElement('ion-icon');
+      statusIcon.name = isActive ? 'calendar-outline' : 'checkmark-circle-outline';
+      statusIcon.color = isActive ? 'warning' : 'success';
+      statusIcon.slot = 'start';
+      item.appendChild(statusIcon);
+
+      const label = document.createElement('ion-label');
+      const h2 = document.createElement('h2');
+      h2.textContent = `Mesa ${mesa.id}`;
+      label.appendChild(h2);
+      const p = document.createElement('p');
+      p.textContent = `${mesa.qtd_cadeiras} cadeira${mesa.qtd_cadeiras !== 1 ? 's' : ''} — ${isActive ? 'Comanda Ativa' : 'Disponível'}`;
+      label.appendChild(p);
+      item.appendChild(label);
+
+      item.addEventListener('click', () => this.onMesaClick(mesa, isActive));
+
+      list.appendChild(item);
+    });
+  }
+
+  async onMesaClick(mesa, isActive) {
+    const router = document.querySelector('ion-router');
+    if (isActive) {
+      try {
+        const comanda = await api.getComandaByMesaId(mesa.id);
+        router.push(`/comanda/edit?id=${comanda.id}`, 'root');
+      } catch (error) {
+        await showToast('Erro ao buscar comanda desta mesa.', 'error', 3000);
+      }
     } else {
-      icon.name = 'time-outline';
-      icon.color = 'warning';
+      router.push(`/comanda/register?id_mesa=${mesa.id}`, 'root');
     }
   }
 }

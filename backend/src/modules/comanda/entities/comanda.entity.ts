@@ -20,6 +20,9 @@ export class Comanda {
   @Column({ type: 'varchar', length: 100, nullable: true })
   obs_comanda: string;
 
+  @Column({ type: 'varchar', length: 10, default: 'aberta' })
+  status: string;
+
   @ManyToOne(() => Mesa)
   @JoinColumn({ name: 'id_mesa' })
   mesa: Mesa;

@@ -22,55 +22,70 @@ const createAndInjectMenu = () => {
         mainContent.id = contentId;
     }
 
+    const menuItems = [
+        { url: '/home', icon: 'home-outline', label: 'Home', profiles: [0, 1] },
+        { url: '/produtos', icon: 'fast-food-outline', label: 'Produtos', profiles: [0] },
+        { url: '/usuarios', icon: 'people-outline', label: 'Usuários', profiles: [0] },
+        { url: '/mesas', icon: 'grid-outline', label: 'Mesas', profiles: [0] },
+        { url: '/comandas', icon: 'receipt-outline', label: 'Comandas', profiles: [0, 1] },
+        { url: '/cozinha', icon: 'restaurant-outline', label: 'Cozinha', profiles: [0, 1, 2] },
+    ];
+
+    const userPerfil = (() => {
+        const stored = localStorage.getItem('user_perfil');
+        return stored !== null ? parseInt(stored, 10) : null;
+    })();
+
+    const allowedItems = userPerfil !== null
+        ? menuItems.filter(item => item.profiles.includes(userPerfil))
+        : menuItems;
+
     // 3. Cria o elemento <ion-menu>
     const menu = document.createElement('ion-menu');
-    menu.contentId = mainContent.id; // Garante que o ID do conteúdo seja o mesmo que o menu espera.
-    menu.innerHTML = `
-        <ion-header>
-            <ion-toolbar color="secondary">
-                <ion-title>Menu</ion-title>
-            </ion-toolbar>
-        </ion-header>
-        <ion-content>
-            <ion-list>
-                <ion-item button class="menu-item" data-url="/home">
-                    <ion-icon name="home-outline" slot="start" aria-hidden="true"></ion-icon>
-                    <ion-label>Home</ion-label>
-                </ion-item>
-                <ion-item button class="menu-item" data-url="/produtos">
-                    <ion-icon name="fast-food-outline" slot="start" aria-hidden="true"></ion-icon>
-                    <ion-label>Produtos</ion-label>
-                </ion-item>
-                <ion-item button class="menu-item" data-url="/usuarios">
-                    <ion-icon name="people-outline" slot="start" aria-hidden="true"></ion-icon>
-                    <ion-label>Usuários</ion-label>
-                </ion-item>
-                <ion-item button class="menu-item" data-url="/mesas">
-                    <ion-icon name="grid-outline" slot="start" aria-hidden="true"></ion-icon>
-                    <ion-label>Mesas</ion-label>
-                </ion-item>
-                <ion-item button class="menu-item" data-url="/comandas">
-                    <ion-icon name="receipt-outline" slot="start" aria-hidden="true"></ion-icon>
-                    <ion-label>Comandas</ion-label>
-                </ion-item>
+    menu.contentId = mainContent.id;
 
-            </ion-list>
-        </ion-content>
-    `;
+    const header = document.createElement('ion-header');
+    const toolbar = document.createElement('ion-toolbar');
+    toolbar.setAttribute('color', 'secondary');
+    const title = document.createElement('ion-title');
+    title.textContent = 'Menu';
+    toolbar.appendChild(title);
+    header.appendChild(toolbar);
 
-    // 4. Adiciona os eventos de clique para a navegação
-    menu.querySelectorAll('.menu-item').forEach(item => {
-        item.addEventListener('click', async () => {
-            const url = item.dataset.url;
+    const content = document.createElement('ion-content');
+    const list = document.createElement('ion-list');
+
+    allowedItems.forEach(item => {
+        const listItem = document.createElement('ion-item');
+        listItem.setAttribute('button', '');
+        listItem.classList.add('menu-item');
+        listItem.dataset.url = item.url;
+
+        const icon = document.createElement('ion-icon');
+        icon.setAttribute('name', item.icon);
+        icon.setAttribute('slot', 'start');
+        icon.setAttribute('aria-hidden', 'true');
+
+        const label = document.createElement('ion-label');
+        label.textContent = item.label;
+
+        listItem.appendChild(icon);
+        listItem.appendChild(label);
+        listItem.addEventListener('click', async () => {
             const router = document.querySelector('ion-router');
-            if (router && window.location.hash.substring(1) !== url) {
-                router.push(url, 'root');
+            if (router && window.location.hash.substring(1) !== item.url) {
+                router.push(item.url, 'root');
             }
-            await menu.close(); // Fecha o menu após a navegação
+            await menu.close();
         });
+        list.appendChild(listItem);
     });
 
-    // 5. Adiciona o menu ao DOM, no início do <body>
+    content.appendChild(list);
+    menu.appendChild(header);
+    menu.appendChild(content);
+
+    // 4. Adiciona o menu ao DOM, no início do <body>
     document.body.prepend(menu);
 };
 

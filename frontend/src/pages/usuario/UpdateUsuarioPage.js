@@ -2,13 +2,19 @@ import './UpdateUsuarioPage.css'
 import { createHeader } from '../../shared/Header.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
-import { showToast, withLoading, validateRequired, focusFirstElement, hasFormChanges } from '../../shared/util.js';
+import { showToast, withLoading, validateRequired, focusFirstElement, hasFormChanges, getLoggedUserProfile } from '../../shared/util.js';
 
 const pageName = 'Editar Usuário';
 
 class UpdateUsuarioPage extends HTMLElement {
   async connectedCallback() {
     if (!requireAuth()) return;
+    const perfil = await getLoggedUserProfile();
+    if (perfil !== 0) {
+      await showToast('Você não tem permissão para acessar esta página.', 'error', 3000);
+      document.querySelector('ion-router')?.push('/home', 'root');
+      return;
+    }
     const urlParams = new URLSearchParams(window.location.search);
     this.usuarioId = urlParams.get('id');
 
@@ -34,6 +40,7 @@ class UpdateUsuarioPage extends HTMLElement {
               <ion-select name="perfil" id="perfil" label="Perfil" label-placement="floating">
                 <ion-select-option value="0">Administrador</ion-select-option>
                 <ion-select-option value="1">Atendente</ion-select-option>
+                <ion-select-option value="2">Cozinha</ion-select-option>
               </ion-select>
             </ion-item>
           </ion-list>

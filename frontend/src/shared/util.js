@@ -43,32 +43,31 @@ export function createEmptyState(container, options) {
     const icon = options.icon || 'file-tray-outline';
     const message = options.message || 'Nenhum registro encontrado';
 
-    container.innerHTML = `
-        <div class="empty-state" style="
-            display: flex; flex-direction: column; align-items: center;
-            justify-content: center; padding: 48px 16px; text-align: center;
-        ">
-            <ion-icon name="${icon}" style="
-                font-size: 64px; color: var(--ion-color-medium); margin-bottom: 16px;
-            "></ion-icon>
-            <p style="
-                font-size: 16px; color: var(--ion-color-medium);
-                margin: 0 0 16px 0; max-width: 280px;
-            ">${message}</p>
-            ${options.actionLabel && options.actionHandler ? `
-                <ion-button fill="solid" color="primary">
-                    ${options.actionLabel}
-                </ion-button>
-            ` : ''}
-        </div>
-    `;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'empty-state';
+    wrapper.style.cssText = 'display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 16px; text-align: center;';
+
+    const iconEl = document.createElement('ion-icon');
+    iconEl.style.cssText = 'font-size: 64px; color: var(--ion-color-medium); margin-bottom: 16px;';
+    iconEl.setAttribute('name', icon);
+    wrapper.appendChild(iconEl);
+
+    const p = document.createElement('p');
+    p.style.cssText = 'font-size: 16px; color: var(--ion-color-medium); margin: 0 0 16px 0; max-width: 280px;';
+    p.textContent = message;
+    wrapper.appendChild(p);
 
     if (options.actionLabel && options.actionHandler) {
-        const button = container.querySelector('ion-button');
-        if (button) {
-            button.addEventListener('click', options.actionHandler);
-        }
+        const btn = document.createElement('ion-button');
+        btn.setAttribute('fill', 'solid');
+        btn.setAttribute('color', 'primary');
+        btn.textContent = options.actionLabel;
+        btn.addEventListener('click', options.actionHandler);
+        wrapper.appendChild(btn);
     }
+
+    container.textContent = '';
+    container.appendChild(wrapper);
 }
 
 export function validateRequired(value, fieldName) {
@@ -86,26 +85,37 @@ export function validatePositiveNumber(value, fieldName) {
     return null;
 }
 
-export function getLoggedUserId() {
-    const token = localStorage.getItem('token');
-    if (!token) return null;
+let _cachedUser = null;
+let _cachedUserTimestamp = null;
+const CACHE_TTL = 5 * 60 * 1000;
+
+export async function getLoggedUser() {
+    if (_cachedUser && _cachedUserTimestamp && Date.now() - _cachedUserTimestamp < CACHE_TTL) {
+        return _cachedUser;
+    }
+    const { api } = await import('../services/api.js');
     try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        return payload.id || null;
+        _cachedUser = await api.getMe();
+        _cachedUserTimestamp = Date.now();
+        return _cachedUser;
     } catch {
         return null;
     }
 }
 
-export function getLoggedUserProfile() {
-    const token = localStorage.getItem('token');
-    if (!token) return null;
-    try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        return payload.perfil ?? null;
-    } catch {
-        return null;
-    }
+export async function getLoggedUserId() {
+    const user = await getLoggedUser();
+    return user?.id ?? null;
+}
+
+export async function getLoggedUserProfile() {
+    const user = await getLoggedUser();
+    return user?.perfil ?? null;
+}
+
+export function clearLoggedUserCache() {
+    _cachedUser = null;
+    _cachedUserTimestamp = null;
 }
 
 export function hasFormChanges(container, initialData) {
@@ -306,7 +316,17 @@ export function createCardSkeleton(count = 4) {
 }
 
 export function logout() {
-    localStorage.removeItem('token');
+    import('../services/api.js').then(({ api }) => {
+        api.logout().catch(() => {});
+    });
+    localStorage.removeItem('logged_in');
+    localStorage.removeItem('user_perfil');
+    clearLoggedUserCache();
+
+    const existingMenu = document.querySelector('ion-menu');
+    if (existingMenu) {
+        existingMenu.remove();
+    }
 
     const router = document.querySelector('ion-router');
     if (router) {

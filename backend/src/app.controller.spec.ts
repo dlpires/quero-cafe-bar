@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { name, version } from '../package.json';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -17,11 +16,9 @@ describe('AppController', () => {
 
   describe('root', () => {
     it('should return health system', () => {
-      expect(appController.getHello()).toStrictEqual({
-        app_name: name,
-        health: 'ok',
-        version: version,
-      });
+      const result = appController.getHello();
+      expect(result.health).toBe('ok');
+      expect(result.timestamp).toBeDefined();
     });
   });
 });

@@ -67,11 +67,20 @@ class LoginPage extends HTMLElement {
       await loading.present();
 
       try {
-        const response = await api.login(user, password);
-        api.setToken(response.token);
+        const data = await api.login(user, password);
+        const perfil = (() => {
+          try {
+            const payload = JSON.parse(atob(data.token.split('.')[1]));
+            localStorage.setItem('user_perfil', payload.perfil);
+            return payload.perfil;
+          } catch {
+            return null;
+          }
+        })();
 
-        await showToast('Login realizado com sucesso!', 'success', 2000);        
-        document.querySelector('ion-router').push('/home', 'forward', 'replace');
+        await showToast('Login realizado com sucesso!', 'success', 2000);
+        const redirect = perfil === 2 ? '/cozinha' : '/home';
+        document.querySelector('ion-router').push(redirect, 'forward', 'replace');
       } catch (error) {
         const mensagem =
           error.message === 'Failed to fetch'

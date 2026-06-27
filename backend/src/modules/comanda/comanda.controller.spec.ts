@@ -14,18 +14,30 @@ describe('ComandaController', () => {
           provide: ComandaService,
           useValue: {
             // Defina aqui os métodos que o controller chama
-            findOne: jest
-              .fn()
-              .mockResolvedValue({ id: 1, id_mesa: 1, obs_comanda: 'Teste' }),
-            findOneByMesaId: jest
-              .fn()
-              .mockResolvedValue({ id: 1, id_mesa: 1, obs_comanda: 'Teste' }),
-            create: jest
-              .fn()
-              .mockResolvedValue({ id: 1, id_mesa: 1, obs_comanda: 'Teste' }),
-            update: jest
-              .fn()
-              .mockResolvedValue({ id: 1, id_mesa: 1, obs_comanda: 'Teste' }),
+            findOne: jest.fn().mockResolvedValue({
+              id: 1,
+              id_mesa: 1,
+              obs_comanda: 'Teste',
+              status: 'aberta',
+            }),
+            findOneByMesaId: jest.fn().mockResolvedValue({
+              id: 1,
+              id_mesa: 1,
+              obs_comanda: 'Teste',
+              status: 'aberta',
+            }),
+            create: jest.fn().mockResolvedValue({
+              id: 1,
+              id_mesa: 1,
+              obs_comanda: 'Teste',
+              status: 'aberta',
+            }),
+            update: jest.fn().mockResolvedValue({
+              id: 1,
+              id_mesa: 1,
+              obs_comanda: 'Teste',
+              status: 'aberta',
+            }),
             remove: jest.fn().mockResolvedValue({ id: 1 }),
             findAll: jest.fn(),
           },
@@ -44,7 +56,12 @@ describe('ComandaController', () => {
   describe('create', () => {
     it('should create a new comanda', async () => {
       const createDto = { id_mesa: 1, obs_comanda: 'Teste' };
-      const result = { id: 1, id_mesa: 1, obs_comanda: 'Teste' };
+      const result = {
+        id: 1,
+        id_mesa: 1,
+        obs_comanda: 'Teste',
+        status: 'aberta',
+      };
       jest.spyOn(service, 'create').mockImplementation(async () => result);
 
       expect(await controller.create(createDto)).toBe(result);
@@ -55,7 +72,7 @@ describe('ComandaController', () => {
   describe('findAll', () => {
     it('should return a paginated response of comandas', async () => {
       const result = {
-        data: [{ id: 1, id_mesa: 1, obs_comanda: 'Teste' }],
+        data: [{ id: 1, id_mesa: 1, obs_comanda: 'Teste', status: 'aberta' }],
         total: 1,
         skip: 0,
         take: 20,
@@ -70,7 +87,12 @@ describe('ComandaController', () => {
 
   describe('findOne', () => {
     it('should return a single comanda by id', async () => {
-      const result = { id: 1, id_mesa: 1, obs_comanda: 'Teste' };
+      const result = {
+        id: 1,
+        id_mesa: 1,
+        obs_comanda: 'Teste',
+        status: 'aberta',
+      };
       jest.spyOn(service, 'findOne').mockImplementation(async () => result);
 
       expect(await controller.findOne(1)).toBe(result);
@@ -80,7 +102,12 @@ describe('ComandaController', () => {
 
   describe('findOneByMesaId', () => {
     it('should return a comanda by mesa id', async () => {
-      const result = { id: 1, id_mesa: 5, obs_comanda: 'Teste' };
+      const result = {
+        id: 1,
+        id_mesa: 5,
+        obs_comanda: 'Teste',
+        status: 'aberta',
+      };
       jest
         .spyOn(service, 'findOneByMesaId')
         .mockImplementation(async () => result);
@@ -93,7 +120,12 @@ describe('ComandaController', () => {
   describe('update', () => {
     it('should update a comanda', async () => {
       const updateDto = { id_mesa: 1, obs_comanda: 'Teste' };
-      const result = { id: 1, id_mesa: 1, obs_comanda: 'Teste' };
+      const result = {
+        id: 1,
+        id_mesa: 1,
+        obs_comanda: 'Teste',
+        status: 'aberta',
+      };
       jest.spyOn(service, 'update').mockImplementation(async () => result);
 
       expect(await controller.update(1, updateDto)).toBe(result);

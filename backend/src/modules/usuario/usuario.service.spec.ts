@@ -1,15 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { UsuarioService } from './usuario.service';
 import { Usuario } from './entities/usuario.entity';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { ListUsuarioDto } from './dto/list-usuario.dto';
+import { AuditService } from '../audit/audit.service';
+import { ConflictException, ForbiddenException } from '@nestjs/common';
+
+jest.mock('bcrypt');
 
 describe('UsuarioService', () => {
   let service: UsuarioService;
-  let mockRepository: jest.Mocked<Repository<Usuario>>;
 
   // Mock do repositório TypeORM
   const mockUsuarioRepository = {
@@ -21,6 +24,11 @@ describe('UsuarioService', () => {
     findAndCount: jest.fn(),
   };
 
+  const mockAuditService = {
+    log: jest.fn(),
+    findAll: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -29,14 +37,24 @@ describe('UsuarioService', () => {
           provide: getRepositoryToken(Usuario),
           useValue: mockUsuarioRepository,
         },
+        {
+          provide: AuditService,
+          useValue: mockAuditService,
+        },
       ],
     }).compile();
 
     service = module.get<UsuarioService>(UsuarioService);
-    mockRepository = module.get(getRepositoryToken(Usuario));
 
     // Limpa todos os mocks antes de cada teste
     jest.clearAllMocks();
+
+    // Mock bcrypt
+    (bcrypt.genSalt as jest.Mock).mockResolvedValue('salt');
+    (bcrypt.hash as jest.Mock).mockResolvedValue('hashed_password');
+    (bcrypt.compare as jest.Mock).mockImplementation(
+      (plain: string, hash: string) => Promise.resolve(plain === hash),
+    );
   });
 
   describe('Criação de Usuário', () => {
@@ -54,6 +72,7 @@ describe('UsuarioService', () => {
         ...createUsuarioDto,
       } as Usuario;
 
+      mockUsuarioRepository.findOne.mockResolvedValue(null);
       mockUsuarioRepository.create.mockReturnValue(usuarioCriado);
       mockUsuarioRepository.save.mockResolvedValue(usuarioCriado);
 
@@ -62,7 +81,11 @@ describe('UsuarioService', () => {
 
       // Assert
       expect(mockUsuarioRepository.create).toHaveBeenCalledWith(
-        createUsuarioDto,
+        expect.objectContaining({
+          nome: 'João Silva',
+          usuario: 'joao.silva',
+          perfil: 1,
+        }),
       );
       expect(mockUsuarioRepository.save).toHaveBeenCalledWith(usuarioCriado);
       expect(result).toEqual(usuarioCriado);
@@ -82,6 +105,7 @@ describe('UsuarioService', () => {
         perfil: 0,
       } as Usuario;
 
+      mockUsuarioRepository.findOne.mockResolvedValue(null);
       mockUsuarioRepository.create.mockReturnValue(usuarioCriado);
       mockUsuarioRepository.save.mockResolvedValue(usuarioCriado);
 
@@ -89,6 +113,12 @@ describe('UsuarioService', () => {
       const result = await service.create(createUsuarioDto);
 
       // Assert
+      expect(mockUsuarioRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          nome: 'Maria Santos',
+          usuario: 'maria.santos',
+        }),
+      );
       expect(result.perfil).toBe(0);
     });
   });
@@ -395,6 +425,138 @@ describe('UsuarioService', () => {
       await expect(service.remove(999)).rejects.toThrow(
         'Usuário com ID 999 não encontrado',
       );
+    });
+  });
+
+  describe('Auditoria e Permissões', () => {
+    describe('create() com auditoria', () => {
+      it('deve registrar log de auditoria ao criar usuário com authenticatedUser', async () => {
+        mockUsuarioRepository.findOne.mockResolvedValue(null);
+        mockUsuarioRepository.save.mockResolvedValue({
+          id: 1,
+          usuario: 'novo',
+          perfil: 1,
+        } as Usuario);
+
+        const result = await service.create(
+          { usuario: 'novo', senha: '123', perfil: 1 } as any,
+          { id: 99 },
+        );
+
+        expect(mockAuditService.log).toHaveBeenCalledWith(
+          99,
+          'CREATE',
+          'usuario',
+          1,
+          { usuario: 'novo', perfil: 1 },
+        );
+        expect(result.id).toBe(1);
+      });
+
+      it('deve criar sem auditoria quando não há authenticatedUser', async () => {
+        mockUsuarioRepository.findOne.mockResolvedValue(null);
+        mockUsuarioRepository.save.mockResolvedValue({
+          id: 2,
+          usuario: 'anon',
+          perfil: 0,
+        } as Usuario);
+
+        const result = await service.create({
+          usuario: 'anon',
+          senha: '123',
+          perfil: 0,
+        } as any);
+
+        expect(mockAuditService.log).not.toHaveBeenCalled();
+        expect(result.id).toBe(2);
+      });
+    });
+
+    describe('update() com auto-proteção de perfil', () => {
+      it('deve lançar ForbiddenException quando usuário não-admin tenta alterar próprio perfil', async () => {
+        const updateDto = { perfil: 0 };
+        await expect(
+          service.update(1, updateDto as any, { id: 1, perfil: 1 }),
+        ).rejects.toThrow(ForbiddenException);
+      });
+
+      it('deve permitir alteração de perfil quando admin altera outro usuário', async () => {
+        mockUsuarioRepository.findOne.mockResolvedValue({
+          id: 2,
+          usuario: 'outro',
+          perfil: 1,
+          senha: 'hash',
+        } as Usuario);
+        mockUsuarioRepository.save.mockResolvedValue({
+          id: 2,
+          usuario: 'outro',
+          perfil: 0,
+          senha: 'hash',
+        } as Usuario);
+
+        await service.update(2, { perfil: 0 } as any, {
+          id: 1,
+          perfil: 0,
+        });
+
+        expect(mockUsuarioRepository.save).toHaveBeenCalled();
+        expect(mockAuditService.log).toHaveBeenCalledWith(
+          1,
+          'UPDATE',
+          'usuario',
+          2,
+          { previousPerfil: 1, newPerfil: 0 },
+        );
+      });
+
+      it('deve atualizar senha com bcrypt quando fornecida', async () => {
+        mockUsuarioRepository.findOne.mockResolvedValue({
+          id: 1,
+          usuario: 'user',
+          senha: 'hash-antigo',
+        } as Usuario);
+        mockUsuarioRepository.save.mockResolvedValue({
+          id: 1,
+          usuario: 'user',
+          senha: 'hashed-senha',
+        } as Usuario);
+
+        await service.update(1, { senha: 'nova-senha' } as any, {
+          id: 99,
+          perfil: 0,
+        });
+
+        expect(bcrypt.hash).toHaveBeenCalledWith('nova-senha', 'salt');
+      });
+    });
+
+    describe('remove() com auto-exclusão', () => {
+      it('deve lançar ConflictException ao tentar excluir próprio usuário', async () => {
+        await expect(service.remove(1, { id: 1 })).rejects.toThrow(
+          ConflictException,
+        );
+      });
+
+      it('deve registrar auditoria ao excluir outro usuário', async () => {
+        mockUsuarioRepository.findOne.mockResolvedValue({
+          id: 2,
+          usuario: 'outro',
+        } as Usuario);
+        mockUsuarioRepository.delete.mockResolvedValue({ affected: 1 });
+
+        const result = await service.remove(2, { id: 1 });
+
+        expect(mockAuditService.log).toHaveBeenCalledWith(
+          1,
+          'DELETE',
+          'usuario',
+          2,
+          {
+            usuario: 'outro',
+          },
+        );
+        expect(result).toEqual({ id: 2 });
+      });
     });
   });
 });

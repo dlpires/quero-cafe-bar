@@ -1,5 +1,5 @@
 export function isAuthenticated() {
-  return !!localStorage.getItem('token');
+  return !!localStorage.getItem('logged_in');
 }
 
 export function requireAuth() {
@@ -11,7 +11,10 @@ export function requireAuth() {
 }
 
 export function redirectToLogin() {
-  localStorage.removeItem('token');
+  localStorage.removeItem('logged_in');
+  import('../shared/util.js').then(({ clearLoggedUserCache }) => {
+    clearLoggedUserCache();
+  });
   const router = document.querySelector('ion-router');
   if (router) {
     router.push('/login', 'root');
@@ -19,16 +22,30 @@ export function redirectToLogin() {
 }
 
 export function redirectToHome() {
+  const stored = localStorage.getItem('user_perfil');
+  const perfil = stored !== null ? parseInt(stored, 10) : null;
+  const redirect = perfil === 2 ? '/cozinha' : '/home';
   const router = document.querySelector('ion-router');
   if (router) {
-    router.push('/home', 'root');
+    router.push(redirect, 'root');
   }
 }
 
 export function setupSessionSync() {
   window.addEventListener('storage', (event) => {
-    if (event.key === 'token' && !event.newValue) {
+    if (event.key === 'logged_in' && !event.newValue) {
       redirectToLogin();
     }
   });
+
+  try {
+    const channel = new BroadcastChannel('auth');
+    channel.onmessage = (event) => {
+      if (event.data === 'logout') {
+        redirectToLogin();
+      }
+    };
+  } catch (e) {
+    console.warn('BroadcastChannel not supported in this browser');
+  }
 }

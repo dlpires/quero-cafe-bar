@@ -1,4 +1,5 @@
 import { Controller, ConflictException } from '@nestjs/common';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { ComandaService } from './comanda.service';
 import { CreateComandaDto } from './dto/create-comanda.dto';
 import { ListComandaDto } from './dto/list-comanda.dto';
@@ -13,6 +14,7 @@ export class ComandaController {
   constructor(private readonly comandaService: ComandaService) {}
 
   @Post()
+  @Roles(0, 1)
   async create(
     @Body() createComandaDto: CreateComandaDto,
   ): Promise<IComandaOutput> {
@@ -20,6 +22,7 @@ export class ComandaController {
   }
 
   @Get()
+  @Roles(0, 1, 2)
   async findAll(
     @Query() listComandaDto: ListComandaDto,
   ): Promise<PaginatedResponse<IComandaOutput>> {
@@ -27,11 +30,13 @@ export class ComandaController {
   }
 
   @Get(':id')
+  @Roles(0, 1, 2)
   async findOne(@Param('id') id: number): Promise<IComandaOutput> {
     return await this.comandaService.findOne(id);
   }
 
   @Get('mesa/:id_mesa')
+  @Roles(0, 1, 2)
   async findOneByMesaId(
     @Param('id_mesa') id_mesa: number,
   ): Promise<IComandaOutput> {
@@ -39,6 +44,7 @@ export class ComandaController {
   }
 
   @Patch(':id')
+  @Roles(0, 1)
   async update(
     @Param('id') id: number,
     @Body() updateComandaDto: UpdateComandaDto,
@@ -47,6 +53,7 @@ export class ComandaController {
   }
 
   @Delete(':id')
+  @Roles(0)
   async remove(@Param('id') id: number): Promise<DeleteComandaDto> {
     try {
       return await this.comandaService.remove(id);

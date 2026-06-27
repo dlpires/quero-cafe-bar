@@ -6,6 +6,8 @@ describe('MesaController', () => {
   let controller: MesaController;
   let service: MesaService;
 
+  const mockRequest = { user: { id: 1 } } as any;
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [MesaController],
@@ -23,7 +25,9 @@ describe('MesaController', () => {
               .fn()
               .mockResolvedValue({ id: 1, qtd_cadeiras: 6, status: true }),
             remove: jest.fn().mockResolvedValue({ id: 1 }),
-            findAll: jest.fn().mockResolvedValue({ data: [], total: 0, skip: 0, take: 20 }),
+            findAll: jest
+              .fn()
+              .mockResolvedValue({ data: [], total: 0, skip: 0, take: 20 }),
           },
         },
       ],
@@ -47,8 +51,8 @@ describe('MesaController', () => {
 
       jest.spyOn(service, 'create').mockResolvedValue(result);
 
-      expect(await controller.create(createMesaDto)).toBe(result);
-      expect(service.create).toHaveBeenCalledWith(createMesaDto);
+      expect(await controller.create(createMesaDto, mockRequest)).toBe(result);
+      expect(service.create).toHaveBeenCalledWith(createMesaDto, { id: 1 });
     });
   });
 
@@ -86,8 +90,10 @@ describe('MesaController', () => {
 
       jest.spyOn(service, 'update').mockResolvedValue(result);
 
-      expect(await controller.update(1, updateMesaDto)).toBe(result);
-      expect(service.update).toHaveBeenCalledWith(1, updateMesaDto);
+      expect(await controller.update(1, updateMesaDto, mockRequest)).toBe(
+        result,
+      );
+      expect(service.update).toHaveBeenCalledWith(1, updateMesaDto, { id: 1 });
     });
   });
 
@@ -97,8 +103,8 @@ describe('MesaController', () => {
 
       jest.spyOn(service, 'remove').mockResolvedValue(result);
 
-      expect(await controller.remove(1)).toBe(result);
-      expect(service.remove).toHaveBeenCalledWith(1);
+      expect(await controller.remove(1, mockRequest)).toBe(result);
+      expect(service.remove).toHaveBeenCalledWith(1, { id: 1 });
     });
   });
 });

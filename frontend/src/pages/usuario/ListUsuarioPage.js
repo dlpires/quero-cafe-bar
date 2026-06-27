@@ -1,6 +1,6 @@
 import './ListUsuarioPage.css'
 import { createHeader } from '../../shared/Header.js';
-import { logout, createEmptyState, focusFirstElement, showToast, getLoggedUserId, perfMeasureAsync, createPaginationState, calculateResponsivePageSize, renderPaginationBar, createListSkeleton } from '../../shared/util.js';
+import { logout, createEmptyState, focusFirstElement, showToast, getLoggedUserId, getLoggedUserProfile, perfMeasureAsync, createPaginationState, calculateResponsivePageSize, renderPaginationBar, createListSkeleton } from '../../shared/util.js';
 import { api } from '../../services/api.js';
 import { requireAuth } from '../../services/auth.js';
 
@@ -32,6 +32,12 @@ class ListUsuarioPage extends HTMLElement {
 
     this.querySelector('#logout-btn').addEventListener('click', logout);
     focusFirstElement(this);
+    const perfil = await getLoggedUserProfile();
+    if (perfil !== 0) {
+      await showToast('Você não tem permissão para acessar esta página.', 'error', 3000);
+      document.querySelector('ion-router')?.push('/home', 'root');
+      return;
+    }
     this.renderFabButton();
 
     const content = this.querySelector('ion-content');
@@ -76,12 +82,12 @@ class ListUsuarioPage extends HTMLElement {
       const total = response.total != null ? response.total : this.items.length;
       this.pagination.update(total);
       this.pagination.currentPage = page;
-      this.renderItems();
+      await this.renderItems();
       this.renderPaginationControls();
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
       await showToast('Erro ao carregar página. Tente novamente.', 'error', 3000);
-      this.renderItems();
+      await this.renderItems();
       this.renderPaginationControls();
     } finally {
       this.isLoading = false;
@@ -127,7 +133,7 @@ class ListUsuarioPage extends HTMLElement {
     content.appendChild(fab);
   }
 
-  renderItems() {
+  async renderItems() {
     const container = this.querySelector('.list-usuario-container');
     if (!container) return;
 
@@ -144,76 +150,97 @@ class ListUsuarioPage extends HTMLElement {
       return;
     }
 
-    const loggedUserId = getLoggedUserId();
-    const itemsHtml = this.items.map((usuario) => {
+    const list = document.createElement('ion-list');
+    container.textContent = '';
+    container.appendChild(list);
+
+    const loggedUserId = await getLoggedUserId();
+    this.items.forEach(usuario => {
       const isSelf = loggedUserId !== null && parseInt(loggedUserId) === usuario.id;
-      return `
-      <ion-item-sliding>
-        <ion-item>
-          <ion-label>
-            <h2 class="item-title">
-              <ion-icon
-                name="${usuario.perfil === 0 ? 'shield-checkmark-outline' : 'person-outline'}"
-                color="medium"
-                aria-hidden="true"
-              ></ion-icon>
-              <span>${usuario.nome}</span>
-            </h2>
-            <p>${usuario.usuario}</p>
-          </ion-label>
-          <ion-buttons slot="end">
-            <ion-button fill="clear" class="btn-edit" data-id="${usuario.id}" aria-label="Editar ${usuario.nome}">
-              <ion-icon slot="icon-only" name="create-outline"></ion-icon>
-            </ion-button>
-          </ion-buttons>
-        </ion-item>
-        ${isSelf ? '' : `
-        <ion-item-options side="end">
-          <ion-item-option color="danger" class="btn-swipe-delete" data-id="${usuario.id}" aria-label="Excluir ${usuario.nome}">
-            <ion-icon slot="start" name="trash-outline"></ion-icon>
-            Excluir
-          </ion-item-option>
-        </ion-item-options>
-        `}
-      </ion-item-sliding>
-    `}).join('');
+      const sliding = document.createElement('ion-item-sliding');
 
-    container.innerHTML = `<ion-list>${itemsHtml}</ion-list>`;
+      const ionItem = document.createElement('ion-item');
 
-    container.querySelectorAll('.btn-edit').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-id');
-        const router = document.querySelector('ion-router');
-        router.push(`/usuario/edit?id=${id}`);
+      const label = document.createElement('ion-label');
+      const titleDiv = document.createElement('h2');
+      titleDiv.className = 'item-title';
+
+      const icon = document.createElement('ion-icon');
+      icon.name = usuario.perfil === 0 ? 'shield-checkmark-outline' : 'person-outline';
+      icon.color = 'medium';
+      icon.setAttribute('aria-hidden', 'true');
+      titleDiv.appendChild(icon);
+
+      const span = document.createElement('span');
+      span.textContent = usuario.nome;
+      titleDiv.appendChild(span);
+      label.appendChild(titleDiv);
+
+      const userP = document.createElement('p');
+      userP.textContent = usuario.usuario;
+      label.appendChild(userP);
+      ionItem.appendChild(label);
+
+      const buttons = document.createElement('ion-buttons');
+      buttons.slot = 'end';
+      const editBtn = document.createElement('ion-button');
+      editBtn.fill = 'clear';
+      editBtn.className = 'btn-edit';
+      editBtn.dataset.id = usuario.id;
+      editBtn.setAttribute('aria-label', `Editar ${usuario.nome}`);
+      editBtn.addEventListener('click', () => {
+        document.querySelector('ion-router').push(`/usuario/edit?id=${usuario.id}`);
       });
-    });
+      const editIcon = document.createElement('ion-icon');
+      editIcon.slot = 'icon-only';
+      editIcon.name = 'create-outline';
+      editBtn.appendChild(editIcon);
+      buttons.appendChild(editBtn);
+      ionItem.appendChild(buttons);
+      sliding.appendChild(ionItem);
 
-    container.querySelectorAll('.btn-swipe-delete').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const id = btn.getAttribute('data-id');
-        const alert = document.createElement('ion-alert');
-        alert.header = 'Confirmar';
-        alert.message = 'Deseja realmente excluir este usuario?';
-        alert.buttons = [
-          { text: 'Cancelar', role: 'cancel' },
-          {
-            text: 'Excluir',
-            handler: async () => {
-              try {
-                await api.deleteUsuario(id);
-                await showToast('Usuário excluído com sucesso!', 'success', 2000);
-                this.pagination.reset();
-                await this.loadPage(1);
-              } catch (error) {
-                console.error('Erro ao excluir:', error);
-                await showToast(error.message, 'error', 5000);
+      if (!isSelf) {
+        const options = document.createElement('ion-item-options');
+        options.side = 'end';
+        const deleteOpt = document.createElement('ion-item-option');
+        deleteOpt.color = 'danger';
+        deleteOpt.className = 'btn-swipe-delete';
+        deleteOpt.dataset.id = usuario.id;
+        deleteOpt.setAttribute('aria-label', `Excluir ${usuario.nome}`);
+        const deleteIcon = document.createElement('ion-icon');
+        deleteIcon.slot = 'start';
+        deleteIcon.name = 'trash-outline';
+        deleteOpt.appendChild(deleteIcon);
+        deleteOpt.append(' Excluir');
+        deleteOpt.addEventListener('click', async () => {
+          const alert = document.createElement('ion-alert');
+          alert.header = 'Confirmar';
+          alert.message = 'Deseja realmente excluir este usuario?';
+          alert.buttons = [
+            { text: 'Cancelar', role: 'cancel' },
+            {
+              text: 'Excluir',
+              handler: async () => {
+                try {
+                  await api.deleteUsuario(usuario.id);
+                  await showToast('Usuário excluído com sucesso!', 'success', 2000);
+                  this.pagination.reset();
+                  await this.loadPage(1);
+                } catch (error) {
+                  console.error('Erro ao excluir:', error);
+                  await showToast(error.message, 'error', 5000);
+                }
               }
             }
-          }
-        ];
-        document.body.appendChild(alert);
-        await alert.present();
-      });
+          ];
+          document.body.appendChild(alert);
+          await alert.present();
+        });
+        options.appendChild(deleteOpt);
+        sliding.appendChild(options);
+      }
+
+      list.appendChild(sliding);
     });
   }
 }

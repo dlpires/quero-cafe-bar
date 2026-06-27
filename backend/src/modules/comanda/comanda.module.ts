@@ -8,6 +8,6 @@ import { Comanda } from './entities/comanda.entity';
   imports: [TypeOrmModule.forFeature([Comanda])],
   controllers: [ComandaController],
   providers: [ComandaService],
-  exports: [ComandaService],
+  exports: [ComandaService, TypeOrmModule],
 })
 export class ComandaModule {}

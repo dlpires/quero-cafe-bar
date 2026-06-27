@@ -29,17 +29,17 @@ describe('Auth Service', () => {
   });
 
   describe('isAuthenticated', () => {
-    it('deve retornar true quando token existe (Happy Path)', () => {
-      localStorageMock.getItem.mockReturnValue('token-valido');
+    it('deve retornar true quando logged_in existe (Happy Path)', () => {
+      localStorageMock.getItem.mockReturnValue('true');
       expect(isAuthenticated()).toBe(true);
     });
 
-    it('deve retornar false quando token não existe (Edge Case)', () => {
+    it('deve retornar false quando logged_in não existe (Edge Case)', () => {
       localStorageMock.getItem.mockReturnValue(null);
       expect(isAuthenticated()).toBe(false);
     });
 
-    it('deve retornar false quando token é string vazia (Edge Case)', () => {
+    it('deve retornar false quando logged_in é string vazia (Edge Case)', () => {
       localStorageMock.getItem.mockReturnValue('');
       expect(isAuthenticated()).toBe(false);
     });
@@ -66,14 +66,14 @@ describe('Auth Service', () => {
     it('deve remover token e navegar para /login (Happy Path)', () => {
       localStorageMock.getItem.mockReturnValue('token');
       redirectToLogin();
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('logged_in');
       expect(mockRouter.push).toHaveBeenCalledWith('/login', 'root');
     });
 
     it('deve lidar com router ausente (Edge Case)', () => {
       document.querySelector = jest.fn(() => null);
       redirectToLogin();
-      expect(localStorageMock.removeItem).toHaveBeenCalledWith('token');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('logged_in');
     });
   });
 
@@ -96,13 +96,13 @@ describe('Auth Service', () => {
       expect(addEventListenerSpy).toHaveBeenCalledWith('storage', expect.any(Function));
     });
 
-    it('deve chamar redirectToLogin quando token é removido em outra aba (Happy Path)', () => {
+    it('deve chamar redirectToLogin quando logged_in é removido em outra aba (Happy Path)', () => {
       setupSessionSync();
       const storageHandler = window.addEventListener.mock.calls.find(
         (call) => call[0] === 'storage'
       )[1];
 
-      const mockEvent = { key: 'token', newValue: null, oldValue: 'token-antigo' };
+      const mockEvent = { key: 'logged_in', newValue: null, oldValue: 'true' };
       const redirectSpy = jest.spyOn(
         { redirectToLogin },
         'redirectToLogin'

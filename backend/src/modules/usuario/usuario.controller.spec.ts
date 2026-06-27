@@ -1,7 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import * as jwt from 'jsonwebtoken';
+import { Reflector, APP_GUARD } from '@nestjs/core';
 import { UsuarioController } from './usuario.controller';
 import { UsuarioService } from './usuario.service';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { ListUsuarioDto } from './dto/list-usuario.dto';
@@ -31,6 +33,11 @@ describe('UsuarioController', () => {
           provide: UsuarioService,
           useValue: mockUsuarioService,
         },
+        {
+          provide: APP_GUARD,
+          useClass: JwtAuthGuard,
+        },
+        Reflector,
       ],
     }).compile();
 
@@ -60,10 +67,11 @@ describe('UsuarioController', () => {
       service.create.mockResolvedValue(usuarioCriado);
 
       // Act
-      const result = await controller.create(createUsuarioDto);
+      const mockRequest = { user: { id: 1 } } as any;
+      const result = await controller.create(createUsuarioDto, mockRequest);
 
       // Assert
-      expect(service.create).toHaveBeenCalledWith(createUsuarioDto);
+      expect(service.create).toHaveBeenCalledWith(createUsuarioDto, { id: 1 });
       expect(result).toEqual(usuarioCriado);
     });
   });
@@ -181,6 +189,35 @@ describe('UsuarioController', () => {
     });
   });
 
+  describe('GET /usuario/me - Perfil do Usuário Autenticado', () => {
+    it('deve retornar dados do usuário autenticado (Happy Path)', async () => {
+      // Arrange
+      const usuarioMock = {
+        id: 1,
+        nome: 'Admin',
+        usuario: 'admin',
+        senha: '123',
+        perfil: 0,
+      };
+
+      service.findOne.mockResolvedValue(usuarioMock);
+
+      const mockRequest = { user: { id: 1 } } as any;
+
+      // Act
+      const result = await controller.getMe(mockRequest);
+
+      // Assert
+      expect(service.findOne).toHaveBeenCalledWith(1);
+      expect(result).toEqual({
+        id: 1,
+        usuario: 'admin',
+        perfil: 0,
+      });
+      expect(result).not.toHaveProperty('senha');
+    });
+  });
+
   describe('POST /usuario/login - Login', () => {
     it('deve realizar login com sucesso e retornar JWT válido (Happy Path)', async () => {
       // Arrange
@@ -193,50 +230,57 @@ describe('UsuarioController', () => {
       };
 
       process.env.JWT_SECRET = 'test-secret';
+      process.env.JWT_EXPIRES_IN = '1h';
       service.login.mockResolvedValue(usuarioMock);
 
+      const mockResponse = {
+        cookie: jest.fn(),
+      } as any;
+
       // Act
-      const result = await controller.login({
-        username: 'admin',
-        password: 'senha123',
-      });
+      const result = await controller.login(
+        { username: 'admin', password: 'senha123' },
+        mockResponse,
+      );
 
       // Assert
       expect(service.login).toHaveBeenCalledWith('admin', 'senha123');
       expect(result).toHaveProperty('token');
+      expect(mockResponse.cookie).toHaveBeenCalledWith(
+        'token',
+        expect.any(String),
+        expect.objectContaining({
+          httpOnly: true,
+          sameSite: 'strict',
+        }),
+      );
 
-      const decoded = jwt.verify(result.token, 'test-secret') as any;
+      const decoded = jwt.verify(result.token, 'test-secret', {
+        algorithms: ['HS256'],
+      }) as any;
       expect(decoded.id).toBe(1);
       expect(decoded.perfil).toBe(0);
       expect(decoded.exp).toBeDefined();
     });
+  });
 
-    it('deve usar fallback dev-secret quando JWT_SECRET não está definido', async () => {
-      delete process.env.JWT_SECRET;
+  describe('POST /usuario/logout - Logout', () => {
+    it('deve limpar o cookie e retornar mensagem de sucesso (Happy Path)', async () => {
+      // Arrange
+      const mockResponse = {
+        cookie: jest.fn(),
+      } as any;
 
-      const usuarioMock = {
-        id: 2,
-        nome: 'Garçom',
-        usuario: 'garcom',
-        senha: 'senha456',
-        perfil: 1,
-      };
-      service.login.mockResolvedValue(usuarioMock);
+      // Act
+      const result = await controller.logout(mockResponse);
 
-      const result = await controller.login({
-        username: 'garcom',
-        password: 'senha456',
-      });
-
-      expect(result).toHaveProperty('token');
-      const decoded = jwt.verify(
-        result.token,
-        'dev-secret-change-in-production',
-      ) as any;
-      expect(decoded.id).toBe(2);
-      expect(decoded.perfil).toBe(1);
-
-      process.env.JWT_SECRET = 'test-secret';
+      // Assert
+      expect(mockResponse.cookie).toHaveBeenCalledWith(
+        'token',
+        '',
+        expect.objectContaining({ maxAge: 0 }),
+      );
+      expect(result).toEqual({ message: 'Logout realizado com sucesso' });
     });
   });
 
@@ -260,10 +304,18 @@ describe('UsuarioController', () => {
       service.update.mockResolvedValue(usuarioAtualizado);
 
       // Act
-      const result = await controller.update(1, updateUsuarioDto);
+      const mockUpdateRequest = { user: { id: 1, perfil: 0 } } as any;
+      const result = await controller.update(
+        1,
+        updateUsuarioDto,
+        mockUpdateRequest,
+      );
 
       // Assert
-      expect(service.update).toHaveBeenCalledWith(1, updateUsuarioDto);
+      expect(service.update).toHaveBeenCalledWith(1, updateUsuarioDto, {
+        id: 1,
+        perfil: 0,
+      });
       expect(result).toEqual(usuarioAtualizado);
     });
   });
@@ -275,11 +327,11 @@ describe('UsuarioController', () => {
       service.remove.mockResolvedValue(deleteResult);
 
       // Act
-      const mockRequest = { headers: { authorization: 'Bearer token' } } as any;
-      const result = await controller.remove(1, mockRequest);
+      const mockRemoveRequest = { user: { id: 2 } } as any;
+      const result = await controller.remove(1, mockRemoveRequest);
 
       // Assert
-      expect(service.remove).toHaveBeenCalledWith(1);
+      expect(service.remove).toHaveBeenCalledWith(1, { id: 2 });
       expect(result).toEqual(deleteResult);
     });
   });

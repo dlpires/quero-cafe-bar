@@ -6,6 +6,8 @@ describe('ProdutoController', () => {
   let controller: ProdutoController;
   let service: ProdutoService;
 
+  const mockRequest = { user: { id: 1 } } as any;
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ProdutoController],
@@ -32,7 +34,9 @@ describe('ProdutoController', () => {
               status: true,
             }),
             remove: jest.fn().mockResolvedValue({ id: 1 }),
-            findAll: jest.fn().mockResolvedValue({ data: [], total: 0, skip: 0, take: 20 }),
+            findAll: jest
+              .fn()
+              .mockResolvedValue({ data: [], total: 0, skip: 0, take: 20 }),
           },
         },
       ],
@@ -57,8 +61,10 @@ describe('ProdutoController', () => {
 
       jest.spyOn(service, 'create').mockResolvedValue(result);
 
-      expect(await controller.create(createProdutoDto)).toBe(result);
-      expect(service.create).toHaveBeenCalledWith(createProdutoDto);
+      expect(await controller.create(createProdutoDto, mockRequest)).toBe(
+        result,
+      );
+      expect(service.create).toHaveBeenCalledWith(createProdutoDto, { id: 1 });
     });
   });
 
@@ -106,8 +112,12 @@ describe('ProdutoController', () => {
 
       jest.spyOn(service, 'update').mockResolvedValue(result);
 
-      expect(await controller.update(1, updateProdutoDto)).toBe(result);
-      expect(service.update).toHaveBeenCalledWith(1, updateProdutoDto);
+      expect(await controller.update(1, updateProdutoDto, mockRequest)).toBe(
+        result,
+      );
+      expect(service.update).toHaveBeenCalledWith(1, updateProdutoDto, {
+        id: 1,
+      });
     });
   });
 
@@ -117,8 +127,8 @@ describe('ProdutoController', () => {
 
       jest.spyOn(service, 'remove').mockResolvedValue(result);
 
-      expect(await controller.remove(1)).toBe(result);
-      expect(service.remove).toHaveBeenCalledWith(1);
+      expect(await controller.remove(1, mockRequest)).toBe(result);
+      expect(service.remove).toHaveBeenCalledWith(1, { id: 1 });
     });
   });
 });

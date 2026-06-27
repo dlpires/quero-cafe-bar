@@ -3,8 +3,9 @@
 ## Project Overview
 - **Name**: Quero Café Bar
 - **Purpose**: Educational system for order management (products, tables, users, kitchen view).
-- **Stack**: NestJS 11.x (Backend) + Ionic 8.x Vanilla JS + Vite 7.x (Frontend) + MySQL 8.x (DB).
+- **Stack**: NestJS 11.x (Backend) + Ionic 8.x Vanilla JS + Vite 7.x (Frontend) + MySQL 8.x (DB, compatível com MariaDB 10.x).
 - **Main Workflow**: Admin/Waiters manage products and tables, opening "comandas" (orders) for customers. Kitchen views orders and updates delivery status.
+- **Workflow Automation**: Speckit-based pipeline — constitution → spec → plan → tasks → implement.
 - **Workflow Automation**: Speckit-based pipeline — constitution → spec → plan → tasks → implement.
 
 ## Dev Commands
@@ -16,7 +17,7 @@ yarn install
 yarn run start:dev        # dev server with watch (port 3001)
 yarn run build            # production build
 yarn run lint             # ESLint + Prettier (--fix)
-yarn run test             # Jest unit tests (24 suites, 163 tests)
+yarn run test             # Jest unit tests (25 suites, 180 tests)
 yarn run test:cov         # Jest with coverage report
 yarn make:migration <name>  # Generate migration
 yarn migrate              # Run migrations
@@ -30,7 +31,7 @@ npm install               # Note: uses npm, not yarn
 npm run dev               # Vite dev server (port 5173)
 npm run build             # web build (outputs to dist/)
 npm run build:prod        # production build (--mode production)
-npm run test              # Jest unit tests (20 suites, 161 tests)
+npm run test              # Jest unit tests (21 suites, 240 tests)
 npm run test:watch        # Jest in watch mode
 npm run test:coverage     # Jest with coverage report
 npx cap copy              # sync web build to Android
@@ -46,7 +47,8 @@ npx cap build android     # build APK directly
   - Entry: `src/main.ts`, root module: `src/app.module.ts`
   - Logic: Controllers handle routes, Services handle business logic, Entities define DB schema.
   - Config: `src/config/orm.config.ts` (TypeORM + MySQL)
-  - Global: `ValidationPipe` (whitelist + forbidNonWhitelisted + transform), `GlobalExceptionFilter`
+  - Global: `ValidationPipe` (whitelist + forbidNonWhitelisted + transform), `GlobalExceptionFilter`, `JwtAuthGuard`, `RolesGuard`, `ThrottlerGuard`, `helmet`
+  - New: `src/common/guards/jwt-auth.guard.ts`, `src/common/guards/roles.guard.ts`, `src/common/decorators/roles.decorator.ts`, `src/common/seed/seed.service.ts`
 
 - **Frontend**: `frontend/src/` — Vanilla JS (ES Modules) with Ionic web components
   - Entry: `src/main.js`
@@ -56,6 +58,7 @@ npx cap build android     # build APK directly
     - Home page = Kitchen view with delivery status updates (red = pending, green = delivered)
   - Environments: `src/environments/environment.js` (dev), `environment.prod.js`
   - Shared: `src/shared/Header.js` (menu + header), `src/shared/util.js` (toast, loading, validation, focus, logout)
+  - Route guard: `src/main.js` (global `ionRouteDidChange` listener with profile-based blocking)
 
 ## Available Subagents
 
@@ -121,18 +124,19 @@ These implement a structured feature development workflow (constitution → spec
 | `speckit.git.remote` | Configura remote do GitHub |
 | `speckit.git.validate` | Valida estado do repositório |
 | `speckit.git.feature` | Gerencia branch de feature |
+| `speckit.git.pr` | Cria Pull Request via gh CLI com título/corpo gerados da spec |
 
 ## Important Quirks
 
 - **Package managers differ**: Backend uses `yarn`, frontend uses `npm`
 - **Port configuration**: Frontend calls `localhost:3001`, backend defaults to `3000` — **set `PORT=3001` in `backend/.env`**
 - **DB migrations required**: `synchronize: false` — always use `yarn make:migration` before `yarn migrate`
-- **CORS enabled**: Backend allows all origins (`*`) in `main.ts` — restrict in production
+- **CORS restricted**: Backend allows origins from `CORS_ORIGIN` env var (default: `http://localhost:5173` in dev) — configure for production
 - **ESLint rule**: `prettier/prettier` uses `endOfLine: "auto"` — do not change line endings manually
 - **Ionic loading**: Vite copies Ionic from `node_modules/@ionic/core/dist/ionic/` to `dist/` via `vite-plugin-static-copy`
 - **Mobile Development**: Capacitor 8.x for Android. Backend URL in `environment.prod.js` uses `ngrok` or `10.0.2.2` for emulator access.
-- **Authentication**: JWT-based using `jsonwebtoken` (signed with `JWT_SECRET`, 24h expiry). Token stored in localStorage, sent as `Authorization: Bearer <token>`.
-- **Password encryption**: AES-256-CTR via `EncryptionTransformer` (TypeORM column transformer) — transparent encrypt/decrypt at ORM level.
+- **Authentication**: JWT-based using `jsonwebtoken` (signed with `JWT_SECRET`, 2h expiry). Token stored in localStorage, sent as `Authorization: Bearer <token>`.
+- **Password encryption**: bcrypt via `bcrypt.hash()` (10 rounds) — irreversible hashing. Replaced AES-256-CTR `EncryptionTransformer`.
 - **Global validation**: `ValidationPipe` with `whitelist: true`, `forbidNonWhitelisted: true`, `transform: true` — unknown fields rejected with 400.
 - **Global exception filter**: `GlobalExceptionFilter` catches unhandled errors and returns sanitized 500 responses.
 - **Kitchen View**: Home page displays comandas with item delivery status (red = pending, green = delivered).
@@ -142,10 +146,10 @@ These implement a structured feature development workflow (constitution → spec
 ## Test Status
 
 ```bash
-# Backend — 24 suites, 163 tests passing
+# Backend — 25 suites, 180 tests passing
 cd backend && yarn test
 
-# Frontend — 20 suites, 161 tests passing
+# Frontend — 21 suites, 240 tests passing
 cd frontend && npm test
 ```
 
@@ -158,6 +162,8 @@ cd frontend && npm test
 - Java JDK 17+ + Android Studio (for mobile builds)
 
 <!-- SPECKIT START -->
-For additional context about the current feature (Controle de Paginação para Listas), read
-specs/010-list-pagination/plan.md
+The most recent feature (Test Coverage Improvement, #015) has been completed.
+All 49 of 55 planned tasks implemented across 7 phases (4 deferred, 2 pre-existing).
+Backend: 180 tests (25 suites) | Frontend: 240 tests (21 suites).
+Read specs/015-test-coverage-improvement/spec.md for reference.
 <!-- SPECKIT END -->

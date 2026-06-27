@@ -7,10 +7,24 @@ import { CreateMesaDto } from './dto/create-mesa.dto';
 import { UpdateMesaDto } from './dto/update-mesa.dto';
 import { ListMesaDto } from './dto/list-mesa.dto';
 import { NotFoundException } from '@nestjs/common';
+import { AuditService } from '../audit/audit.service';
 
 describe('MesaService', () => {
   let service: MesaService;
   let mockRepository: jest.Mocked<Repository<Mesa>>;
+
+  const mockQueryBuilder = {
+    select: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    andWhere: jest.fn().mockReturnThis(),
+    getRawMany: jest.fn().mockResolvedValue([]),
+  };
+
+  const mockManager = {
+    getRepository: jest.fn().mockReturnValue({
+      createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
+    }),
+  };
 
   const mockMesaRepository = {
     create: jest.fn(),
@@ -19,6 +33,11 @@ describe('MesaService', () => {
     findOne: jest.fn(),
     delete: jest.fn(),
     findAndCount: jest.fn(),
+    manager: mockManager,
+  };
+
+  const mockAuditService = {
+    log: jest.fn().mockResolvedValue(undefined),
   };
 
   beforeEach(async () => {
@@ -28,6 +47,10 @@ describe('MesaService', () => {
         {
           provide: getRepositoryToken(Mesa),
           useValue: mockMesaRepository,
+        },
+        {
+          provide: AuditService,
+          useValue: mockAuditService,
         },
       ],
     }).compile();
@@ -81,7 +104,9 @@ describe('MesaService', () => {
         skip: undefined,
         take: undefined,
       });
-      expect(result.data).toEqual(mesasMock);
+      expect(result.data).toEqual(
+        mesasMock.map((m) => ({ ...m, hasActiveComanda: false })),
+      );
       expect(result.total).toBe(3);
       expect(result.data).toHaveLength(3);
     });

@@ -18,8 +18,10 @@ O projeto visa simular um cenário real de desenvolvimento de software, abrangen
 - **Linguagem:** TypeScript
 - **Gerenciador de Pacotes:** Yarn
 - **Validação:** class-validator, class-transformer
-- **Autenticação:** JWT (JSON Web Token via `jsonwebtoken`)
-- **Criptografia:** AES-256-CTR via `EncryptionTransformer` (TypeORM column transformer)
+- **Autenticação:** JWT (HS256, 2h expiry) via `jsonwebtoken`
+- **Proteção Global:** `JwtAuthGuard` (todas as rotas exceto login), `RolesGuard` (perfil-based), `ThrottlerGuard`, `helmet`
+- **Hash de Senhas:** bcrypt (10 rounds) — substituiu AES-256-CTR
+- **Rate Limiting:** 10 req/min no login, 120 req/min global
 - **Filtro Global de Erros:** `GlobalExceptionFilter` para respostas sanitizadas
 
 ### Frontend
@@ -42,10 +44,19 @@ O projeto visa simular um cenário real de desenvolvimento de software, abrangen
 - [x] Integração com Banco de Dados (TypeORM + MySQL)
 - [x] Autenticação JWT implementada
 - [x] Relacionamentos entre entidades configurados
-- [x] Testes unitários completos (163 testes, 24 suites)
+- [x] Testes unitários completos (180 testes, 25 suites)
 - [x] Tratamento global de exceções
 - [x] Validação global (whitelist + transform)
-- [x] Criptografia de senhas via ORM transformer
+- [x] Autenticação JWT com guard global (JwtAuthGuard)
+- [x] Hash de senhas com bcrypt (irreversível)
+- [x] Rate limiting (ThrottlerGuard)
+- [x] Headers de segurança (helmet)
+- [x] CORS restrito por ambiente
+- [x] Seed automático de admin padrão
+- [x] Validação de ambiente no startup (fail-fast)
+- [x] Controle de acesso por perfil (@Roles decorator + RolesGuard)
+- [x] Auditoria de ações sensíveis (AuditService + AuditLogEntity)
+- [x] Prevenção de auto-alteração de perfil para não-Admin
 
 ### Frontend
 - [x] Configuração inicial do ambiente Ionic + Vite
@@ -61,8 +72,10 @@ O projeto visa simular um cenário real de desenvolvimento de software, abrangen
 - [x] Feedback visual (toast, alert, loading)
 - [x] Build para Android configurado (Capacitor)
 - [x] Utilitários compartilhados (toast, loading, validação, foco, empty state)
-- [ ] Temas personalizados
-- [x] Testes unitários (161 testes, 20 suites)
+- [x] Menu lateral filtrado por perfil de usuário
+- [x] Rota guard com verificação de perfil (main.js)
+- [x] Per-page permission checks em páginas administrativas
+- [x] Testes unitários (240 testes, 21 suites)
 
 ## 📂 Estrutura de Pastas
 
@@ -71,7 +84,9 @@ quero-cafe-bar/
 ├── /backend          # API REST desenvolvida em NestJS 11.x
 │   ├── src/
 │   │   ├── modules/      # Módulos: comanda, comanda-item, mesa, produto, usuario
+│   │   ├── common/       # Guards (JwtAuthGuard), Seed (seedAdmin), Encryption (bcrypt)
 │   │   ├── config/       # Configuração TypeORM
+│   │   ├── database/     # Migrations
 │   │   └── main.ts       # Entry point
 │   └── package.json
 │
@@ -106,6 +121,8 @@ quero-cafe-bar/
    DB_PASSWORD=sua_senha
    DB_NAME=quero_cafe_bar
    PORT=3001
+   JWT_SECRET=sua_chave_secreta_aqui
+   SEED_ADMIN=true   # Remove or keep (idempotent) after first run
    ```
 
 4. Execute as migrations do banco de dados:
@@ -119,6 +136,8 @@ quero-cafe-bar/
    ```
 
 O backend estará disponível em `http://localhost:3001`.
+
+> **Seed automático**: Com `SEED_ADMIN=true`, o sistema cria o usuário `admin`/`admin` na inicialização se nenhum administrador existir.
 
 ## 📱 Como executar o Frontend (Web)
 
@@ -211,7 +230,7 @@ Consulte [AGENTS.md](./AGENTS.md) para a lista completa de agentes e comandos.
 | `yarn start:dev` | Servidor com hot-reload (porta 3001) |
 | `yarn build` | Build de produção |
 | `yarn lint` | ESLint + Prettier (--fix) |
-| `yarn test` | Jest unit tests (163 testes, 24 suites) |
+| `yarn test` | Jest unit tests (180 testes, 25 suites) |
 | `yarn test:cov` | Testes com relatório de cobertura |
 | `yarn make:migration <nome>` | Gerar migration |
 | `yarn migrate` | Executar migrations |
@@ -223,7 +242,7 @@ Consulte [AGENTS.md](./AGENTS.md) para a lista completa de agentes e comandos.
 | `npm run dev` | Servidor Vite (desenvolvimento, porta 5173) |
 | `npm run build` | Build web (saída em dist/) |
 | `npm run build:prod` | Build de produção (--mode production) |
-| `npm test` | Jest unit tests (161 testes, 20 suites) |
+| `npm test` | Jest unit tests (240 testes, 21 suites) |
 | `npm run test:watch` | Jest em modo watch |
 | `npm run test:coverage` | Testes com relatório de cobertura |
 | `npx cap copy` | Sincronizar build web com Android |
