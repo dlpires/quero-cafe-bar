@@ -159,8 +159,22 @@ describe('Util - shared utilities', () => {
     describe('createEmptyState', () => {
         it('deve renderizar ícone, mensagem e botão CTA', () => {
             const { createEmptyState } = require('./util.js');
-            const container = document.createElement('div');
             const handler = jest.fn();
+            const mockEl = (overrides) => ({
+                appendChild: jest.fn(), setAttribute: jest.fn(), addEventListener: jest.fn(),
+                textContent: '', style: { cssText: '' }, className: '',
+                ...overrides,
+            });
+            const mockIcon = mockEl();
+            const mockBtn = mockEl();
+            const container = { textContent: '', appendChild: jest.fn() };
+            const originalCreateElement = document.createElement;
+            document.createElement = jest.fn((tag) => {
+                if (tag === 'ion-icon') return mockIcon;
+                if (tag === 'ion-button') return mockBtn;
+                if (tag === 'div') return { style: { cssText: '' }, className: '', appendChild: jest.fn(), textContent: '' };
+                return originalCreateElement(tag);
+            });
 
             createEmptyState(container, {
                 icon: 'cube-outline',
@@ -169,37 +183,66 @@ describe('Util - shared utilities', () => {
                 actionHandler: handler,
             });
 
-            expect(container.innerHTML).toContain('cube-outline');
-            expect(container.innerHTML).toContain('Nenhum produto cadastrado');
-            expect(container.innerHTML).toContain('Cadastrar');
+            expect(mockIcon.setAttribute).toHaveBeenCalledWith('name', 'cube-outline');
+            expect(mockBtn.textContent).toBe('Cadastrar');
+            expect(mockBtn.addEventListener).toHaveBeenCalledWith('click', handler);
+            expect(container.appendChild).toHaveBeenCalled();
+
+            document.createElement = originalCreateElement;
         });
 
         it('deve renderizar sem botão quando actionLabel é omitido', () => {
             const { createEmptyState } = require('./util.js');
-            const container = document.createElement('div');
+            const mockEl = (overrides) => ({
+                appendChild: jest.fn(), setAttribute: jest.fn(), addEventListener: jest.fn(),
+                textContent: '', style: { cssText: '' }, className: '',
+                ...overrides,
+            });
+            const mockIcon = mockEl();
+            const container = { textContent: '', appendChild: jest.fn() };
+            const originalCreateElement = document.createElement;
+            document.createElement = jest.fn((tag) => {
+                if (tag === 'ion-icon') return mockIcon;
+                if (tag === 'div') return { style: { cssText: '' }, className: '', appendChild: jest.fn(), textContent: '' };
+                return originalCreateElement(tag);
+            });
 
             createEmptyState(container, {
                 message: 'Lista vazia',
             });
 
-            expect(container.innerHTML).toContain('Lista vazia');
-            expect(container.innerHTML).not.toContain('ion-button');
+            expect(mockIcon.setAttribute).toHaveBeenCalledWith('name', 'file-tray-outline');
+            expect(container.appendChild).toHaveBeenCalled();
+
+            document.createElement = originalCreateElement;
         });
 
         it('deve chamar actionHandler ao clicar no botão CTA', () => {
             const { createEmptyState } = require('./util.js');
-            const container = document.createElement('div');
             const handler = jest.fn();
+            const mockEl = (overrides) => ({
+                appendChild: jest.fn(), setAttribute: jest.fn(), addEventListener: jest.fn(),
+                textContent: '', style: { cssText: '' }, className: '',
+                ...overrides,
+            });
+            const mockBtn = mockEl();
+            const container = { textContent: '', appendChild: jest.fn() };
+            const originalCreateElement = document.createElement;
+            document.createElement = jest.fn((tag) => {
+                if (tag === 'ion-button') return mockBtn;
+                if (tag === 'ion-icon') return mockEl();
+                if (tag === 'div') return { style: { cssText: '' }, className: '', appendChild: jest.fn(), textContent: '' };
+                return originalCreateElement(tag);
+            });
 
             createEmptyState(container, {
                 actionLabel: 'Adicionar',
                 actionHandler: handler,
             });
 
-            const button = container.querySelector('ion-button');
-            expect(button).not.toBeNull();
-            button.click();
-            expect(handler).toHaveBeenCalled();
+            expect(mockBtn.addEventListener).toHaveBeenCalledWith('click', handler);
+
+            document.createElement = originalCreateElement;
         });
     });
 
@@ -461,6 +504,67 @@ describe('Util - shared utilities', () => {
             const { focusFirstElement } = require('./util.js');
 
             expect(() => focusFirstElement(null)).not.toThrow();
+        });
+    });
+
+    describe('getLoggedUserId', () => {
+        beforeEach(() => {
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: true,
+                status: 200,
+                json: jest.fn().mockResolvedValue({ id: 42, usuario: 'admin', perfil: 0 }),
+            });
+        });
+
+        afterEach(() => {
+            delete global.fetch;
+        });
+
+        it('deve extrair ID do usuário logado', async () => {
+            const { getLoggedUserId, clearLoggedUserCache } = require('./util.js');
+            clearLoggedUserCache();
+            const id = await getLoggedUserId();
+            expect(id).toBe(42);
+        });
+    });
+
+    describe('getLoggedUserProfile', () => {
+        beforeEach(() => {
+            global.fetch = jest.fn().mockResolvedValue({
+                ok: true,
+                status: 200,
+                json: jest.fn().mockResolvedValue({ id: 1, usuario: 'admin', perfil: 0 }),
+            });
+        });
+
+        afterEach(() => {
+            delete global.fetch;
+        });
+
+        it('deve extrair perfil do usuário logado', async () => {
+            const { getLoggedUserProfile, clearLoggedUserCache } = require('./util.js');
+            clearLoggedUserCache();
+            const perfil = await getLoggedUserProfile();
+            expect(perfil).toBe(0);
+        });
+    });
+
+    describe('logout', () => {
+        it('deve limpar localStorage, remover menu e navegar para /login', () => {
+            const { logout } = require('./util.js');
+
+            const mockRouter = { push: jest.fn() };
+            document.querySelector = jest.fn((selector) => {
+                if (selector === 'ion-router') return mockRouter;
+                if (selector === 'ion-menu') return null;
+                return null;
+            });
+
+            logout();
+
+            expect(localStorageMock.removeItem).toHaveBeenCalledWith('logged_in');
+            expect(localStorageMock.removeItem).toHaveBeenCalledWith('user_perfil');
+            expect(mockRouter.push).toHaveBeenCalledWith('/login', 'root');
         });
     });
 });

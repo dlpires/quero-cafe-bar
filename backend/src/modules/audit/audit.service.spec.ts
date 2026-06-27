@@ -130,5 +130,42 @@ describe('AuditService', () => {
       expect(result.data).toEqual(mockData);
       expect(result.total).toBe(2);
     });
+
+    it('deve usar valores padrão (skip=0, take=50) quando nenhum parâmetro é passado', async () => {
+      mockLogRepository.findAndCount.mockResolvedValue([[], 0]);
+
+      await service.findAll();
+
+      expect(mockLogRepository.findAndCount).toHaveBeenCalledWith({
+        skip: 0,
+        take: 50,
+        order: { createdAt: 'DESC' },
+      });
+    });
+
+    it('deve aceitar parâmetros explícitos personalizados', async () => {
+      const mockData = [
+        { id: 3, userId: 2, action: 'delete', resource: 'usuario' },
+      ];
+      mockLogRepository.findAndCount.mockResolvedValue([mockData, 1]);
+
+      const result = await service.findAll(10, 5);
+
+      expect(mockLogRepository.findAndCount).toHaveBeenCalledWith({
+        skip: 10,
+        take: 5,
+        order: { createdAt: 'DESC' },
+      });
+      expect(result.data).toHaveLength(1);
+      expect(result.total).toBe(1);
+    });
+
+    it('deve retornar lista vazia quando não há logs', async () => {
+      mockLogRepository.findAndCount.mockResolvedValue([[], 0]);
+
+      const result = await service.findAll();
+
+      expect(result).toEqual({ data: [], total: 0 });
+    });
   });
 });
