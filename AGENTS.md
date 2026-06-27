@@ -17,7 +17,7 @@ yarn install
 yarn run start:dev        # dev server with watch (port 3001)
 yarn run build            # production build
 yarn run lint             # ESLint + Prettier (--fix)
-yarn run test             # Jest unit tests (24 suites, 163 tests)
+yarn run test             # Jest unit tests (25 suites, 180 tests)
 yarn run test:cov         # Jest with coverage report
 yarn make:migration <name>  # Generate migration
 yarn migrate              # Run migrations
@@ -31,7 +31,7 @@ npm install               # Note: uses npm, not yarn
 npm run dev               # Vite dev server (port 5173)
 npm run build             # web build (outputs to dist/)
 npm run build:prod        # production build (--mode production)
-npm run test              # Jest unit tests (21 suites, 221 tests)
+npm run test              # Jest unit tests (21 suites, 240 tests)
 npm run test:watch        # Jest in watch mode
 npm run test:coverage     # Jest with coverage report
 npx cap copy              # sync web build to Android
@@ -146,10 +146,10 @@ These implement a structured feature development workflow (constitution → spec
 ## Test Status
 
 ```bash
-# Backend — 24 suites, 163 tests passing
+# Backend — 25 suites, 180 tests passing
 cd backend && yarn test
 
-# Frontend — 21 suites, 221 tests passing
+# Frontend — 21 suites, 240 tests passing
 cd frontend && npm test
 ```
 
@@ -162,6 +162,8 @@ cd frontend && npm test
 - Java JDK 17+ + Android Studio (for mobile builds)
 
 <!-- SPECKIT START -->
-For additional context about the current feature (Test Coverage Improvement), read
-specs/015-test-coverage-improvement/plan.md
+The most recent feature (Test Coverage Improvement, #015) has been completed.
+All 49 of 55 planned tasks implemented across 7 phases (4 deferred, 2 pre-existing).
+Backend: 180 tests (25 suites) | Frontend: 240 tests (21 suites).
+Read specs/015-test-coverage-improvement/spec.md for reference.
 <!-- SPECKIT END -->

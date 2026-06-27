@@ -44,7 +44,7 @@ O projeto visa simular um cenário real de desenvolvimento de software, abrangen
 - [x] Integração com Banco de Dados (TypeORM + MySQL)
 - [x] Autenticação JWT implementada
 - [x] Relacionamentos entre entidades configurados
-- [x] Testes unitários completos (163 testes, 24 suites)
+- [x] Testes unitários completos (180 testes, 25 suites)
 - [x] Tratamento global de exceções
 - [x] Validação global (whitelist + transform)
 - [x] Autenticação JWT com guard global (JwtAuthGuard)
@@ -75,7 +75,7 @@ O projeto visa simular um cenário real de desenvolvimento de software, abrangen
 - [x] Menu lateral filtrado por perfil de usuário
 - [x] Rota guard com verificação de perfil (main.js)
 - [x] Per-page permission checks em páginas administrativas
-- [x] Testes unitários (221 testes, 21 suites)
+- [x] Testes unitários (240 testes, 21 suites)
 
 ## 📂 Estrutura de Pastas
 
@@ -230,7 +230,7 @@ Consulte [AGENTS.md](./AGENTS.md) para a lista completa de agentes e comandos.
 | `yarn start:dev` | Servidor com hot-reload (porta 3001) |
 | `yarn build` | Build de produção |
 | `yarn lint` | ESLint + Prettier (--fix) |
-| `yarn test` | Jest unit tests (163 testes, 24 suites) |
+| `yarn test` | Jest unit tests (180 testes, 25 suites) |
 | `yarn test:cov` | Testes com relatório de cobertura |
 | `yarn make:migration <nome>` | Gerar migration |
 | `yarn migrate` | Executar migrations |
@@ -242,7 +242,7 @@ Consulte [AGENTS.md](./AGENTS.md) para a lista completa de agentes e comandos.
 | `npm run dev` | Servidor Vite (desenvolvimento, porta 5173) |
 | `npm run build` | Build web (saída em dist/) |
 | `npm run build:prod` | Build de produção (--mode production) |
-| `npm test` | Jest unit tests (221 testes, 21 suites) |
+| `npm test` | Jest unit tests (240 testes, 21 suites) |
 | `npm run test:watch` | Jest em modo watch |
 | `npm run test:coverage` | Testes com relatório de cobertura |
 | `npx cap copy` | Sincronizar build web com Android |
