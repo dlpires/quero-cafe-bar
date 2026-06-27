@@ -6,7 +6,7 @@ describe('MesaController', () => {
   let controller: MesaController;
   let service: MesaService;
 
-  const mockRequest = { user: { id: 1 } } as any; 
+  const mockRequest = { user: { id: 1 } } as any;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -90,7 +90,9 @@ describe('MesaController', () => {
 
       jest.spyOn(service, 'update').mockResolvedValue(result);
 
-      expect(await controller.update(1, updateMesaDto, mockRequest)).toBe(result);
+      expect(await controller.update(1, updateMesaDto, mockRequest)).toBe(
+        result,
+      );
       expect(service.update).toHaveBeenCalledWith(1, updateMesaDto, { id: 1 });
     });
   });

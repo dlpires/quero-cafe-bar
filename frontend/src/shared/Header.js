@@ -42,38 +42,50 @@ const createAndInjectMenu = () => {
 
     // 3. Cria o elemento <ion-menu>
     const menu = document.createElement('ion-menu');
-    menu.contentId = mainContent.id; // Garante que o ID do conteúdo seja o mesmo que o menu espera.
-    menu.innerHTML = `
-        <ion-header>
-            <ion-toolbar color="secondary">
-                <ion-title>Menu</ion-title>
-            </ion-toolbar>
-        </ion-header>
-        <ion-content>
-            <ion-list>
-                ${allowedItems.map(item => `
-                    <ion-item button class="menu-item" data-url="${item.url}">
-                        <ion-icon name="${item.icon}" slot="start" aria-hidden="true"></ion-icon>
-                        <ion-label>${item.label}</ion-label>
-                    </ion-item>
-                `).join('')}
-            </ion-list>
-        </ion-content>
-    `;
+    menu.contentId = mainContent.id;
 
-    // 4. Adiciona os eventos de clique para a navegação
-    menu.querySelectorAll('.menu-item').forEach(item => {
-        item.addEventListener('click', async () => {
-            const url = item.dataset.url;
+    const header = document.createElement('ion-header');
+    const toolbar = document.createElement('ion-toolbar');
+    toolbar.setAttribute('color', 'secondary');
+    const title = document.createElement('ion-title');
+    title.textContent = 'Menu';
+    toolbar.appendChild(title);
+    header.appendChild(toolbar);
+
+    const content = document.createElement('ion-content');
+    const list = document.createElement('ion-list');
+
+    allowedItems.forEach(item => {
+        const listItem = document.createElement('ion-item');
+        listItem.setAttribute('button', '');
+        listItem.classList.add('menu-item');
+        listItem.dataset.url = item.url;
+
+        const icon = document.createElement('ion-icon');
+        icon.setAttribute('name', item.icon);
+        icon.setAttribute('slot', 'start');
+        icon.setAttribute('aria-hidden', 'true');
+
+        const label = document.createElement('ion-label');
+        label.textContent = item.label;
+
+        listItem.appendChild(icon);
+        listItem.appendChild(label);
+        listItem.addEventListener('click', async () => {
             const router = document.querySelector('ion-router');
-            if (router && window.location.hash.substring(1) !== url) {
-                router.push(url, 'root');
+            if (router && window.location.hash.substring(1) !== item.url) {
+                router.push(item.url, 'root');
             }
-            await menu.close(); // Fecha o menu após a navegação
+            await menu.close();
         });
+        list.appendChild(listItem);
     });
 
-    // 5. Adiciona o menu ao DOM, no início do <body>
+    content.appendChild(list);
+    menu.appendChild(header);
+    menu.appendChild(content);
+
+    // 4. Adiciona o menu ao DOM, no início do <body>
     document.body.prepend(menu);
 };
 

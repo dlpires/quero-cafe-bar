@@ -40,7 +40,10 @@ export class ProdutoService {
         'CREATE',
         'produto',
         result.id,
-        { dsc_produto: createProdutoDto.dsc_produto, valor_unit: createProdutoDto.valor_unit },
+        {
+          dsc_produto: createProdutoDto.dsc_produto,
+          valor_unit: createProdutoDto.valor_unit,
+        },
       );
     }
     return result;
@@ -87,9 +90,12 @@ export class ProdutoService {
     const result = await this.produtoRepository.save(updatedProduto);
     if (authenticatedUser) {
       const details: Record<string, unknown> = {};
-      if (updateProdutoDto.dsc_produto) details.dsc_produto = updateProdutoDto.dsc_produto;
-      if (updateProdutoDto.valor_unit !== undefined) details.valor_unit = updateProdutoDto.valor_unit;
-      if (updateProdutoDto.status !== undefined) details.status = updateProdutoDto.status;
+      if (updateProdutoDto.dsc_produto)
+        details.dsc_produto = updateProdutoDto.dsc_produto;
+      if (updateProdutoDto.valor_unit !== undefined)
+        details.valor_unit = updateProdutoDto.valor_unit;
+      if (updateProdutoDto.status !== undefined)
+        details.status = updateProdutoDto.status;
       await this.auditService.log(
         authenticatedUser.id,
         'UPDATE',

@@ -160,6 +160,9 @@ export class UsuarioService {
   }
 
   async remove(id: number, authenticatedUser?: { id: number }) {
+    if (authenticatedUser && authenticatedUser.id === id) {
+      throw new ConflictException('Você não pode excluir seu próprio usuário');
+    }
     const usuario = await this.findOne(id);
     await this.usuarioRepository.delete(id);
     if (authenticatedUser) {

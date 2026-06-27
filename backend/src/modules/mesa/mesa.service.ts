@@ -94,8 +94,10 @@ export class MesaService {
     const result = await this.mesaRepository.save(updatedMesa);
     if (authenticatedUser) {
       const details: Record<string, unknown> = {};
-      if (updateMesaDto.qtd_cadeiras !== undefined) details.qtd_cadeiras = updateMesaDto.qtd_cadeiras;
-      if (updateMesaDto.status !== undefined) details.status = updateMesaDto.status;
+      if (updateMesaDto.qtd_cadeiras !== undefined)
+        details.qtd_cadeiras = updateMesaDto.qtd_cadeiras;
+      if (updateMesaDto.status !== undefined)
+        details.status = updateMesaDto.status;
       await this.auditService.log(
         authenticatedUser.id,
         'UPDATE',
@@ -114,13 +116,9 @@ export class MesaService {
     const mesa = await this.findOne(id);
     await this.mesaRepository.delete(id);
     if (authenticatedUser) {
-      await this.auditService.log(
-        authenticatedUser.id,
-        'DELETE',
-        'mesa',
-        id,
-        { qtd_cadeiras: mesa.qtd_cadeiras },
-      );
+      await this.auditService.log(authenticatedUser.id, 'DELETE', 'mesa', id, {
+        qtd_cadeiras: mesa.qtd_cadeiras,
+      });
     }
     return { id };
   }

@@ -47,22 +47,23 @@ export function createEmptyState(container, options) {
     wrapper.className = 'empty-state';
     wrapper.style.cssText = 'display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 16px; text-align: center;';
 
-    wrapper.innerHTML = '<ion-icon style="font-size: 64px; color: var(--ion-color-medium); margin-bottom: 16px;"></ion-icon>' +
-        '<p style="font-size: 16px; color: var(--ion-color-medium); margin: 0 0 16px 0; max-width: 280px;"></p>' +
-        (options.actionLabel && options.actionHandler ? '<ion-button fill="solid" color="primary"></ion-button>' : '');
+    const iconEl = document.createElement('ion-icon');
+    iconEl.style.cssText = 'font-size: 64px; color: var(--ion-color-medium); margin-bottom: 16px;';
+    iconEl.setAttribute('name', icon);
+    wrapper.appendChild(iconEl);
 
-    const iconEl = wrapper.querySelector('ion-icon');
-    if (iconEl) iconEl.setAttribute('name', icon);
-
-    const p = wrapper.querySelector('p');
-    if (p) p.textContent = message;
+    const p = document.createElement('p');
+    p.style.cssText = 'font-size: 16px; color: var(--ion-color-medium); margin: 0 0 16px 0; max-width: 280px;';
+    p.textContent = message;
+    wrapper.appendChild(p);
 
     if (options.actionLabel && options.actionHandler) {
-        const btn = wrapper.querySelector('ion-button');
-        if (btn) {
-            btn.textContent = options.actionLabel;
-            btn.addEventListener('click', options.actionHandler);
-        }
+        const btn = document.createElement('ion-button');
+        btn.setAttribute('fill', 'solid');
+        btn.setAttribute('color', 'primary');
+        btn.textContent = options.actionLabel;
+        btn.addEventListener('click', options.actionHandler);
+        wrapper.appendChild(btn);
     }
 
     container.textContent = '';
@@ -85,12 +86,17 @@ export function validatePositiveNumber(value, fieldName) {
 }
 
 let _cachedUser = null;
+let _cachedUserTimestamp = null;
+const CACHE_TTL = 5 * 60 * 1000;
 
 export async function getLoggedUser() {
-    if (_cachedUser) return _cachedUser;
+    if (_cachedUser && _cachedUserTimestamp && Date.now() - _cachedUserTimestamp < CACHE_TTL) {
+        return _cachedUser;
+    }
     const { api } = await import('../services/api.js');
     try {
         _cachedUser = await api.getMe();
+        _cachedUserTimestamp = Date.now();
         return _cachedUser;
     } catch {
         return null;
@@ -109,6 +115,7 @@ export async function getLoggedUserProfile() {
 
 export function clearLoggedUserCache() {
     _cachedUser = null;
+    _cachedUserTimestamp = null;
 }
 
 export function hasFormChanges(container, initialData) {

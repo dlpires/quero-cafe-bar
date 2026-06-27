@@ -674,4 +674,65 @@ describe('Api Service', () => {
       );
     });
   });
+
+  describe('getMe', () => {
+    it('deve retornar dados do usuário autenticado (Happy Path)', async () => {
+      const mockResponse = {
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({ id: 1, usuario: 'admin', perfil: 0 }),
+      };
+      fetch.mockResolvedValue(mockResponse);
+
+      const result = await api.getMe();
+
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/usuario/me',
+        expect.objectContaining({
+          headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
+        }),
+      );
+      expect(result).toEqual({ id: 1, usuario: 'admin', perfil: 0 });
+    });
+
+    it('deve lançar erro de sessão expirada quando retorna 401', async () => {
+      const mockResponse = {
+        ok: false,
+        status: 401,
+        json: jest.fn().mockResolvedValue({ message: 'Não autorizado' }),
+      };
+      const mockRouter = { push: jest.fn() };
+      const originalQS = document.querySelector;
+      document.querySelector = jest.fn((selector) => {
+        if (selector === 'ion-router') return mockRouter;
+        return originalQS.call(document, selector);
+      });
+      fetch.mockResolvedValue(mockResponse);
+
+      await expect(api.getMe()).rejects.toThrow(
+        'Sessão expirada. Faça login novamente.',
+      );
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('logged_in');
+      expect(mockRouter.push).toHaveBeenCalledWith('/login', 'root');
+      document.querySelector = originalQS;
+    });
+  });
+
+  describe('logout', () => {
+    it('deve chamar rota de logout e retornar confirmação', async () => {
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({ message: 'Logout realizado com sucesso' }),
+      };
+      fetch.mockResolvedValue(mockResponse);
+
+      const result = await api.logout();
+
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3001/usuario/logout',
+        expect.objectContaining({ method: 'POST' }),
+      );
+      expect(result).toEqual({ message: 'Logout realizado com sucesso' });
+    });
+  });
 });
